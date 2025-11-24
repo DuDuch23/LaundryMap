@@ -63,6 +63,7 @@ php bin/console lexik:jwt:generate-keypair
 
 # Lancer le serveur de développement
 symfony server:start
+```
 
 ### Frontend (React)
 
@@ -77,7 +78,7 @@ npm install
 
 # Lancer le serveur de développement
 npm start
-
+```
 
 ## 📁 Structure du projet
 
