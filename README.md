@@ -4,13 +4,19 @@ LaundryMap est une application collaborative orienté mobile first permettant de
 
 ## ✨ Fonctionnalités
 
-- 🗺️ Carte interactive pour visualiser les emplacements de machines à laver
+- 🗺️ Carte interactive pour visualiser les emplacements de laveries automatiques
+- ↗️ Itinéraire vers les laveries diponibles
 - 📍 Ajout collaboratif de nouveaux emplacements
-- 👤 Système d'authentification pour les contributions
-- ✏️ Modification et suppression des emplacements ajoutés
+- 👤 Système d'authentification pour les contributeurs + systèmes de modérations (Super admin)
+- ✏️ Modification et suppression des laveries
 - 🔍 Recherche et filtrage des machines disponibles
-- 📱 Interface responsive adaptée mobile first + tablette/desktop
-- Interactions API propriétaires (Lecture + interprétations des données json)
+- 📱 Interface responsive adaptée Mobile-first + Tablet/Desktop
+- 🤖 Intéractions API propriétaires (Lecture + interprétations des données json)
+- 🗣️ Gestion des commentaires
+- ⭐ Gestion des notations
+- 🇺🇸 Système de traductions (internationnalisation)
+- ♿ Accessibilité renforcé pour les personnes handicapées
+- ‼️ Système de signalement de contenu
 
 ## 🛠️ Technologies
 
