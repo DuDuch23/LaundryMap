@@ -9,7 +9,8 @@ LaundryMap est une application collaborative orienté mobile first permettant de
 - 👤 Système d'authentification pour les contributions
 - ✏️ Modification et suppression des emplacements ajoutés
 - 🔍 Recherche et filtrage des machines disponibles
-- 📱 Interface responsive adaptée mobile et desktop
+- 📱 Interface responsive adaptée mobile first + tablette/desktop
+- Interactions API propriétaires (Lecture + interprétations des données json)
 
 ## 🛠️ Technologies
 
