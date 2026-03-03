@@ -24,6 +24,7 @@ function App() {
       </Routes>
       <div>
         <h1>{t('main.header')}</h1>
+        <h3>{t('main.inscription_pro.nom')}</h3>
         <ChangeLanguage />
         <AccessibleLayout />
       </div>

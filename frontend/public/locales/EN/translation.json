@@ -1,5 +1,16 @@
 {
   "main": {
-    "header": "Welcome to the app!"
+    "header": "Welcome to the app !",
+    "inscription_pro": {
+      "titre": "S'inscrire en tant que professionnel",
+      "nom": "Lastname",
+      "prenom": "Firstname",
+      "email": "Email",
+      "mot_de_passe": "Password",
+      "num_siren_ou_siret": "Number SIREN or SIRET",
+      "accepte_condition": "J'accepte les conditions d'utilisation",
+      "mot_de_passe_oublie": "Password forget ?",
+      "sinscrire": "Sign up"
+    }
   }
 }
