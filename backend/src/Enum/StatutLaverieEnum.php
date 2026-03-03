@@ -2,7 +2,7 @@
 
 namespace App\Enum;
 
-enum StatueLaverieEnum: string
+enum StatutLaverieEnum: string
 {
     case STATUT_EN_ATTENTE = 'En attente';
     case STATUT_VALIDEE = 'Validée';

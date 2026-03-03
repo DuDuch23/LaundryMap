@@ -36,8 +36,8 @@ class Adresse
     #[ORM\Column(type: 'float', nullable: true)]
     private ?float $longitude = null;
 
-    #[ORM\Column(name: 'statut_geolocalisation', type: 'string')]
-    private string $statutGeolocalisation = StatutGeoEnum::EN_ATTENTE->value;
+    #[ORM\Column(name: 'statut_geolocalisation', enumType: StatutGeoEnum::class)]
+    private StatutGeoEnum $statutGeolocalisation = StatutGeoEnum::EN_ATTENTE;
 
     public function getId(): ?int
     {
@@ -121,12 +121,12 @@ class Adresse
         return $this;
     }
 
-    public function getStatutGeolocalisation(): string
+    public function getStatutGeolocalisation(): StatutGeoEnum
     {
         return $this->statutGeolocalisation;
     }
 
-    public function setStatutGeolocalisation(string $statut): static
+    public function setStatutGeolocalisation(StatutGeoEnum $statut): static
     {
         $this->statutGeolocalisation = $statut;
         return $this;
