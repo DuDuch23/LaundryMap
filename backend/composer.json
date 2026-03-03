@@ -10,6 +10,7 @@
         "doctrine/doctrine-bundle": "^3.2.2",
         "doctrine/doctrine-migrations-bundle": "^3.7",
         "doctrine/orm": "^3.6.2",
+        "lexik/jwt-authentication-bundle": "^3.2",
         "symfony/console": "^8.0.6",
         "symfony/dotenv": "^8.0.6",
         "symfony/flex": "^2.10",
