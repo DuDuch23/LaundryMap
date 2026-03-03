@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -13,6 +15,29 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+header{
+  background-color: #14A8DE;
+  padding: 10px 20px;
+}
+
+header svg{
+  background-color: white;
+  padding: 8px;
+  border-radius: 12px;
+}
+
+header nav{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header nav a{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 a {
   font-weight: 500;
   color: #646cff;
@@ -24,8 +49,6 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
 }
