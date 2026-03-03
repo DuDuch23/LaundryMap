@@ -6,16 +6,12 @@ use App\Repository\UtilisateurRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use App\Enum\StatutUtilisateurEnum;
 
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
 #[ORM\Table(name: 'utilisateur')]
 class Utilisateur
 {
-    public const STATUT_EN_ATTENTE = 'En attente';
-    public const STATUT_VALIDE     = 'Validé';
-    public const STATUT_REFUSE     = 'Refusé';
-    public const STATUT_BANNI      = 'Banni';
-
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
@@ -33,8 +29,8 @@ class Utilisateur
     #[ORM\Column(name: 'mot_de_passe', type: 'string', length: 255, nullable: true)]
     private ?string $motDePasse = null;
 
-    #[ORM\Column(type: 'string', enumType: null)]
-    private string $statut = self::STATUT_EN_ATTENTE;
+    #[ORM\Column(type: 'string', enumType: StatutUtilisateurEnum::class)]
+    private StatutUtilisateurEnum $statut = StatutUtilisateurEnum::STATUT_EN_ATTENTE;
 
     #[ORM\Column(name: 'date_creation', type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $dateCreation = null;
@@ -119,12 +115,12 @@ class Utilisateur
         return $this;
     }
 
-    public function getStatut(): string
+    public function getStatut(): StatutUtilisateurEnum
     {
         return $this->statut;
     }
 
-    public function setStatut(string $statut): static
+    public function setStatut(StatutUtilisateurEnum $statut): static
     {
         $this->statut = $statut;
         return $this;
