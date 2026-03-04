@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use App\Enum\StatutProfessionnelEnum;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ProfessionnelRepository::class)]
 #[ORM\Table(name: 'professionnel')]
@@ -22,6 +23,11 @@ class Professionnel
     private Utilisateur $utilisateur;
 
     #[ORM\Column(type: 'integer')]
+    #[Assert\NotBlank(message: "Le numéro SIREN est obligatoire pour un professionnel.")]
+    #[Assert\Length(
+        exactly: 9, 
+        exactMessage: "Le numéro SIREN doit contenir exactement {{ limit }} chiffres."
+    )]
     private int $siren;
 
     #[ORM\Column(enumType: StatutProfessionnelEnum::class)]

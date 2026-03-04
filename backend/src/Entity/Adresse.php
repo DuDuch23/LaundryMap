@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Repository\AdresseRepository;
 use Doctrine\ORM\Mapping as ORM;
 use App\Enum\StatutGeoEnum;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Constraints\NotBlank;
 
 #[ORM\Entity(repositoryClass: AdresseRepository::class)]
 #[ORM\Table(name: 'adresse')]
@@ -16,18 +18,23 @@ class Adresse
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank(message: "L'adresse est obligatoire.")]
     private string $adresse;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank(message: "La rue est obligatoire.")]
     private string $rue;
 
     #[ORM\Column(name: 'code_postal', type: 'integer')]
+    #[Assert\NotBlank(message: "Le code postal est obligatoire.")]
     private int $codePostal;
 
     #[ORM\Column(type: 'string')]
+    #[Assert\NotBlank(message: "La ville est obligatoire.")]
     private string $ville;
 
     #[ORM\Column(type: 'string')]
+    #[Assert\NotBlank(message: "Le pays est obligatoire.")]
     private string $pays;
 
     #[ORM\Column(type: 'float', nullable: true)]
