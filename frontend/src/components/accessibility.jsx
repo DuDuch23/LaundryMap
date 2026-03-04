@@ -75,12 +75,10 @@ export function AccessibleButton({
   );
 }
 
-// ─────────────────────────────────────────────
-// 4. INPUT ACCESSIBLE — toujours avec un label lié
-// ─────────────────────────────────────────────
 export function AccessibleInput({
   id,
   label,
+  className,
   type = 'text',
   value,
   onChange,
@@ -89,9 +87,10 @@ export function AccessibleInput({
   error,
 }) {
   return (
-    <div role="group">
-      {/* Label toujours présent et lié via htmlFor */}
-      <label htmlFor={id}>
+    <div role="group" className={className}>
+      <label htmlFor={id}
+      className='w-auto max-w-fit px-4 bg-white text-black rounded-lg relative top-2 -right-3'
+      >
         {label}
         {required && (
           <span aria-hidden="true" style={{ color: 'red' }}>
@@ -104,16 +103,15 @@ export function AccessibleInput({
         id={id}
         type={type}
         value={value}
+        className='border border-solid rounded-10 bg-white p-4'
         onChange={onChange}
         placeholder={placeholder}
         required={required}
         aria-required={required}
-        // Lie l'input au message d'erreur si présent
         aria-describedby={error ? `${id}-error` : undefined}
         aria-invalid={error ? 'true' : 'false'}
       />
 
-      {/* Message d'erreur accessible */}
       {error && (
         <span
           id={`${id}-error`}
@@ -125,6 +123,48 @@ export function AccessibleInput({
         </span>
       )}
     </div>
+  );
+}
+
+export function checkBoxAccessibility({
+  id,
+  label,
+  type = 'text',
+  value,
+  onChange,
+  placeholder,
+  required = false,
+  error,
+}){
+  return (
+    <>
+      <div>
+        <label htmlFor={id}>
+          {label}
+          {required && (
+            <span aria-hidden="true" style={{ color: 'red' }}>
+              {' '}*
+            </span>
+          )}
+        </label>
+        <input
+          type="checkbox"
+          name="vehicle"
+          value="Bike"
+        />
+
+        {error && (
+          <span
+            id={`${id}-error`}
+            role="alert"
+            aria-live="polite"
+            style={{ color: 'red', fontSize: '0.875rem' }}
+          >
+            {error}
+          </span>
+        )}
+      </div>
+    </>
   );
 }
 
