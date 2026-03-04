@@ -10,6 +10,7 @@ use App\Enum\StatutUtilisateurEnum;
 
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
 #[ORM\Table(name: 'utilisateur')]
+#[ORM\HasLifecycleCallbacks]
 class Utilisateur
 {
     #[ORM\Id]
@@ -192,5 +193,20 @@ class Utilisateur
     public function getHistoriqueInteractions(): Collection
     {
         return $this->historiqueInteractions;
+    }
+
+    //METHODE AJOUT AUTOMATIQUE LORS DE LA CREATION
+    #[ORM\PrePersist]
+    public function setDatesLorsDeLaCreation(): void
+    {
+        $this->dateCreation = new \DateTime();
+        $this->dateModification = new \DateTime();
+    }
+
+    //METHODE POUR METTRE A JOUR LA DATE DE MODIFICATION
+    #[ORM\PreUpdate]
+    public function setDateLorsDeLaModification(): void
+    {
+        $this->dateModification = new \DateTime();
     }
 }
