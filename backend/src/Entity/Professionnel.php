@@ -110,7 +110,7 @@ class Professionnel
         return $this->laveries;
     }
 
-        public function getHistoriqueInteractions(): Collection {
+    public function getHistoriqueInteractions(): Collection {
         return $this->historiqueInteractions;
     }
 }
