@@ -70,7 +70,7 @@ export default function Footer() {
             {/* Share button */}
             <button
                 onClick={handleShare}
-                className="w-full flex items-center justify-center gap-3 bg-[#1B3A8C] text-white text-lg font-medium py- px-4 rounded-xl active:opacity-80 transition-opacity"
+                className="w-full flex items-center justify-center gap-3 bg-[#1B3A8C] text-white text-lg font-medium py-3 px-4 rounded-xl active:opacity-80 transition-opacity"
                 aria-label={t('main.footer.partager_aria')}
             >
                 <svg
