@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-*, ::after, ::before, ::backdrop, ::file-selector-button{
+*, ::after, ::before, ::backdrop, ::file-selector-button, ::file-selector-button:not(footer){
   box-sizing: inherit !important;
 }
 

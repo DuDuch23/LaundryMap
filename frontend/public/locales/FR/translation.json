@@ -7,6 +7,13 @@
       "connexion": "Connexion",
       "mon_profil": "Mon profil"
     },
+    "footer": {
+      "cgu": "CGU",
+      "contact": "Contactez-Nous",
+      "mentions_legales": "Mention Légale",
+      "partager": "Partager le lien",
+      "partager_aria": "Partager le lien de l'application"
+    },
     "inscription_pro": {
       "titre": "S'inscrire en tant que professionnel",
       "nom": "Nom",
