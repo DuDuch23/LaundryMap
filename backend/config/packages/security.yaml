@@ -21,7 +21,7 @@ security:
             stateless: true
             provider: app_user_provider
             json_login:
-                check_path: /api/connexion_verification
+                check_path: /api/connexion
                 username_path: email
                 password_path: mot_de_passe
                 success_handler: lexik_jwt_authentication.handler.authentication_success
