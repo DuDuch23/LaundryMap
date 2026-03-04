@@ -1,6 +1,12 @@
 {
   "main": {
-    "header": "Bienvenue dans l'application !",
+    "header": {
+      "bienvenue": "Bienvenue",
+      "tableau_de_bord": "Tableau de bord",
+      "inscription": "Inscription",
+      "connexion": "Connexion",
+      "mon_profil": "Mon profil"
+    },
     "inscription_pro": {
       "titre": "S'inscrire en tant que professionnel",
       "nom": "Nom",
@@ -11,7 +17,18 @@
       "accepte_condition": "J'accepte les conditions d'utilisation",
       "mot_de_passe_oublie": "Mot de passe oublié ?",
       "sinscrire": "S'inscrire",
-      "placeholder_nom": "Tapez votre nom..."
+      "placeholder_nom": "Tapez votre nom...",
+      "placeholder_prenom": "Tapez votre prénom...",
+      "placeholder_email": "Tapez votre email...",
+      "placeholder_mot_de_passe": "Tapez votre mot de passe...",
+      "placeholder_num_siren_ou_siret": "Tapez votre numéro de siren ou siret...",
+      "nom_requis": "Nom requis",
+      "prenom_requis": "Prénom requis",
+      "email_requis": "Email requis",
+      "email_invalid": "Email invalide",
+      "mot_de_passe_requis": "Mot de passe requis",
+      "num_siren_ou_siret_requis": "efzeNuméro de SIREN ou SIRET requis",
+      "conditions_requis": "Veuillez acceptez les conditions d'utilisations"
     }
   }
 }

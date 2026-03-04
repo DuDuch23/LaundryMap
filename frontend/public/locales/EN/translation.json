@@ -1,8 +1,14 @@
 {
   "main": {
-    "header": "Welcome to the app !",
+    "header": {
+      "bienvenue": "Welcome",
+      "tableau_de_bord": "Dashboard",
+      "inscription": "Sign up",
+      "connexion": "Login",
+      "mon_profil": "My profile"
+    },
     "inscription_pro": {
-      "titre": "S'inscrire en tant que professionnel",
+      "titre": "Register as an professionnal",
       "nom": "Lastname",
       "prenom": "Firstname",
       "email": "Email",
@@ -10,7 +16,19 @@
       "num_siren_ou_siret": "Number SIREN or SIRET",
       "accepte_condition": "J'accepte les conditions d'utilisation",
       "mot_de_passe_oublie": "Password forget ?",
-      "sinscrire": "Sign up"
+      "sinscrire": "Sign up",
+      "placeholder_nom": "Enter your last name...",
+      "placeholder_prenom": "Enter your first name...",
+      "placeholder_email": "Enter your email...",
+      "placeholder_mot_de_passe": "Enter your password...",
+      "placeholder_num_siren_ou_siret": "Enter your SIREN or SIRET number...",
+      "nom_requis": "Lastname required",
+      "prenom_requis": "Firstname required",
+      "email_requis": "Email required",
+      "email_invalid": "Invalid email",
+      "mot_de_passe_requis": "Password required",
+      "num_siren_ou_siret_requis": "Number SIREN or SIRET required",
+      "conditions_requis": "Please accept the terms of use"
     }
   }
 }
