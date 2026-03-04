@@ -1,0 +1,5 @@
+{
+    "require": {
+        "symfony/serializer-pack": "^1.4"
+    }
+}

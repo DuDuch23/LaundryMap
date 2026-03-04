@@ -4,6 +4,6 @@ controllers:
         namespace: App\Controller
     type: attribute
 
-api_login_check:
-    path: /api/login_check
+api_connexion_verification:
+    path: /api/connexion_verification
     methods: [POST]

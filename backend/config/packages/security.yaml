@@ -5,7 +5,10 @@ security:
 
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
-        users_in_memory: { memory: null }
+        app_user_provider:
+            entity:
+                class: App\Entity\Utilisateur
+                property: email
 
 
     firewalls:
@@ -14,21 +17,25 @@ security:
             pattern: ^/(_profiler|_wdt|assets|build)/
             security: false
         login:
-            pattern: ^/api/login
+            pattern: ^/api/connexion
             stateless: true
+            provider: app_user_provider
             json_login:
-                check_path: /api/login_check
+                check_path: /api/connexion_verification
+                username_path: email
+                password_path: mot_de_passe
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
 
         api:
             pattern:   ^/api
             stateless: true
+            provider: app_user_provider
             jwt: ~
 
         main:
             lazy: true
-            provider: users_in_memory
+            provider: app_user_provider
 
             # Activate different ways to authenticate:
             # https://symfony.com/doc/current/security.html#the-firewall
@@ -38,9 +45,9 @@ security:
 
     # Note: Only the *first* matching rule is applied
     access_control:
-        - { path: ^/api/login, roles: PUBLIC_ACCESS }
-        - { path: ^/api/register, roles: PUBLIC_ACCESS }
-        - { path: ^/api/forgot-password, roles: PUBLIC_ACCESS }
+        - { path: ^/api/connexion, roles: PUBLIC_ACCESS }
+        - { path: ^/api/inscription, roles: PUBLIC_ACCESS }
+        - { path: ^/api/mot-de-passe-oublie, roles: PUBLIC_ACCESS }
         - { path: ^/api,       roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
