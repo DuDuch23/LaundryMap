@@ -10,7 +10,7 @@ import Header from './components/Header';
 const Home = React.lazy(() => import('./pages/Home'));
 const Profil = React.lazy(() => import('./pages/Profil'));
 
-const RegisterUser = React.lazy(() => import('./pages/RegisterUser'));
+const InscriptionUtilisateur = React.lazy(() => import('./pages/InscriptionUtilisateur'));
 const InscriptionPro = React.lazy(() => import('./pages/InscriptionProfessionnel'));
 
 function App() {
@@ -30,7 +30,7 @@ function App() {
         <Route element={<Header />}>
           <Route path="/" element={<Home />} />
           <Route path="/profil" element={<Profil />} />
-          <Route path="/inscription-utisateur" element={<RegisterUser />} />
+          <Route path="/inscription-utilisateur" element={<InscriptionUtilisateur />} />
           <Route path="/inscription-pro" element={<InscriptionPro />} />
         </Route>
       </Routes>

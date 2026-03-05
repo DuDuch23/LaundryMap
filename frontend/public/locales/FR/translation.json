@@ -29,6 +29,29 @@
       "mot_de_passe_requis": "Mot de passe requis",
       "num_siren_ou_siret_requis": "efzeNuméro de SIREN ou SIRET requis",
       "conditions_requis": "Veuillez acceptez les conditions d'utilisations"
+    },
+    "inscription_utilisateur": {
+      "titre": "Inscription utilisateur",
+      "nom": "Nom",
+      "prenom": "Prénom",
+      "email": "Email",
+      "mot_de_passe": "Mot de passe",
+      "accepte_condition": "J'accepte les conditions d'utilisation",
+      "sinscrire": "S'inscrire",
+      "placeholder_nom": "Ex: Dupont",
+      "placeholder_prenom": "Ex: Jean",
+      "placeholder_email": "Ex: jean.dupont@email.com",
+      "placeholder_mot_de_passe": "Tapez votre mot de passe...",
+      "nom_requis": "Le nom est requis",
+      "nom_trop_court": "Le nom doit contenir au moins 2 caractères",
+      "prenom_requis": "Le prénom est requis",
+      "prenom_trop_court": "Le prénom doit contenir au moins 2 caractères",
+      "email_requis": "L'email est requis",
+      "email_invalid": "L'email est invalide",
+      "mot_de_passe_requis": "Le mot de passe est requis",
+      "mot_de_passe_invalide": "Le mot de passe ne respecte pas les critères",
+      "conditions_requis": "Vous devez accepter les conditions d'utilisation",
+      "succes": "Votre compte a été créé avec succès !"
     }
   }
 }
