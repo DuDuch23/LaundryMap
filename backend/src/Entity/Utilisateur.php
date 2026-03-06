@@ -9,6 +9,8 @@ use Doctrine\ORM\Mapping as ORM;
 use App\Enum\StatutUtilisateurEnum;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
@@ -19,7 +21,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     message: 'Cet email a déjà été utilisé.'
 )]
 
-class Utilisateur
+class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -222,5 +224,20 @@ class Utilisateur
     public function setDateLorsDeLaModification(): void
     {
         $this->dateModification = new \DateTime();
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
+    }
+
+    public function getRoles(): array
+    {
+        return ['ROLE_USER'];
+    }
+
+    public function getPassword(): ?string
+    {
+        return $this->motDePasse;
     }
 }

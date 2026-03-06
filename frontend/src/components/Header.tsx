@@ -54,6 +54,7 @@ export default function Header() {
                             <li><Link to="/profil" className='text-white p-4' onClick={() => setIsOpen(false)}>Profil</Link></li>
                             <li><Link to="/inscription-pro" className='text-white p-4' onClick={() => setIsOpen(false)}>Inscription Pro</Link></li>
                             <li><Link to="/inscription-utilisateur" className='text-white p-4' onClick={() => setIsOpen(false)}>Inscription Utilisateur</Link></li>
+                            <li><Link to="/connexion" className='text-white p-4' onClick={() => setIsOpen(false)}>Connexion</Link></li>
                         </ul>
                     )}
                 </nav>

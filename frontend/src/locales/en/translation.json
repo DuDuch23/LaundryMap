@@ -1,0 +1,57 @@
+{
+  "main": {
+    "header": {
+      "bienvenue": "Welcome",
+      "tableau_de_bord": "Dashboard",
+      "inscription": "Sign up",
+      "connexion": "Login",
+      "mon_profil": "My profile"
+    },
+    "inscription_pro": {
+      "titre": "Register as an user",
+      "nom": "Lastname",
+      "prenom": "Firstname",
+      "email": "Email",
+      "mot_de_passe": "Password",
+      "num_siren_ou_siret": "Number SIREN or SIRET",
+      "accepte_condition": "J'accepte les conditions d'utilisation",
+      "mot_de_passe_oublie": "Password forget ?",
+      "sinscrire": "Sign up",
+      "placeholder_nom": "Enter your last name...",
+      "placeholder_prenom": "Enter your first name...",
+      "placeholder_email": "Enter your email...",
+      "placeholder_mot_de_passe": "Enter your password...",
+      "placeholder_num_siren_ou_siret": "Enter your SIREN or SIRET number...",
+      "nom_requis": "Lastname required",
+      "prenom_requis": "Firstname required",
+      "email_requis": "Email required",
+      "email_invalid": "Invalid email",
+      "mot_de_passe_requis": "Password required",
+      "num_siren_ou_siret_requis": "Number SIREN or SIRET required",
+      "conditions_requis": "Please accept the terms of use"
+    },
+    "inscription_utilisateur": {
+      "titre": "User Registration",
+      "nom": "Last Name",
+      "prenom": "First Name",
+      "email": "Email",
+      "mot_de_passe": "Password",
+      "accepte_condition": "I accept the terms of use",
+      "sinscrire": "Sign Up",
+      "placeholder_nom": "Ex: Smith",
+      "placeholder_prenom": "Ex: John",
+      "placeholder_email": "Ex: john.smith@email.com",
+      "placeholder_mot_de_passe": "Enter your password...",
+      "nom_requis": "Last name is required",
+      "nom_trop_court": "Last name must contain at least 2 characters",
+      "prenom_requis": "First name is required",
+      "prenom_trop_court": "First name must contain at least 2 characters",
+      "email_requis": "Email is required",
+      "email_invalid": "Invalid email address",
+      "mot_de_passe_requis": "Password is required",
+      "mot_de_passe_invalide": "Password does not meet the criteria",
+      "conditions_requis": "You must accept the terms of use",
+      "succes": "Your account has been successfully created!"
+    }
+  }
+}

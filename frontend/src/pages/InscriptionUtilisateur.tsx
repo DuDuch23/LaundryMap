@@ -4,13 +4,13 @@ import { AccessibleInput, AccessibleButton } from '../components/accessibility';
 
 export default function RegisterUser() {
     const { t } = useTranslation();
-    
+
     const [firstName, setFirstName] = useState<string>("");
     const [lastName, setLastName] = useState<string>("");
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [cguAccepted, setCguAccepted] = useState<boolean>(false);
-    
+
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [messageSucces, setMessageSucces] = useState<string>("");
 
@@ -30,35 +30,35 @@ export default function RegisterUser() {
         setMessageSucces("");
 
         //VALIDATION FRONTEND
-        if(!firstName.trim()){
+        if (!firstName.trim()) {
             newsErrors.firstName = t('main.inscription_utilisateur.prenom_requis');
-        } else if(firstName.trim().length < 2){
+        } else if (firstName.trim().length < 2) {
             newsErrors.firstName = t('main.inscription_utilisateur.prenom_trop_court');
         }
 
-        if(!lastName.trim()){
+        if (!lastName.trim()) {
             newsErrors.lastName = t('main.inscription_utilisateur.nom_requis');
-        } else if(lastName.trim().length < 2){
+        } else if (lastName.trim().length < 2) {
             newsErrors.lastName = t('main.inscription_utilisateur.nom_trop_court');
         }
 
-        if(!password.trim()){
+        if (!password.trim()) {
             newsErrors.password = t('main.inscription_utilisateur.mot_de_passe_requis');
-        } else if(!passwordRegex.test(password)){
+        } else if (!passwordRegex.test(password)) {
             newsErrors.password = t('main.inscription_utilisateur.mot_de_passe_invalide');
         }
 
-        if(!email.trim()){
+        if (!email.trim()) {
             newsErrors.email = t('main.inscription_utilisateur.email_requis');
-        } else if(!emailRegex.test(email)){
+        } else if (!emailRegex.test(email)) {
             newsErrors.email = t('main.inscription_utilisateur.email_invalid');
         }
 
-        if(!cguAccepted){
+        if (!cguAccepted) {
             newsErrors.cguAccepted = t('main.inscription_utilisateur.conditions_requis');
         }
 
-        if(Object.keys(newsErrors).length > 0) {
+        if (Object.keys(newsErrors).length > 0) {
             setErrors(newsErrors);
             return;
         }
@@ -97,7 +97,7 @@ export default function RegisterUser() {
             setPassword("");
             setCguAccepted(false);
 
-        } catch(error) {
+        } catch (error) {
             console.error('Erreur :', error);
             setErrors({ global: "Une erreur est survenue lors de la connexion au serveur." });
         }
@@ -122,7 +122,7 @@ export default function RegisterUser() {
             )}
 
             <form onSubmit={handleSubmit}>
-                <AccessibleInput 
+                <AccessibleInput
                     id="prenom"
                     className={'flex flex-col mb-4'}
                     label={t('main.inscription_utilisateur.prenom')}
@@ -133,7 +133,7 @@ export default function RegisterUser() {
                     error={errors.firstName}
                 />
 
-                <AccessibleInput 
+                <AccessibleInput
                     id="nom"
                     className={'flex flex-col mb-4'}
                     label={t('main.inscription_utilisateur.nom')}
@@ -144,7 +144,7 @@ export default function RegisterUser() {
                     error={errors.lastName}
                 />
 
-                <AccessibleInput 
+                <AccessibleInput
                     id="email"
                     className={'flex flex-col mb-4'}
                     label={t('main.inscription_utilisateur.email')}
@@ -155,7 +155,7 @@ export default function RegisterUser() {
                     error={errors.email}
                 />
 
-                <AccessibleInput 
+                <AccessibleInput
                     id="password"
                     className={'flex flex-col mb-2'}
                     label={t('main.inscription_utilisateur.mot_de_passe')}
@@ -174,13 +174,13 @@ export default function RegisterUser() {
                     <li style={{ color: /[@$!%*?&^#]/.test(password) ? 'green' : 'red' }}>✓ Un caractère spécial (@$!%*?&^#)</li>
                 </ul>
 
-                
-                <AccessibleInput 
+
+                <AccessibleInput
                     id="cgu"
                     label={t('main.inscription_utilisateur.accepte_condition')}
                     type='checkbox'
                     className={'flex flex-row-reverse justify-end gap-3 mb-6 items-center'}
-                    value={cguAccepted.toString()} 
+                    value={cguAccepted.toString()}
                     onChange={handleChangeCgu}
                     error={errors.cguAccepted}
                     placeholder={''}
@@ -190,7 +190,7 @@ export default function RegisterUser() {
                     type="submit"
                     ariaLabel={t('main.inscription_utilisateur.sinscrire')}
                 >
-                    <div className="bg-[#22ACE2] text-white font-bold py-3 px-4 rounded-lg w-full hover:bg-blue-500 transition-colors">
+                    <div className="bg-[#22ACE2] text-white font-bold py-3 px-4 rounded-lg w-full hover:bg-blue-500 transition-colors cursor-pointer">
                         {t('main.inscription_utilisateur.sinscrire')}
                     </div>
                 </AccessibleButton>
