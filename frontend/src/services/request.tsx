@@ -14,8 +14,16 @@ interface InscriptionProfessionnelData {
     pays: string;
 }
 
-interface InscriptionProfessionnelResponse {
-    message: string;
+interface InscriptionUtilisateurData {
+    prenom: string;
+    nom: string;
+    email: string;
+    motDePasse: string;
+}
+
+export interface ConnexionData {
+    email: string;
+    mot_de_passe: string;
 }
 
 // export async function InscriptionProfessionnel(data: InscriptionProfessionnelData) {
@@ -74,6 +82,26 @@ export async function getLangue() {
         return response.data;
     } catch (error) {
         console.error("Error fetching language:", error);
+        throw error;
+    }
+}
+
+export async function inscriptionUtilisateur(data: InscriptionUtilisateurData) {
+    try {
+        const response = await axios.post(`${API_BASE_URL}/api/inscription-utilisateur`, data);
+        return response.data;
+    } catch (error) {
+        console.error("Erreur lors de l'inscription utilisateur:", error);
+        throw error;
+    }
+}
+
+export async function connexion(data: ConnexionData) {
+    try {
+        const response = await axios.post(`${API_BASE_URL}/api/connexion`, data);
+        return response.data;
+    } catch (error) {
+        console.error("Erreur lors de la connexion:", error);
         throw error;
     }
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccessibleInput, AccessibleButton } from '../components/accessibility';
+import { inscriptionUtilisateur } from '../services/request';
 
 export default function RegisterUser() {
     const { t } = useTranslation();
@@ -67,29 +68,12 @@ export default function RegisterUser() {
 
         //APPEL API
         try {
-            const reponse = await fetch('http://localhost:8000/api/inscription-utilisateur', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    prenom: firstName,
-                    nom: lastName,
-                    email: email,
-                    motDePasse: password
-                })
+            const resultat = await inscriptionUtilisateur({
+                prenom: firstName,
+                nom: lastName,
+                email: email,
+                motDePasse: password
             });
-
-            const resultat = await reponse.json();
-
-            if (!reponse.ok) {
-                if (resultat.erreurs) {
-                    setErrors(resultat.erreurs);
-                }
-                return;
-            }
-
             setMessageSucces(t('main.inscription_utilisateur.succes'));
             setFirstName("");
             setLastName("");
@@ -97,9 +81,13 @@ export default function RegisterUser() {
             setPassword("");
             setCguAccepted(false);
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Erreur :', error);
-            setErrors({ global: "Une erreur est survenue lors de la connexion au serveur." });
+            if (error.response && error.response.data && error.response.data.erreurs) {
+                setErrors(error.response.data.erreurs);
+            } else {
+                setErrors({ global: "Une erreur est survenue lors de la connexion au serveur." });
+            }
         }
     }
 
@@ -175,27 +163,26 @@ export default function RegisterUser() {
                 </ul>
 
 
-                <div className="flex justify-center w-full mb-4">
                     <AccessibleInput
                         id="cgu"
                         label={t('main.inscription_utilisateur.accepte_condition')}
                         type="checkbox"
-                        className="flex flex-row-reverse items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer [&>input]:w-4 [&>input]:h-4 [&>input]:accent-[#22ACE2] [&>input]:cursor-pointer [&>input]:rounded-md"
+                        className=""
                         value={cguAccepted.toString()}
                         onChange={handleChangeCgu}
                         error={errors.cguAccepted}
                         placeholder=""
                     />
+                <div className="flex justify-center w-full mb-4 mt-4">
+                    <AccessibleButton
+                        type="submit"
+                        ariaLabel={t('main.inscription_utilisateur.sinscrire')}
+                    >
+                        <div className="bg-[#22ACE2] text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-500 transition-colors cursor-pointer">
+                            {t('main.inscription_utilisateur.sinscrire')}
+                        </div>
+                    </AccessibleButton>
                 </div>
-
-                <AccessibleButton
-                    type="submit"
-                    ariaLabel={t('main.inscription_utilisateur.sinscrire')}
-                >
-                    <div className="bg-[#22ACE2] text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-500 transition-colors cursor-pointer">
-                        {t('main.inscription_utilisateur.sinscrire')}
-                    </div>
-                </AccessibleButton>
             </form>
         </div>
     );

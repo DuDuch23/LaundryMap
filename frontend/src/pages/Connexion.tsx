@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { AccessibleInput, AccessibleButton } from '../components/accessibility';
+import { connexion } from '../services/request'
 
 export default function PageConnexion() {
     const { t } = useTranslation();
@@ -28,28 +29,18 @@ export default function PageConnexion() {
 
         //APPEL API POUR LA CONNEXION
         try {
-            const reponse = await fetch('http://localhost:8000/api/connexion', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    email: email, 
-                    mot_de_passe: password
-                })
+            const resultat = await connexion({
+                email: email, 
+                mot_de_passe: password
             });
+            //REDIRECTION FUTUR UTILISATEUR
 
-            const resultat = await reponse.json();
-
-            if (!reponse.ok) {
+        } catch(error: any) {
+            if (error.response && error.response.status === 401) {
                 setErreurGenerale("Email ou mot de passe incorrect.");
-                return;
+            } else {
+                setErreurGenerale("Impossible de se connecter au serveur.");
             }
-
-            
-        } catch(error) {
-            setErreurGenerale("Impossible de se connecter.");
         }
     };
 
@@ -80,7 +71,7 @@ return (
                 </div>
 
                 <div className="relative mb-8 w-full text-left">
-                    <div className="absolute right-0 top-0 z-10">
+                    <div className="absolute right-0 top-0 z-1">
                         <Link 
                             to="/mot-de-passe-oublie" 
                             className="text-sm text-[#22ACE2] hover:text-blue-600 hover:underline font-medium transition-colors"

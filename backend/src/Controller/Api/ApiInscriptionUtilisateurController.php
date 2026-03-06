@@ -22,7 +22,7 @@ class ApiInscriptionUtilisateurController extends AbstractController
 
         $utilisateur = $serializer->deserialize($request->getContent(), Utilisateur::class, 'json');
 
-        // GESTION DES ERREURS
+        //GESTION DES ERREURS
         $erreursFront = [];
         $erreurs = $validator->validate($utilisateur);
 
@@ -35,7 +35,7 @@ class ApiInscriptionUtilisateurController extends AbstractController
         }
 
         // UTILISATEUR
-        $utilisateur->setStatut(StatutUtilisateurEnum::STATUT_EN_ATTENTE);
+        $utilisateur->setStatut(StatutUtilisateurEnum::STATUT_VALIDE);
 
         $motDePasseEnClair = $utilisateur->getMotDePasse();
         if ($motDePasseEnClair) {
