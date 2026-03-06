@@ -55,9 +55,9 @@ export function AccessibleLayout({ children }) {
 // 3. BOUTON ACCESSIBLE
 // ─────────────────────────────────────────────
 export function AccessibleButton({
-  onClick,
+  onClick = undefined,
   children,
-  ariaLabel,
+  ariaLabel = "",
   disabled = false,
   type = 'button',
 }) {

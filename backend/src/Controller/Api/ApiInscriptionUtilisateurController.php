@@ -13,28 +13,28 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-
 class ApiInscriptionUtilisateurController extends AbstractController
 {
     #[Route('/api/inscription-utilisateur', name: 'api_inscription', methods: ['POST'])]
+    #[IsGranted('PUBLIC_ACCESS')]
     public function inscription(Request $request, SerializerInterface $serializer, UserPasswordHasherInterface $passwordHasher, 
     EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse {
 
         $utilisateur = $serializer->deserialize($request->getContent(), Utilisateur::class, 'json');
 
-        //GESTION DES ERREURS
+        // GESTION DES ERREURS
         $erreursFront = [];
         $erreurs = $validator->validate($utilisateur);
 
         foreach ($erreurs as $erreur){
-            $erreursFront[$erreur->getPropertyPath()] = $erreur->getMessage();//ASSOCIATION DE L'ERREUR AUX CHAMPS
+            $erreursFront[$erreur->getPropertyPath()] = $erreur->getMessage();
         }
 
         if (count($erreursFront) > 0) {
             return $this->json(['erreurs' => $erreursFront], 400);
         }
 
-        //UTILISATEUR
+        // UTILISATEUR
         $utilisateur->setStatut(StatutUtilisateurEnum::STATUT_EN_ATTENTE);
 
         $motDePasseEnClair = $utilisateur->getMotDePasse();

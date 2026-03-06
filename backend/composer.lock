@@ -5996,5 +5996,9 @@
         "ext-iconv": "*"
     },
     "platform-dev": {},
+<<<<<<< HEAD
     "plugin-api-version": "2.9.0"
+=======
+    "plugin-api-version": "2.6.0"
+>>>>>>> f058608e02db32393faf7f9c1954db8d8f0b4d45
 }
