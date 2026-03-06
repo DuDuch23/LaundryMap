@@ -1,0 +1,26 @@
+nelmio_cors:
+    defaults:
+        allow_origin: ['^http://localhost:5173$', '^https://localhost:5173$', '^http://127.0.0.1:5173$', '^https://127.0.0.1:5173$', '^https://groupe-5.lycee-stvincent.net$']
+        origin_regex: true
+        allow_methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD']
+        allow_headers: ['*']
+        expose_headers: ['Link']
+        max_age: 7200
+        allow_credentials: true
+    paths:
+        '^/api/':
+            allow_origin: ['^http://localhost:5173$', '^https://localhost:5173$', '^http://127.0.0.1:5173$', '^https://127.0.0.1:5173$', '^https://groupe-5.lycee-stvincent.net$']
+            origin_regex: true
+            allow_methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD']
+            allow_headers: ['*']
+            expose_headers: ['Link']
+            allow_credentials: true
+            max_age: 7200
+        '^/uploads/':
+            allow_origin: ['^http://localhost:5173$', '^https://localhost:5173$', '^http://127.0.0.1:5173$', '^https://127.0.0.1:5173$', '^https://groupe-5.lycee-stvincent.net$']
+            origin_regex: true
+            allow_methods: ['GET', 'OPTIONS', 'HEAD']
+            allow_headers: ['*']
+            expose_headers: ['Content-Type']
+            max_age: 7200
+            allow_credentials: true

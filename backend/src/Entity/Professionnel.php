@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use App\Enum\StatutProfessionnelEnum;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: ProfessionnelRepository::class)]
 #[ORM\Table(name: 'professionnel')]
@@ -16,31 +17,38 @@ class Professionnel
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
+    #[Groups(['professionnel:read'])]
     private ?int $id = null;
 
     #[ORM\OneToOne(targetEntity: Utilisateur::class, inversedBy: 'professionnel')]
     #[ORM\JoinColumn(name: 'utilisateur_id', referencedColumnName: 'id', nullable: false)]
+    #[Groups(['professionnel:read'])]
     private Utilisateur $utilisateur;
 
     #[ORM\Column(type: 'integer')]
     #[Assert\NotBlank(message: "Le numéro SIREN est obligatoire pour un professionnel.")]
     #[Assert\Length(
-        exactly: 9, 
+        exactly: 9,
         exactMessage: "Le numéro SIREN doit contenir exactement {{ limit }} chiffres."
     )]
+    #[Groups(['professionnel:read', 'professionnel:write'])]
     private int $siren;
 
     #[ORM\Column(enumType: StatutProfessionnelEnum::class)]
+    #[Groups(['professionnel:read'])]
     private StatutProfessionnelEnum $statut = StatutProfessionnelEnum::STATUT_EN_ATTENTE;
 
     #[ORM\Column(name: 'date_validation', type: 'datetime', nullable: true)]
+    #[Groups(['professionnel:read'])]
     private ?\DateTimeInterface $dateValidation = null;
 
     #[ORM\ManyToOne(targetEntity: Adresse::class)]
     #[ORM\JoinColumn(name: 'adresse_id', referencedColumnName: 'id', nullable: false)]
+    #[Groups(['professionnel:read', 'professionnel:write'])]
     private Adresse $adresse;
 
     #[ORM\OneToMany(mappedBy: 'professionnel', targetEntity: Laverie::class)]
+    #[Groups(['professionnel:read'])]
     private Collection $laveries;
 
     #[ORM\OneToMany(mappedBy: 'professionnel', targetEntity: ProfessionnelHistoriqueInteraction::class)]

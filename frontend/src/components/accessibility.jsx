@@ -89,7 +89,7 @@ export function AccessibleInput({
   return (
     <div role="group" className={className}>
       <label htmlFor={id}
-      className='w-auto max-w-fit px-4 bg-white text-black rounded-lg relative top-2 -right-3'
+      className={`w-auto max-w-fit px-4 bg-white text-black rounded-lg relative ${type !== 'checkbox' ? 'top-2 -right-3' : ''}`}
       >
         {label}
         {required && (
@@ -103,7 +103,7 @@ export function AccessibleInput({
         id={id}
         type={type}
         value={value}
-        className='border border-solid rounded-10 bg-white p-4'
+        className='border border-solid rounded-lg bg-white p-4'
         onChange={onChange}
         placeholder={placeholder}
         required={required}

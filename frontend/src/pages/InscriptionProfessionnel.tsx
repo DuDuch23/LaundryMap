@@ -1,17 +1,27 @@
 import { useTranslation} from 'react-i18next';
 import {AccessibleInput} from '../components/accessibility';
 import { useState, useEffect } from 'react';
-
+import { inscriptionProfessionnel } from '../services/request';
+import { useNavigate } from 'react-router';
 
 export default function InscriptionProfessionnel() {
     const { t, i18n } = useTranslation();
-    const [firstName, setFirstName] = useState<string>("");
-    const [lastName, setLastName] = useState<string>("");
+    const navigate = useNavigate();
+    const [prenom, setprenom] = useState<string>("");
+    const [nom, setnom] = useState<string>("");
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [sirenOrSiret, setSirenOrSiret] = useState<string>("");
     const [rgpdAccepted, setRgpdAccepted] = useState<boolean>(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+
+    // Adresse
+    const [adresse, setAdresse] = useState<string>("");
+    const [rue, setRue] = useState<string>("");
+    const [codePostal, setCodePostal] = useState<string>("");
+    const [ville, setVille] = useState<string>("");
+    const [pays, setPays] = useState<string>("France");
 
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     const sirenRegex = /^\d{9}$/;
@@ -19,8 +29,8 @@ export default function InscriptionProfessionnel() {
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#])[A-Za-z\d@$!%*?&^#]{12,}$/;
 
 
-    const handleChangeFirstName = (e: any) => setFirstName(e.target.value);
-    const handleChangeLastName = (e: any) => setLastName(e.target.value);
+    const handleChangeprenom = (e: any) => setprenom(e.target.value);
+    const handleChangenom = (e: any) => setnom(e.target.value);
     const handleChangeEmail = (e: any) => setEmail(e.target.value);
     const handleChangePassword = (e: any) => setPassword(e.target.value);
     const handleChangeSirenOrSiret = (e: any) => setSirenOrSiret(e.target.value);
@@ -29,16 +39,16 @@ export default function InscriptionProfessionnel() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const newsErrors: Record<string, string> = {};
-        if(!firstName.trim()){
-            newsErrors.firstName = t('main.inscription_pro.prenom_requis');
-        }else if(firstName.trim().length < 2){
-            newsErrors.firstName = t('main.inscription_pro.prenom_trop_court');
+        if(!prenom.trim()){
+            newsErrors.prenom = t('main.inscription_pro.prenom_requis');
+        }else if(prenom.trim().length < 2){
+            newsErrors.prenom = t('main.inscription_pro.prenom_trop_court');
         }
 
-        if(!lastName.trim()){
-            newsErrors.lastName = t('main.inscription_pro.nom_requis');
-        }else if(lastName.trim().length < 2){
-            newsErrors.lastName = t('main.inscription_pro.nom_trop_court');
+        if(!nom.trim()){
+            newsErrors.nom = t('main.inscription_pro.nom_requis');
+        }else if(nom.trim().length < 2){
+            newsErrors.nom = t('main.inscription_pro.nom_trop_court');
         }
 
         if(!password.trim()){
@@ -72,48 +82,81 @@ export default function InscriptionProfessionnel() {
             return;
         }
 
-        setErrors({});
+        // Adresse
 
-        if(Object.keys(errors).length === 0){
-            console.log("pas d'erreur");
-            try{
-                console.log(handleChangeEmail, handleChangePassword, handleChangeSirenOrSiret, handleChangeRgpd, setRgpdAccepted);
-                setErrors({});
-                console.log(firstName, lastName, password, sirenOrSiret, rgpdAccepted, email);
-            }catch(error){
-                console.error(error);
+        if (!adresse.trim()) {
+            newsErrors.adresse = t('main.inscription_pro.adresse_requise');
+        }
+        if (!rue.trim()) {
+            newsErrors.rue = t('main.inscription_pro.rue_requise');
+        }
+        if (!codePostal.trim() || !/^\d{5}$/.test(codePostal)) {
+            newsErrors.codePostal = t('main.inscription_pro.code_postal_invalide');
+        }
+        if (!ville.trim()) {
+            newsErrors.ville = t('main.inscription_pro.ville_requise');
+        }
+        if (!pays.trim()) {
+            newsErrors.pays = t('main.inscription_pro.pays_requis');
+        }
+
+        setErrors({});
+        setIsLoading(true);
+
+        try{
+            await inscriptionProfessionnel({
+                email,
+                prenom,
+                nom,
+                password,
+                sirenOrSiret,
+                adresse,
+                rue,
+                codePostal,
+                ville,
+                pays
+            });
+            navigate('/');
+            console.log(handleChangeEmail, handleChangePassword, handleChangeSirenOrSiret, handleChangeRgpd, setRgpdAccepted);
+            setErrors({});
+            console.log(prenom, nom, password, sirenOrSiret, rgpdAccepted, email);
+        }catch(error){
+            if (error.response?.data?.erreurs) {
+                setErrors(error.response.data.erreurs);
+            } else {
+                setErrors({ global: 'Une erreur est survenue, veuillez réessayer' });
             }
-        }else{
-            console.log("il y a des erreurs", errors);
+        } finally{
+            setIsLoading(false);
         }
 
     }
     return (
-        <div className='p-4'>
-            <h1>{t('main.inscription_pro.titre')}</h1>
-            <form action="#" onSubmit={handleSubmit}>
+        <div className='p-4 pt-8'>
+            <h1 className='text-xl text-center'>{t('main.inscription_pro.titre')}</h1>
+            <form action="#" className='flex flex-col gap-5' onSubmit={handleSubmit}>
 
                 <AccessibleInput 
                     id="nom"
                     className={'flex flex-col'}
                     label={t('main.inscription_pro.nom')}
                     type='text'
-                    value={lastName}
-                    onChange={handleChangeLastName}
+                    value={nom}
+                    onChange={handleChangenom}
                     placeholder={t('main.inscription_pro.placeholder_nom')}
                     // required
-                    error={errors.lastName}
+                    error={errors.nom}
                 />
                 <AccessibleInput 
                     id="prenom"
                     className={'flex flex-col'}
                     label={t('main.inscription_pro.prenom')}
                     type='text'
-                    value={firstName}
-                    onChange={handleChangeFirstName}
+                    value={prenom}
+                    onChange={handleChangeprenom}
                     placeholder={t('main.inscription_pro.placeholder_prenom')}
                     // required
-                    error={errors.firstName}
+                    error={errors.prenom}
                 />
                 <AccessibleInput 
                     id="email"
@@ -139,19 +182,19 @@ export default function InscriptionProfessionnel() {
                 />
                 <ul style={{ fontSize: '0.8rem', color: '#666' }}>
                     <li style={{ color: password.length >= 12 ? 'green' : 'red' }}>
-                        ✓ 12 caractères minimum
+                        ✓ {t('main.inscription_pro.mot_de_passe_caractere_minimum')}
                     </li>
                     <li style={{ color: /[A-Z]/.test(password) ? 'green' : 'red' }}>
-                        ✓ Une majuscule
+                        ✓ {t('main.inscription_pro.une_majuscule')}
                     </li>
                     <li style={{ color: /[a-z]/.test(password) ? 'green' : 'red' }}>
-                        ✓ Une minuscule
+                        ✓ {t('main.inscription_pro.une_minuscule')}
                     </li>
                     <li style={{ color: /\d/.test(password) ? 'green' : 'red' }}>
-                        ✓ Un chiffre
+                        ✓ {t('main.inscription_pro.un_chiffre')}
                     </li>
                     <li style={{ color: /[@$!%*?&^#]/.test(password) ? 'green' : 'red' }}>
-                        ✓ Un caractère spécial (@$!%*?&^#)
+                        ✓ {t('main.inscription_pro.un_caractere_special')}
                     </li>
                 </ul>
                 <AccessibleInput
@@ -165,11 +208,66 @@ export default function InscriptionProfessionnel() {
                     // required
                     error={errors.sirenOrSiret}
                 />
+                <AccessibleInput
+                    id="adresse"
+                    className='flex flex-col'
+                    label={t('main.inscription_pro.adresse')}
+                    type="text"
+                    value={adresse}
+                    onChange={(e) => setAdresse(e.target.value)}
+                    placeholder={t('main.inscription_pro.placeholder_adresse')}
+                    required
+                    error={errors.adresse}
+                />
+                <AccessibleInput
+                    id="rue"
+                    className='flex flex-col'
+                    label={t('main.inscription_pro.rue')}
+                    type="text"
+                    value={rue}
+                    onChange={(e) => setRue(e.target.value)}
+                    placeholder={t('main.inscription_pro.placeholder_rue')}
+                    required
+                    error={errors.rue}
+                />
+                <AccessibleInput
+                    id="code_postal"
+                    className='flex flex-col'
+                    label={t('main.inscription_pro.code_postal')}
+                    type="text"
+                    value={codePostal}
+                    onChange={(e) => setCodePostal(e.target.value)}
+                    placeholder={t('main.inscription_pro.placeholder_code_postal')}
+                    required
+                    error={errors.codePostal}
+                />
+                <AccessibleInput
+                    id="ville"
+                    className='flex flex-col'
+                    label={t('main.inscription_pro.ville')}
+                    type="text"
+                    value={ville}
+                    onChange={(e) => setVille(e.target.value)}
+                    placeholder={t('main.inscription_pro.placeholder_ville')}
+                    required
+                    error={errors.ville}
+                />
+                <AccessibleInput
+                    id="pays"
+                    className='flex flex-col'
+                    label={t('main.inscription_pro.pays')}
+                    type="text"
+                    value={pays}
+                    onChange={(e) => setPays(e.target.value)}
+                    placeholder={t('main.inscription_pro.placeholder_pays')}
+                    required
+                    error={errors.pays}
+                />
                 <AccessibleInput 
                     id="rgpd"
                     label={t('main.inscription_pro.accepte_condition')}
                     type='checkbox'
-                    className={'flex flex-row-reverse'}
+                    className={'flex flex-row-reverse justify-end'}
                     value={rgpdAccepted}
                     onChange={handleChangeRgpd}
                     placeholder={t('main.inscription_pro.placeholder_num_siren_ou_siret')}
