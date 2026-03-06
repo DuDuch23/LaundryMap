@@ -20,7 +20,7 @@ interface InscriptionProfessionnelResponse {
 
 // export async function InscriptionProfessionnel(data: InscriptionProfessionnelData) {
 //     try {
-//         const response = await axios.post(`${API_BASE_URL}/api/inscription_professionnel`, data);
+//         const response = await axios.post(`${API_BASE_URL}/api/inscription-professionnel`, data);
 //         return response.data;
 //     } catch (error) {
 //         console.error("Error during professional registration:", error);
@@ -28,10 +28,44 @@ interface InscriptionProfessionnelResponse {
 //     }
 // }
 
-export async function inscriptionProfessionnel(data: InscriptionProfessionnelData): Promise<InscriptionProfessionnelResponse> {
-    const response = await axios.post(`${API_BASE_URL}/api/inscription_professionnel`, data);
-    console.log(data);
-    return response.data;
+export async function inscriptionProfessionnel(data: InscriptionProfessionnelData) {
+    // const response = await axios.post(`${API_BASE_URL}/api/inscription-professionnel`, data);
+    // console.log(data);
+    // return response.data;
+
+    try {
+        const response = await fetch('http://localhost:8000/api/inscription-utilisateur', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                data
+            })
+        });
+
+        const resultat = await response.json();
+
+        // if (!response.ok) {
+        //     if (resultat.erreurs) {
+        //         setErrors(resultat.erreurs);
+        //     }
+        //     return;
+        // }
+
+        // setMessageSucces(t('main.inscription_utilisateur.succes'));
+        // setFirstName("");
+        // setLastName("");
+        // setEmail("");
+        // setPassword("");
+        // setCguAccepted(false);
+        return resultat;
+
+    } catch (error) {
+        console.error('Erreur :', error);
+        // setErrors({ global: "Une erreur est survenue lors de la connexion au serveur." });
+    }
 }
 
 export async function getLangue() {

@@ -19,7 +19,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ApiProfessionnelController extends AbstractController
 {
-    #[Route('/api/inscription_professionnel', name: 'api_inscription_professionnel', methods: ['POST'])]
+    #[Route('/api/inscription-professionnel', name: 'api_inscription-professionnel', methods: ['POST'])]
     public function inscription(
         Request $request,
         SerializerInterface $serializer,
