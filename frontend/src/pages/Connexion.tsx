@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
-// Assure-toi que le chemin vers tes composants d'accessibilité est correct
 import { AccessibleInput, AccessibleButton } from '../components/accessibility';
 
 export default function PageConnexion() {
@@ -27,7 +26,7 @@ export default function PageConnexion() {
             return;
         }
 
-        // APPEL API POUR LA CONNEXION
+        //APPEL API POUR LA CONNEXION
         try {
             const reponse = await fetch('http://localhost:8000/api/connexion', {
                 method: 'POST',

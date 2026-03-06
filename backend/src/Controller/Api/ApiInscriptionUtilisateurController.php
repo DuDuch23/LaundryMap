@@ -16,6 +16,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class ApiInscriptionUtilisateurController extends AbstractController
 {
     #[Route('/api/inscription-utilisateur', name: 'api_inscription', methods: ['POST'])]
+    #[IsGranted('PUBLIC_ACCESS')]
     public function inscription(Request $request, SerializerInterface $serializer, UserPasswordHasherInterface $passwordHasher, 
     EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse {
 
