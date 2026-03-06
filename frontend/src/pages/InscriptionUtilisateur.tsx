@@ -175,22 +175,24 @@ export default function RegisterUser() {
                 </ul>
 
 
-                <AccessibleInput
-                    id="cgu"
-                    label={t('main.inscription_utilisateur.accepte_condition')}
-                    type='checkbox'
-                    className={'flex flex-row-reverse justify-end gap-3 mb-6 items-center'}
-                    value={cguAccepted.toString()}
-                    onChange={handleChangeCgu}
-                    error={errors.cguAccepted}
-                    placeholder={''}
-                />
+                <div className="flex justify-center w-full mb-4">
+                    <AccessibleInput
+                        id="cgu"
+                        label={t('main.inscription_utilisateur.accepte_condition')}
+                        type="checkbox"
+                        className="flex flex-row-reverse items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer [&>input]:w-4 [&>input]:h-4 [&>input]:accent-[#22ACE2] [&>input]:cursor-pointer [&>input]:rounded-md"
+                        value={cguAccepted.toString()}
+                        onChange={handleChangeCgu}
+                        error={errors.cguAccepted}
+                        placeholder=""
+                    />
+                </div>
 
                 <AccessibleButton
                     type="submit"
                     ariaLabel={t('main.inscription_utilisateur.sinscrire')}
                 >
-                    <div className="bg-[#22ACE2] text-white font-bold py-3 px-4 rounded-lg w-full hover:bg-blue-500 transition-colors cursor-pointer">
+                    <div className="bg-[#22ACE2] text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-500 transition-colors cursor-pointer">
                         {t('main.inscription_utilisateur.sinscrire')}
                     </div>
                 </AccessibleButton>
