@@ -15,9 +15,9 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
-    App\Service\ApiSirenSiretService:
-        arguments:
-            $inseeToken: '%env(INSEE_TOKEN)%'
+    # App\Service\ApiSirenSiretService:
+    #     arguments:
+    #         $inseeToken: '%env(INSEE_TOKEN)%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

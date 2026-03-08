@@ -45,7 +45,7 @@ export default function PageConnexion() {
     };
 
 return (
-        <div className='p-4 max-w-md mx-auto mt-10 flex flex-col items-center'>
+        <div className='p-4 pt-8 max-w-md mx-auto flex flex-col items-center'>
             <h1 className="text-2xl font-bold text-[#22ACE2] mb-8 text-center w-full">
                 Connexion
             </h1>
@@ -92,15 +92,16 @@ return (
                     />
                 </div>
 
-
-                <AccessibleButton 
-                    type="submit" 
-                    ariaLabel="Se connecter"
-                >
-                    <div className="bg-[#22ACE2] text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-500 transition-colors shadow-sm cursor-pointer text-center">
-                        Se connecter
-                    </div>
-                </AccessibleButton>
+                <AccessibleInput
+                    id="submit"
+                    label={false}
+                    type="submit"
+                    className="bg-[#22ACE2] w-full font-semibold rounded-lg hover:bg-blue-500 transition-colors shadow-sm cursor-pointer text-center"
+                    value="Se connecter"
+                    onChange={false}
+                    error={false}
+                    placeholder="Se connecter"
+                />
                 
                 <div className="flex items-center w-full my-6">
                     <div className="flex-grow border-t border-gray-300"></div>

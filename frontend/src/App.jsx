@@ -35,10 +35,6 @@ function App() {
           <Route path="/connexion" element={<Connexion />} />
         </Route>
       </Routes>
-      <div>
-        <ChangeLanguage />
-        <AccessibleLayout />
-      </div>
     </Suspense>
 
   );

@@ -92,8 +92,8 @@ export default function RegisterUser() {
     }
 
     return (
-        <div className='p-4 max-w-md mx-auto'>
-            <h1 className="text-2xl font-bold text-[#22ACE2] mb-6 text-center">
+        <div className='p-4 pt-8 max-w-md mx-auto'>
+            <h1 className="text-2xl font-bold text-[#22ACE2] mb-8 text-center w-full">
                 {t('main.inscription_utilisateur.titre')}
             </h1>
 
@@ -155,11 +155,11 @@ export default function RegisterUser() {
                 />
 
                 <ul className="text-xs text-gray-600 mb-6 pl-2 space-y-1">
-                    <li style={{ color: password.length >= 12 ? 'green' : 'red' }}>✓ 12 caractères minimum</li>
-                    <li style={{ color: /[A-Z]/.test(password) ? 'green' : 'red' }}>✓ Une majuscule</li>
-                    <li style={{ color: /[a-z]/.test(password) ? 'green' : 'red' }}>✓ Une minuscule</li>
-                    <li style={{ color: /\d/.test(password) ? 'green' : 'red' }}>✓ Un chiffre</li>
-                    <li style={{ color: /[@$!%*?&^#]/.test(password) ? 'green' : 'red' }}>✓ Un caractère spécial (@$!%*?&^#)</li>
+                    <li style={{ color: password.length >= 12 ? 'green' : 'red' }}>✓ {t('main.inscription_utilisateur.mot_de_passe_caractere_minimum')}</li>
+                    <li style={{ color: /[A-Z]/.test(password) ? 'green' : 'red' }}>✓ {t('main.inscription_utilisateur.une_majuscule')}</li>
+                    <li style={{ color: /[a-z]/.test(password) ? 'green' : 'red' }}>✓ {t('main.inscription_utilisateur.une_minuscule')}</li>
+                    <li style={{ color: /\d/.test(password) ? 'green' : 'red' }}>✓ {t('main.inscription_utilisateur.un_chiffre')}</li>
+                    <li style={{ color: /[@$!%*?&^#]/.test(password) ? 'green' : 'red' }}>✓ {t('main.inscription_utilisateur.un_caractere_special')}</li>
                 </ul>
 
 
@@ -173,16 +173,16 @@ export default function RegisterUser() {
                         error={errors.cguAccepted}
                         placeholder=""
                     />
-                <div className="flex justify-center w-full mb-4 mt-4">
-                    <AccessibleButton
+                    <AccessibleInput
+                        id="submit"
+                        label={false}
                         type="submit"
-                        ariaLabel={t('main.inscription_utilisateur.sinscrire')}
-                    >
-                        <div className="bg-[#22ACE2] text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-500 transition-colors cursor-pointer">
-                            {t('main.inscription_utilisateur.sinscrire')}
-                        </div>
-                    </AccessibleButton>
-                </div>
+                        className="bg-[#22ACE2] w-full font-semibold rounded-lg hover:bg-blue-500 transition-colors shadow-sm cursor-pointer text-center"
+                        value="S'inscrire"
+                        onChange={false}
+                        error={false}
+                        placeholder="S'inscrire"
+                    />
             </form>
         </div>
     );

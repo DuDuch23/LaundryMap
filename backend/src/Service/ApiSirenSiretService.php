@@ -6,36 +6,33 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class ApiSirenSiretService
 {
-    public function __construct(private HttpClientInterface $httpClient, private string $inseeToken)
-    {
-        $this->inseeToken = $inseeToken;
-        $this->httpClient = $httpClient;
-    }
+    public function __construct(private HttpClientInterface $httpClient) {}
 
     public function verifySiren(string $siren): bool
     {
         try {
             $response = $this->httpClient->request(
                 'GET',
-                "https://api.insee.fr/entreprises/sirene/V3.11/siren/{$siren}",
-                [
-                    'headers' => [
-                        'Authorization' => "Bearer {$this->inseeToken}",
-                        'Accept' => 'application/json',
-                    ]
-                ]
+                "https://recherche-entreprises.api.gouv.fr/search?q={$siren}&page=1&per_page=1"
             );
 
-            $statusCode = $response->getStatusCode();
-            $content = $response->getContent(false);
+            $data = $response->toArray();
+            
+            if (empty($data['results'])) {
+                return false;
+            }
 
-            // Log temporaire pour débuguer
-            dump($statusCode, $content);
+            // Vérifie que le SIREN correspond exactement
+            foreach ($data['results'] as $entreprise) {
+                if ($entreprise['siren'] === $siren) {
+                    return true;
+                }
+            }
 
-            return $statusCode === 200;
+            return false;
 
         } catch (\Exception $e) {
-            dump($e->getMessage()); // Log l'erreur
+            dump($e->getMessage());
             return false;
         }
     }
@@ -45,25 +42,30 @@ class ApiSirenSiretService
         try {
             $response = $this->httpClient->request(
                 'GET',
-                "https://api.insee.fr/entreprises/sirene/V3.11/siret/{$siret}",
-                [
-                    'headers' => [
-                        'Authorization' => "Bearer {$this->inseeToken}",
-                        'Accept' => 'application/json',
-                    ]
-                ]
+                "https://recherche-entreprises.api.gouv.fr/search?q={$siret}&page=1&per_page=1"
             );
 
-            $statusCode = $response->getStatusCode();
-            $content = $response->getContent(false);
+            $data = $response->toArray();
 
-            // Log temporaire pour débuguer
-            dump($statusCode, $content);
+            if (empty($data['results'])) {
+                return false;
+            }
 
-            return $statusCode === 200;
+            // Vérifie que le SIRET correspond dans les établissements
+            foreach ($data['results'] as $entreprise) {
+                if (!empty($entreprise['matching_etablissements'])) {
+                    foreach ($entreprise['matching_etablissements'] as $etablissement) {
+                        if ($etablissement['siret'] === $siret) {
+                            return true;
+                        }
+                    }
+                }
+            }
 
-        }catch(\Exception $e) {
-            dump($e->getMessage()); // Log l'erreur
+            return false;
+
+        } catch (\Exception $e) {
+            dump($e->getMessage());
             return false;
         }
     }
@@ -76,8 +78,8 @@ class ApiSirenSiretService
             $existe = $this->verifySiren($sirenOuSiret);
             return [
                 'valide' => $existe,
-                'type' => 'SIREN',
-                'siren' => $sirenOuSiret,
+                'type'   => 'SIREN',
+                'siren'  => $sirenOuSiret,
             ];
         }
 

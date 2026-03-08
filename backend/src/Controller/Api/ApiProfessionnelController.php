@@ -41,12 +41,20 @@ class ApiProfessionnelController extends AbstractController
             $sirenOuSiret = trim($donnees['sirenOrSiret'] ?? '');
     
             $resultat = null;
+            $existeSiren = $entityManager->getRepository(Professionnel::class)->findOneBy(['siren' => $sirenOuSiret]);
+            $existeUtilisateur = $entityManager->getRepository(Utilisateur::class)->findOneBy(['email' => $donnees['email'] ?? null]);
+
+            if($existeUtilisateur){
+                $erreursFront['email'] = 'Cet email est déjà utilisé';
+            }
     
-            if (empty($sirenOuSiret)) {
+            if(empty($sirenOuSiret)){
                 $erreursFront['sirenOrSiret'] = 'Le numéro SIREN ou SIRET est requis';
             } elseif (!preg_match('/^\d{9}$/', $sirenOuSiret) && !preg_match('/^\d{14}$/', $sirenOuSiret)) {
                 $erreursFront['sirenOrSiret'] = 'Format invalide';
-            } else {
+            }else if($existeSiren){
+                $erreursFront['sirenOrSiret'] = 'Ce numéro SIREN/SIRET est déjà utilisé';
+            }else {
                 $resultat = $sirenService->verify($sirenOuSiret);
                 if (!$resultat['valide']) {
                     $erreursFront['sirenOrSiret'] = 'Numéro SIREN/SIRET introuvable ou entreprise inactive';
@@ -59,8 +67,8 @@ class ApiProfessionnelController extends AbstractController
     
             $utilisateur = new Utilisateur();
             $utilisateur->setEmail($donnees['email'] ?? '');
-            $utilisateur->setPrenom($donnees['prenom'] ?? '');
-            $utilisateur->setNom($donnees['nom'] ?? '');
+            $utilisateur->setNom(!empty($donnees['nom']) ? $donnees['nom'] : null);
+            $utilisateur->setPrenom(!empty($donnees['prenom']) ? $donnees['prenom'] : null);
             $utilisateur->setMotDePasse($passwordHasher->hashPassword($utilisateur, $donnees['password'] ?? ''));
             $utilisateur->setStatut(StatutUtilisateurEnum::STATUT_EN_ATTENTE);
     

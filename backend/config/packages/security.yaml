@@ -30,11 +30,11 @@ security:
             jwt: ~
 
     access_control:
-        - { path: ^/api, roles: PUBLIC_ACCESS, methods: [OPTIONS] }
         - { path: ^/api/connexion, roles: PUBLIC_ACCESS }
         - { path: ^/api/inscription, roles: PUBLIC_ACCESS }
         - { path: ^/api/inscription-professionnel, roles: PUBLIC_ACCESS }
         - { path: ^/api/mot-de-passe-oublie, roles: PUBLIC_ACCESS }
+        - { path: ^/api/langues, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:

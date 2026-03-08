@@ -88,25 +88,30 @@ export function AccessibleInput({
 }) {
   return (
     <div role="group" className={className}>
-      <label htmlFor={id}
-      className={`w-auto max-w-fit px-4 bg-white text-black rounded-lg relative ${type !== 'checkbox' ? 'top-2 -right-3' : ''}`}
-      >
-        {label}
-        {required && (
+      {label && (
+        <label htmlFor={id}
+          className={`w-auto max-w-fit px-4 bg-white text-black rounded-lg relative ${type !== 'checkbox' ? 'top-2 -right-3' : ''}`}
+        >
+          {label}
+          {required && (
           <span aria-hidden="true" style={{ color: 'red' }}>
             {' '}*
           </span>
         )}
       </label>
+      )}
 
       <input
         id={id}
         type={type}
         value={value}
-        className='border border-solid rounded-lg bg-white p-4'
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
+        className={`
+          ${type !== 'submit' ? 'border border-solid rounded-lg bg-white p-4' : 'text-white font-bold py-3 px-4 rounded-lg transition-colors cursor-pointer'}
+          ${error ? 'bg-[#FADED7]! border-[#E3634C]' : ''}
+        `}
+        onChange={onChange || undefined}
+        placeholder={placeholder || undefined}
+        required={required || undefined} 
         aria-required={required}
         aria-describedby={error ? `${id}-error` : undefined}
         aria-invalid={error ? 'true' : 'false'}

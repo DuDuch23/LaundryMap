@@ -19,6 +19,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
     fields: ['email'],
     message: 'Cet email a déjà été utilisé.'
 )]
+#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
 
 class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 {
@@ -35,19 +36,17 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     private string $email;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    #[Assert\NotBlank(message: "Le nom est obligatoire.")]
     #[Groups(['utilisateur:read', 'utilisateur:write'])]
     private ?string $nom = null;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    #[Assert\NotBlank(message: "Le prénom est obligatoire.")]
     #[Groups(['utilisateur:read', 'utilisateur:write'])]
     private ?string $prenom = null;
 
     #[ORM\Column(name: 'mot_de_passe', type: 'string', length: 255, nullable: true)]
     #[Assert\NotBlank(message: "Le mot de passe est obligatoire.")]
     #[Assert\Length(min: 8, minMessage: "Le mot de passe doit faire au moins {{ limit }} caractères.")]
-    #[Groups(['utilisateur:write'])] // ← jamais en :read pour ne pas exposer le hash
+    #[Groups(['utilisateur:write'])]
     private ?string $motDePasse = null;
 
     #[ORM\Column(type: 'string', enumType: StatutUtilisateurEnum::class)]

@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\LangueRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: LangueRepository::class)]
 #[ORM\Table(name: 'langue')]
@@ -15,10 +16,12 @@ class Langue
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Groups(['langue:read', 'langue:write'])]
     private string $nom;
 
     /** @comment ex: fr, en */
     #[ORM\Column(type: 'string', length: 2)]
+    #[Groups(['langue:read', 'langue:write'])]
     private string $code;
 
     public function getId(): ?int
