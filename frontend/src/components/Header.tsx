@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Link, Outlet } from 'react-router';
+import { Link, NavLink, Outlet } from 'react-router';
+import ChangeLanguage from './ChangeLanguage';
 
 export default function Header() {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
         <>
-            <header>
+            <header className="relative z-50 bg-slate-900">
                 <nav className='flex items-center justify-between'>
                     
                     <Link to="/" className='flex items-center gap-2'>
@@ -15,6 +16,7 @@ export default function Header() {
                         </svg>
                         <p className='text-white text-xl'>LaundryMap</p>
                     </Link>
+                    <ChangeLanguage />
                     <div className='flex item-right gap-6'>
                         <button 
                             className=''
@@ -26,7 +28,7 @@ export default function Header() {
                         </button>
                         
                         <button 
-                            className='md:hidden'
+                            className='md:hidden cursor-pointer'
                             onClick={() => setIsOpen(!isOpen)}
                             aria-label={isOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
                             aria-expanded={isOpen}
@@ -38,21 +40,58 @@ export default function Header() {
                         </button>
                     </div>
 
-
-                    <ul className='hidden md:flex gap-6' role="list">
-                        <li><Link to="/" className='text-white'>Home</Link></li>
-                        <li><Link to="/profil" className='text-white'>Profil</Link></li>
-                    </ul>
-
                     {isOpen && (
                         <ul
                             id="nav-mobile"
-                            className='absolute top-16 left-0 w-full flex flex-col gap-4 bg-gray-800 md:hidden'
+                            className='absolute top-full left-0 w-full flex flex-col bg-white shadow-2xl border-b border-gray-200 md:hidden z-50'
                             role="list"
                         >
-                            <li><Link to="/" className='text-white p-4' onClick={() => setIsOpen(false)}>Home</Link></li>
-                            <li><Link to="/profil" className='text-white p-4' onClick={() => setIsOpen(false)}>Profil</Link></li>
-                            <li><Link to="/inscription-pro" className='text-white p-4' onClick={() => setIsOpen(false)}>Inscription Pro</Link></li>
+                            <li className="border-b border-gray-100">
+                                <NavLink 
+                                    to="/" 
+                                    end
+                                    className={({ isActive }) => `block px-6 py-4 transition-all duration-300 hover:text-[#22ACE2] hover:bg-blue-50 hover:pl-8 ${isActive ? 'bg-blue-50/50 text-[#22ACE2] font-bold' : 'text-gray-700'}`} 
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    Accueil
+                                </NavLink>
+                            </li>
+                            <li className="border-b border-gray-100">
+                                <NavLink 
+                                    to="/profil" 
+                                    className={({ isActive }) => `block px-6 py-4 transition-all duration-300 hover:text-[#22ACE2] hover:bg-blue-50 hover:pl-8 ${isActive ? 'bg-blue-50/50 text-[#22ACE2] font-bold' : 'text-gray-700'}`} 
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    Profil
+                                </NavLink>
+                            </li>
+                            <li className="border-b border-gray-100">
+                                <NavLink 
+                                    to="/inscription-pro" 
+                                    className={({ isActive }) => `block px-6 py-4 transition-all duration-300 hover:text-[#22ACE2] hover:bg-blue-50 hover:pl-8 ${isActive ? 'bg-blue-50/50 text-[#22ACE2] font-bold' : 'text-gray-700'}`} 
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    Inscription Pro
+                                </NavLink>
+                            </li>
+                            <li className="border-b border-gray-100">
+                                <NavLink 
+                                    to="/inscription-utilisateur" 
+                                    className={({ isActive }) => `block px-6 py-4 transition-all duration-300 hover:text-[#22ACE2] hover:bg-blue-50 hover:pl-8 ${isActive ? 'bg-blue-50/50 text-[#22ACE2] font-bold' : 'text-gray-700'}`} 
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    Inscription Utilisateur
+                                </NavLink>
+                            </li>
+                            <li>
+                                <NavLink 
+                                    to="/connexion" 
+                                    className={({ isActive }) => `block px-6 py-5 font-bold transition-colors hover:bg-blue-50 ${isActive ? 'bg-blue-50/50 text-blue-600' : 'text-[#22ACE2]'}`} 
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    Connexion
+                                </NavLink>
+                            </li>
                         </ul>
                     )}
                 </nav>
