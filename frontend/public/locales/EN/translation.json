@@ -1,0 +1,41 @@
+{
+  "main": {
+    "header": {
+      "bienvenue": "Welcome",
+      "tableau_de_bord": "Dashboard",
+      "inscription": "Sign up",
+      "connexion": "Login",
+      "mon_profil": "My profile"
+    },
+    "footer": {
+      "cgu": "Terms of use",
+      "contact": "Contact us",
+      "mentions_legales": "Legal notice",
+      "partager": "Share",
+      "partager_aria": "Share"
+    },
+    "inscription_pro": {
+      "titre": "Register as an professionnal",
+      "nom": "Lastname",
+      "prenom": "Firstname",
+      "email": "Email",
+      "mot_de_passe": "Password",
+      "num_siren_ou_siret": "Number SIREN or SIRET",
+      "accepte_condition": "I accept the terms of use",
+      "mot_de_passe_oublie": "Password forget ?",
+      "sinscrire": "Sign up",
+      "placeholder_nom": "Enter your last name...",
+      "placeholder_prenom": "Enter your first name...",
+      "placeholder_email": "Enter your email...",
+      "placeholder_mot_de_passe": "Enter your password...",
+      "placeholder_num_siren_ou_siret": "Enter your SIREN or SIRET number...",
+      "nom_requis": "Lastname required",
+      "prenom_requis": "Firstname required",
+      "email_requis": "Email required",
+      "email_invalid": "Invalid email",
+      "mot_de_passe_requis": "Password required",
+      "num_siren_ou_siret_requis": "Number SIREN or SIRET required",
+      "conditions_requis": "Please accept the terms of use"
+    }
+  }
+}
