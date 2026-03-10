@@ -58,17 +58,14 @@ export async function inscriptionProfessionnel(data: InscriptionProfessionnelDat
 }
 
 export async function getLangues() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/langues`, {
-            method: 'GET',
-            headers: { accept: 'application/json' },
-        });
-        console.log("Langues récupérées :", response);
-        return await response.json();
-    } catch (error) {
-        console.error("Erreur API getCategory :", error);
-        return { data: [] }; 
-    }
+
+    const response = await fetch(`${API_BASE_URL}/api/langues`, {
+        method: 'GET',
+        headers: { accept: 'application/json' },
+    });
+    console.log("Langues récupérées :", response);
+    return await response.json();
+
 }
 
 export async function inscriptionUtilisateur(data: InscriptionUtilisateurData) {

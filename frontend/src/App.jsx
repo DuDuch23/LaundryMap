@@ -5,6 +5,7 @@ import { useTranslation} from 'react-i18next';
 import ChangeLanguage from './components/ChangeLanguage';
 import {AccessibleLayout} from './components/accessibility';
 import Header from './components/Header';
+import Footer from './components/Footer/footer';
 
 // Pages
 const Home = React.lazy(() => import('./pages/Home'));
@@ -35,8 +36,8 @@ function App() {
           <Route path="/connexion" element={<Connexion />} />
         </Route>
       </Routes>
+        <Footer />
     </Suspense>
-
   );
 }
 
