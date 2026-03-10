@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Entity;
 
 use App\Repository\UtilisateurRepository;
@@ -9,7 +8,9 @@ use Doctrine\ORM\Mapping as ORM;
 use App\Enum\StatutUtilisateurEnum;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
-
+use Symfony\Component\Serializer\Attribute\Groups;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
 #[ORM\Table(name: 'utilisateur')]
@@ -18,39 +19,46 @@ use Symfony\Component\Validator\Constraints as Assert;
     fields: ['email'],
     message: 'Cet email a déjà été utilisé.'
 )]
+#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
 
-class Utilisateur
+class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
+    #[Groups(['utilisateur:read'])]
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 255, unique: true)]
     #[Assert\NotBlank(message: "L'adresse email ne peut pas être vide.")]
     #[Assert\Email(message: "L'adresse email '{{ value }}' n'est pas valide.")]
+    #[Groups(['utilisateur:read', 'utilisateur:write'])]
     private string $email;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    #[Assert\NotBlank(message: "Le nom est obligatoire.")]
+    #[Groups(['utilisateur:read', 'utilisateur:write'])]
     private ?string $nom = null;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    #[Assert\NotBlank(message: "Le prénom est obligatoire.")]
+    #[Groups(['utilisateur:read', 'utilisateur:write'])]
     private ?string $prenom = null;
 
     #[ORM\Column(name: 'mot_de_passe', type: 'string', length: 255, nullable: true)]
     #[Assert\NotBlank(message: "Le mot de passe est obligatoire.")]
     #[Assert\Length(min: 8, minMessage: "Le mot de passe doit faire au moins {{ limit }} caractères.")]
+    #[Groups(['utilisateur:write'])]
     private ?string $motDePasse = null;
 
     #[ORM\Column(type: 'string', enumType: StatutUtilisateurEnum::class)]
+    #[Groups(['utilisateur:read'])]
     private StatutUtilisateurEnum $statut = StatutUtilisateurEnum::STATUT_EN_ATTENTE;
 
     #[ORM\Column(name: 'date_creation', type: 'datetime', nullable: true)]
+    #[Groups(['utilisateur:read'])]
     private ?\DateTimeInterface $dateCreation = null;
 
     #[ORM\Column(name: 'date_modification', type: 'datetime', nullable: true)]
+    #[Groups(['utilisateur:read'])]
     private ?\DateTimeInterface $dateModification = null;
 
     #[ORM\Column(name: 'oauth_id', type: 'string', length: 255, nullable: true)]
@@ -209,7 +217,6 @@ class Utilisateur
         return $this->historiqueInteractions;
     }
 
-    //METHODE AJOUT AUTOMATIQUE LORS DE LA CREATION
     #[ORM\PrePersist]
     public function setDatesLorsDeLaCreation(): void
     {
@@ -217,10 +224,29 @@ class Utilisateur
         $this->dateModification = new \DateTime();
     }
 
-    //METHODE POUR METTRE A JOUR LA DATE DE MODIFICATION
     #[ORM\PreUpdate]
     public function setDateLorsDeLaModification(): void
     {
         $this->dateModification = new \DateTime();
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->email;
+    }
+
+    public function getRoles(): array
+    {
+        return ['ROLE_USER'];
+    }
+
+    public function getPassword(): ?string
+    {
+        return $this->motDePasse;
+    }
+
+    public function eraseCredentials(): void
+    {
+        // Vide intentionnellement
     }
 }

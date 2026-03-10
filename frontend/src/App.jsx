@@ -10,9 +10,9 @@ import Footer from './components/Footer/footer';
 // Pages
 const Home = React.lazy(() => import('./pages/Home'));
 const Profil = React.lazy(() => import('./pages/Profil'));
-
-const RegisterUser = React.lazy(() => import('./pages/RegisterUser'));
+const InscriptionUtilisateur = React.lazy(() => import('./pages/InscriptionUtilisateur'));
 const InscriptionPro = React.lazy(() => import('./pages/InscriptionProfessionnel'));
+const Connexion = React.lazy(() => import('./pages/Connexion'));
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -31,14 +31,11 @@ function App() {
         <Route element={<Header />}>
           <Route path="/" element={<Home />} />
           <Route path="/profil" element={<Profil />} />
-          <Route path="/inscription-utisateur" element={<RegisterUser />} />
+          <Route path="/inscription-utilisateur" element={<InscriptionUtilisateur />} />
           <Route path="/inscription-pro" element={<InscriptionPro />} />
+          <Route path="/connexion" element={<Connexion />} />
         </Route>
       </Routes>
-      <div>
-        <ChangeLanguage />
-        <AccessibleLayout />
-      </div>
         <Footer />
     </Suspense>
   );
