@@ -78,7 +78,12 @@
       "mot_de_passe_requis": "Le mot de passe est requis",
       "mot_de_passe_invalide": "Le mot de passe ne respecte pas les critères",
       "conditions_requis": "Vous devez accepter les conditions d'utilisation",
-      "succes": "Votre compte a été créé avec succès !"
+      "succes": "Votre compte a été créé avec succès !",
+      "continuer_avec_google": "Continuer avec Google"
+    },
+    "connexion": {
+      "continuer_avec_google": "Continuer avec Google",
+      "google_erreur": "La connexion Google a échoué, veuillez réessayer."
     }
   }
 }

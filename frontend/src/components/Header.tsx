@@ -1,9 +1,17 @@
 import { useState } from 'react';
-import { Link, NavLink, Outlet } from 'react-router';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router';
 import ChangeLanguage from './ChangeLanguage';
 
 export default function Header() {
     const [isOpen, setIsOpen] = useState(false);
+    const navigate = useNavigate();
+    const isAuthenticated = Boolean(localStorage.getItem('token'));
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        setIsOpen(false);
+        navigate('/connexion');
+    };
 
     return (
         <>
@@ -18,6 +26,16 @@ export default function Header() {
                     </Link>
                     <ChangeLanguage />
                     <div className='flex item-right gap-6'>
+                        {isAuthenticated && (
+                            <button
+                                type="button"
+                                className='text-white font-semibold hidden md:block cursor-pointer'
+                                onClick={handleLogout}
+                            >
+                                Déconnexion
+                            </button>
+                        )}
+
                         <button 
                             className=''
                             aria-controls="search"
@@ -84,13 +102,23 @@ export default function Header() {
                                 </NavLink>
                             </li>
                             <li>
-                                <NavLink 
-                                    to="/connexion" 
-                                    className={({ isActive }) => `block px-6 py-5 font-bold transition-colors hover:bg-blue-50 ${isActive ? 'bg-blue-50/50 text-blue-600' : 'text-[#22ACE2]'}`} 
-                                    onClick={() => setIsOpen(false)}
-                                >
-                                    Connexion
-                                </NavLink>
+                                {isAuthenticated ? (
+                                    <button
+                                        type="button"
+                                        className="block w-full text-left px-6 py-5 font-bold text-[#22ACE2] transition-colors hover:bg-blue-50 cursor-pointer"
+                                        onClick={handleLogout}
+                                    >
+                                        Déconnexion
+                                    </button>
+                                ) : (
+                                    <NavLink 
+                                        to="/connexion" 
+                                        className={({ isActive }) => `block px-6 py-5 font-bold transition-colors hover:bg-blue-50 ${isActive ? 'bg-blue-50/50 text-blue-600' : 'text-[#22ACE2]'}`} 
+                                        onClick={() => setIsOpen(false)}
+                                    >
+                                        Connexion
+                                    </NavLink>
+                                )}
                             </li>
                         </ul>
                     )}

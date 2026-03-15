@@ -26,6 +26,10 @@ export interface ConnexionData {
     mot_de_passe: string;
 }
 
+interface HydraCollection<T> {
+    'hydra:member'?: T[];
+}
+
 // export async function InscriptionProfessionnel(data: InscriptionProfessionnelData) {
 //     try {
 //         const response = await axios.post(`${API_BASE_URL}/api/inscription-professionnel`, data);
@@ -63,8 +67,26 @@ export async function getLangues() {
         method: 'GET',
         headers: { accept: 'application/json' },
     });
-    console.log("Langues récupérées :", response);
-    return await response.json();
+
+    if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des langues');
+    }
+
+    const data = await response.json() as unknown;
+
+    if (Array.isArray(data)) {
+        return data;
+    }
+
+    if (
+        data &&
+        typeof data === 'object' &&
+        Array.isArray((data as HydraCollection<unknown>)['hydra:member'])
+    ) {
+        return (data as HydraCollection<unknown>)['hydra:member'] as unknown[];
+    }
+
+    return [];
 
 }
 

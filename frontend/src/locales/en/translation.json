@@ -85,7 +85,12 @@
       "un_chiffre": "One number",
       "un_caractere_special": "One special character (@$!%*?&^#)",
       "num_siren_ou_siret_requis": "SIREN or SIRET number is required",
-      "num_siren_ou_siret_incorrect": "Number must contain 9 digits (SIREN) or 14 digits (SIRET)"
+      "num_siren_ou_siret_incorrect": "Number must contain 9 digits (SIREN) or 14 digits (SIRET)",
+      "continuer_avec_google": "Continue with Google"
+    },
+    "connexion": {
+      "continuer_avec_google": "Continue with Google",
+      "google_erreur": "Google sign-in failed, please try again."
     }
   }
 }

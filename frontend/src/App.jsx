@@ -1,9 +1,6 @@
-import React, { Suspense, useState, useEffect } from 'react';
-import { Routes, Route, useNavigate } from 'react-router';
+import React, { Suspense } from 'react';
+import { Routes, Route, Navigate } from 'react-router';
 import './App.css'
-import { useTranslation} from 'react-i18next';
-import ChangeLanguage from './components/ChangeLanguage';
-import {AccessibleLayout} from './components/accessibility';
 import Header from './components/Header';
 import Footer from './components/Footer/footer';
 
@@ -14,10 +11,17 @@ const InscriptionUtilisateur = React.lazy(() => import('./pages/InscriptionUtili
 const InscriptionPro = React.lazy(() => import('./pages/InscriptionProfessionnel'));
 const Connexion = React.lazy(() => import('./pages/Connexion'));
 
-function App() {
-  const { t, i18n } = useTranslation();
-  const navigate = useNavigate();
+function RequireAuth({ children }) {
+  const token = localStorage.getItem('token');
 
+  if (!token) {
+    return <Navigate to="/connexion" replace />;
+  }
+
+  return children;
+}
+
+function App() {
   return (
     <Suspense fallback={
       <div>
@@ -30,7 +34,7 @@ function App() {
       <Routes>
         <Route element={<Header />}>
           <Route path="/" element={<Home />} />
-          <Route path="/profil" element={<Profil />} />
+          <Route path="/profil" element={<RequireAuth><Profil /></RequireAuth>} />
           <Route path="/inscription-utilisateur" element={<InscriptionUtilisateur />} />
           <Route path="/inscription-pro" element={<InscriptionPro />} />
           <Route path="/connexion" element={<Connexion />} />
