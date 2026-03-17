@@ -109,10 +109,10 @@ export default function RegisterUser() {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className='flex flex-col gap-5'>
                 <AccessibleInput
                     id="prenom"
-                    className={'flex flex-col mb-4'}
+                    className={'flex flex-col'}
                     label={t('main.inscription_utilisateur.prenom')}
                     type='text'
                     value={firstName}
@@ -123,7 +123,7 @@ export default function RegisterUser() {
 
                 <AccessibleInput
                     id="nom"
-                    className={'flex flex-col mb-4'}
+                    className={'flex flex-col'}
                     label={t('main.inscription_utilisateur.nom')}
                     type='text'
                     value={lastName}
@@ -134,7 +134,7 @@ export default function RegisterUser() {
 
                 <AccessibleInput
                     id="email"
-                    className={'flex flex-col mb-4'}
+                    className={'flex flex-col'}
                     label={t('main.inscription_utilisateur.email')}
                     type='email'
                     value={email}
@@ -167,7 +167,7 @@ export default function RegisterUser() {
                         id="cgu"
                         label={t('main.inscription_utilisateur.accepte_condition')}
                         type="checkbox"
-                        className=""
+                        className={'flex flex-row-reverse justify-end'}
                         value={cguAccepted.toString()}
                         onChange={handleChangeCgu}
                         error={errors.cguAccepted}
