@@ -11,7 +11,7 @@ export default function ChangeLanguage() {
 
     useEffect(() => {
         getLangues()
-            .then((data: Langue[]) => setLangues(data))
+            .then((data: Langue[]) => setLangues(Array.isArray(data) ? data : []))
             .catch(() => {
                 setLangues([
                     { id: 1, nom: 'Français', code: 'fr' },
