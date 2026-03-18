@@ -178,10 +178,10 @@ export default function RegisterUser() {
                         label={false}
                         type="submit"
                         className="bg-[#22ACE2] w-full font-semibold rounded-lg hover:bg-blue-500 transition-colors shadow-sm cursor-pointer text-center"
-                        value="S'inscrire"
+                        value={t('main.inscription_utilisateur.sinscrire')} 
                         onChange={false}
                         error={false}
-                        placeholder="S'inscrire"
+                        placeholder={t('main.inscription_utilisateur.sinscrire')}
                     />
             </form>
         </div>
