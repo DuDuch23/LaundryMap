@@ -22,7 +22,6 @@
 
 header{
   background-color: #14A8DE;
-  padding: 10px 20px;
 }
 
 header button{
@@ -43,12 +42,25 @@ header nav{
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 10px 20px;
+  max-width: 1280px;
+  margin: 0 auto;
 }
 
 header nav a{
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+footer{
+
+}
+
+footer .footer__content{
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 a {

@@ -39,8 +39,8 @@ export default function PageConnexion() {
 
     const newsErrors: Record<string, string> = {};
 
-    if (!email.trim()) newsErrors.email = "L'email est requis";
-    if (!password.trim()) newsErrors.password = "Le mot de passe est requis";
+    if (!email.trim()) newsErrors.email = t("main.connexion.email_requis");
+    if (!password.trim()) newsErrors.password = t("main.connexion.mot_de_passe_requis");
 
     if (Object.keys(newsErrors).length > 0) {
       setErrors(newsErrors);
@@ -62,9 +62,9 @@ export default function PageConnexion() {
       setErreurGenerale("Réponse de connexion invalide.");
     } catch (error: any) {
       if (error.response && error.response.status === 401) {
-        setErreurGenerale("Email ou mot de passe incorrect.");
+        setErreurGenerale(t("main.connexion.mot_de_passe_invalid"));
       } else {
-        setErreurGenerale("Impossible de se connecter au serveur.");
+        setErreurGenerale(t("main.connexion.google_erreur"));
       }
     }
   };
@@ -74,9 +74,9 @@ export default function PageConnexion() {
   };
 
   return (
-    <div className="p-4 pt-8 max-w-md mx-auto flex flex-col items-center">
-      <h1 className="text-2xl font-bold text-[#22ACE2] mb-8 text-center w-full">
-        Connexion
+    <div className="max-w-[392px] w-full mx-auto flex flex-col items-center p-4 pt-8 pt-24">
+      <h1 className="text-2xl font-bold text-[#22ACE2] mb-2 text-center w-full">
+        {t("main.connexion.connexion")}
       </h1>
 
       {erreurGenerale && (
@@ -90,12 +90,12 @@ export default function PageConnexion() {
 
       <form
         onSubmit={handleSubmit}
-        className="w-full flex flex-col items-center"
+        className="w-full flex flex-col items-center gap-5"
       >
         <div className="w-full text-left">
           <AccessibleInput
             id="email"
-            className={"flex flex-col mb-4"}
+            className={"flex flex-col"}
             label={"Email"}
             type="email"
             value={email}
@@ -106,25 +106,25 @@ export default function PageConnexion() {
         </div>
 
         <div className="relative mb-8 w-full text-left">
-          <div className="absolute right-0 top-0 z-1">
-            <Link
-              to="/mot-de-passe-oublie"
-              className="text-sm text-[#22ACE2] hover:text-blue-600 hover:underline font-medium transition-colors"
-            >
-              Mot de passe oublié ?
-            </Link>
-          </div>
 
           <AccessibleInput
             id="password"
             className={"flex flex-col"}
-            label={"Mot de passe"}
+            label={t("main.connexion.mot_de_passe")}
             type="password"
-            value={password}
+            value={t("main.connexion.mot_de_passe")}
             onChange={(e: any) => setPassword(e.target.value)}
             placeholder={"••••••••••••"}
             error={errors.password}
           />
+          <div className="right-0 top-0 z-1">
+            <Link
+              to="/mot-de-passe-oublie"
+              className="text-sm text-[#22ACE2] hover:text-blue-600 hover:underline font-medium transition-colors"
+            >
+              {t("main.connexion.mot_de_passe_oublie")}
+            </Link>
+          </div>
         </div>
 
         <AccessibleInput
@@ -132,15 +132,15 @@ export default function PageConnexion() {
           label={false}
           type="submit"
           className="bg-[#22ACE2] w-full font-semibold rounded-lg hover:bg-blue-500 transition-colors shadow-sm cursor-pointer text-center"
-          value="Se connecter"
+          value={t("main.connexion.se_connecter")}
           onChange={false}
           error={false}
-          placeholder="Se connecter"
+          placeholder={t("main.connexion.se_connecter")}
         />
 
-        <div className="flex items-center w-full my-6">
+        <div className="flex items-center w-full">
           <div className="flex-grow border-t border-gray-300"></div>
-          <span className="mx-4 text-gray-500 text-sm font-medium">ou</span>
+          <span className="mx-4 text-gray-500 text-sm font-medium">{t("main.connexion.ou")}</span>
           <div className="flex-grow border-t border-gray-300"></div>
         </div>
 
@@ -180,12 +180,12 @@ export default function PageConnexion() {
         </div>
 
         <div className="mt-6 text-center text-sm text-gray-600">
-          Pas encore de compte ?{" "}
+          {t("main.connexion.pas_encore_de_compte")}{" "}
           <Link
             to="/inscription-utilisateur"
             className="text-[#22ACE2] font-bold hover:underline"
           >
-            S'inscrire
+            {t("main.connexion.sinscrire")}
           </Link>
         </div>
       </form>

@@ -126,11 +126,11 @@ export default function InscriptionProfessionnel() {
 
     }
     return (
-        <div className='p-4 pt-8'>
-            <h1 className='text-2xl font-bold text-[#22ACE2] mb-8 text-center w-full'>
+        <div className='max-w-[392px] w-full mx-auto flex flex-col items-center p-4 pt-8 pt-24'>
+            <h1 className='text-2xl font-bold text-[#22ACE2] mb-2 text-center w-full'>
                 {t('main.inscription_professionnel.titre')}
             </h1>
-            <form action="#" className='flex flex-col gap-5' onSubmit={handleSubmit}>
+            <form action="#" className='w-full flex flex-col gap-5' onSubmit={handleSubmit}>
 
                 <AccessibleInput 
                     id="nom"

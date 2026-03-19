@@ -115,8 +115,8 @@ export default function RegisterUser() {
   };
 
   return (
-    <div className="p-4 pt-8 max-w-md mx-auto">
-      <h1 className="text-2xl font-bold text-[#22ACE2] mb-8 text-center w-full">
+    <div className="max-w-[392px] w-full mx-auto flex flex-col items-center p-4 pt-8 pt-24">
+      <h1 className="text-2xl font-bold text-[#22ACE2] mb-2 text-center w-full">
         {t("main.inscription_utilisateur.titre")}
       </h1>
 
@@ -138,10 +138,10 @@ export default function RegisterUser() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="w-full flex flex-col gap-5">
         <AccessibleInput
           id="prenom"
-          className={"flex flex-col mb-4"}
+          className={"flex flex-col"}
           label={t("main.inscription_utilisateur.prenom")}
           type="text"
           value={firstName}
@@ -152,7 +152,7 @@ export default function RegisterUser() {
 
         <AccessibleInput
           id="nom"
-          className={"flex flex-col mb-4"}
+          className={"flex flex-col"}
           label={t("main.inscription_utilisateur.nom")}
           type="text"
           value={lastName}
@@ -163,7 +163,7 @@ export default function RegisterUser() {
 
         <AccessibleInput
           id="email"
-          className={"flex flex-col mb-4"}
+          className={"flex flex-col"}
           label={t("main.inscription_utilisateur.email")}
           type="email"
           value={email}
@@ -207,7 +207,7 @@ export default function RegisterUser() {
           id="cgu"
           label={t("main.inscription_utilisateur.accepte_condition")}
           type="checkbox"
-          className=""
+          className={'flex flex-row-reverse justify-end'}
           value={cguAccepted.toString()}
           onChange={handleChangeCgu}
           error={errors.cguAccepted}
@@ -224,9 +224,9 @@ export default function RegisterUser() {
           placeholder="S'inscrire"
         />
 
-        <div className="flex items-center w-full my-6">
+        <div className="flex items-center w-full">
           <div className="flex-grow border-t border-gray-300"></div>
-          <span className="mx-4 text-gray-500 text-sm font-medium">ou</span>
+          <span className="mx-4 text-gray-500 text-sm font-medium">{t("main.connexion.ou")}</span>
           <div className="flex-grow border-t border-gray-300"></div>
         </div>
 

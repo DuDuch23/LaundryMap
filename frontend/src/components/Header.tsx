@@ -15,7 +15,7 @@ export default function Header() {
 
     return (
         <>
-            <header className="relative z-50 bg-slate-900">
+            <header className="fixed w-full z-50 bg-slate-900">
                 <nav className='flex items-center justify-between'>
                     
                     <Link to="/" className='flex items-center gap-2'>

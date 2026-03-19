@@ -75,6 +75,11 @@
       "prenom_trop_court": "Le prénom doit contenir au moins 2 caractères",
       "email_requis": "L'email est requis",
       "email_invalid": "L'email est invalide",
+      "mot_de_passe_caractere_minimum": "12 caractères minimum",
+      "une_majuscule": "Une majuscule",
+      "une_minuscule": "Une minuscule",
+      "un_chiffre": "Un chiffre",
+      "un_caractere_special": "Un caractère spécial (@$!%*?&^#)",
       "mot_de_passe_requis": "Le mot de passe est requis",
       "mot_de_passe_invalide": "Le mot de passe ne respecte pas les critères",
       "conditions_requis": "Vous devez accepter les conditions d'utilisation",
@@ -83,7 +88,26 @@
     },
     "connexion": {
       "continuer_avec_google": "Continuer avec Google",
-      "google_erreur": "La connexion Google a échoué, veuillez réessayer."
+      "google_erreur": "La connexion Google a échoué, veuillez réessayer.",
+      "connexion": "Connexion",
+      "email": "Email",
+      "mot_de_passe": "Mot de passe",
+      "se_connecter": "Se connecter",
+      "email_requis": "L'email est requis",
+      "email_invalid": "L'email est invalide",
+      "mot_de_passe_requis": "Le mot de passe est requis",
+      "mot_de_passe_invalid": "Le mot de passe est invalide",
+      "mot_de_passe_oublie": "Mot de passe oublié ?",
+      "pas_encore_de_compte": "Pas encore de compte ?",
+      "sinscrire": "S'inscrire",
+      "ou": "ou"
+    },
+    "footer": {
+      "cgu": "Conditions générales d'utilisation",
+      "contact": "Contact",
+      "mentions_legales": "Mentions légales",
+      "partager": "Partager",
+      "partager_aria": "Partager la page"
     }
   }
 }

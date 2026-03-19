@@ -90,7 +90,26 @@
     },
     "connexion": {
       "continuer_avec_google": "Continue with Google",
-      "google_erreur": "Google sign-in failed, please try again."
+      "google_erreur": "Google sign-in failed, please try again.",
+      "connexion": "Connexion",
+      "email": "Email",
+      "mot_de_passe": "Password",
+      "se_connecter": "Sign In",
+      "email_requis": "Email is required",
+      "email_invalid": "Invalid email address",
+      "mot_de_passe_requis": "Password is required",
+      "mot_de_passe_invalid": "Invalid password",
+      "mot_de_passe_oublie": "Forgot your password?",
+      "pas_encore_de_compte": "Don't have an account yet?",
+      "sinscrire": "Sign Up",
+      "ou": "or"
+    },
+    "footer": {
+      "cgu": "Terms of Use",
+      "contact": "Contact",
+      "mentions_legales": "Legal Notice",
+      "partager": "Share",
+      "partager_aria": "Share this page"
     }
   }
 }
