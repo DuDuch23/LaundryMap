@@ -1,6 +1,18 @@
 import axios from 'axios';
 import API_BASE_URL from "./api";
 
+//AXIOS JWT TOKEN
+axios.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('jwt_token'); 
+        if (token && config.headers) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
 interface InscriptionProfessionnelData {
     email: string;
     prenom: string;
@@ -84,6 +96,16 @@ export async function connexion(data: ConnexionData) {
         return response.data;
     } catch (error) {
         console.error("Erreur lors de la connexion:", error);
+        throw error;
+    }
+}
+
+export async function fetchAdminUtilisateurs() {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/api/admin/utilisateurs`);
+        return response.data;
+    } catch (error) {
+        console.error("Erreur lors de la récupération des utilisateurs:", error);
         throw error;
     }
 }

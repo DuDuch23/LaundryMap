@@ -13,6 +13,7 @@ const Profil = React.lazy(() => import('./pages/Profil'));
 const InscriptionUtilisateur = React.lazy(() => import('./pages/InscriptionUtilisateur'));
 const InscriptionPro = React.lazy(() => import('./pages/InscriptionProfessionnel'));
 const Connexion = React.lazy(() => import('./pages/Connexion'));
+const GestionUtilisateur = React.lazy(() => import('./pages/administration/GestionUtilisateurs'));
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -34,6 +35,7 @@ function App() {
           <Route path="/inscription-utilisateur" element={<InscriptionUtilisateur />} />
           <Route path="/inscription-pro" element={<InscriptionPro />} />
           <Route path="/connexion" element={<Connexion />} />
+          <Route path="/gestion-utilisateurs" element={<GestionUtilisateur />} />
         </Route>
       </Routes>
         <Footer />

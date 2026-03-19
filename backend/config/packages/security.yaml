@@ -30,6 +30,8 @@ security:
             jwt: ~
 
     access_control:
+        - { path: ^/api/admin/utilisateurs$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/admin, roles: ROLE_ADMIN }
         - { path: ^/api/connexion, roles: PUBLIC_ACCESS }
         - { path: ^/api/inscription, roles: PUBLIC_ACCESS }
         - { path: ^/api/inscription-professionnel, roles: PUBLIC_ACCESS }
