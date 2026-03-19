@@ -26,6 +26,22 @@ export interface ConnexionData {
     mot_de_passe: string;
 }
 
+export interface ProfilUtilisateurData {
+    id: number;
+    email: string;
+    prenom: string | null;
+    nom: string | null;
+    statut: string;
+    dateCreation: string | null;
+    dateDerniereConnexion: string | null;
+}
+
+export interface UpdateProfilData {
+    nom: string;
+    prenom: string;
+    nouveauMotDePasse?: string;
+}
+
 interface HydraCollection<T> {
     'hydra:member'?: T[];
 }
@@ -108,4 +124,57 @@ export async function connexion(data: ConnexionData) {
         console.error("Erreur lors de la connexion:", error);
         throw error;
     }
+}
+
+export async function getProfilUtilisateur(): Promise<ProfilUtilisateurData> {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+        throw new Error('Aucun token de connexion trouvé.');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/profil`, {
+        method: 'GET',
+        headers: {
+            accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        const error: any = new Error('Impossible de récupérer le profil utilisateur.');
+        error.status = response.status;
+        throw error;
+    }
+
+    const data = await response.json();
+    return data as ProfilUtilisateurData;
+}
+
+export async function updateProfilUtilisateur(payload: UpdateProfilData): Promise<ProfilUtilisateurData> {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+        throw new Error('Aucun token de connexion trouvé.');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/profil`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+        const error: any = new Error(data?.message || 'Impossible de mettre à jour le profil utilisateur.');
+        error.status = response.status;
+        throw error;
+    }
+
+    return data.utilisateur as ProfilUtilisateurData;
 }
