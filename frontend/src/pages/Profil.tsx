@@ -123,7 +123,7 @@ export default function Profil() {
     }
 
     return (
-        <div className="p-4 pt-8 max-w-xl mx-auto">
+        <div className="max-w-[392px] w-full mx-auto flex flex-col items-center p-4 pt-8 pt-24">
             <h1 className="text-2xl font-bold text-[#22ACE2] mb-8 text-center">Mon profil</h1>
 
             {messageSucces && (
@@ -138,7 +138,7 @@ export default function Profil() {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-md border border-gray-100 p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="w-full bg-white rounded-xl shadow-md border border-gray-100 p-6 space-y-4">
                 <div className="border-b border-gray-100 pb-3">
                     <label htmlFor="prenom" className="block text-sm text-gray-500 mb-1">Prénom</label>
                     <input

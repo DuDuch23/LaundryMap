@@ -55,6 +55,7 @@ export default function PageConnexion() {
       });
       if (resultat?.token) {
         localStorage.setItem("token", resultat.token);
+        e.preventDefault();
         navigate("/profil", { replace: true });
         return;
       }
@@ -112,7 +113,7 @@ export default function PageConnexion() {
             className={"flex flex-col"}
             label={t("main.connexion.mot_de_passe")}
             type="password"
-            value={t("main.connexion.mot_de_passe")}
+            value={password}
             onChange={(e: any) => setPassword(e.target.value)}
             placeholder={"••••••••••••"}
             error={errors.password}
