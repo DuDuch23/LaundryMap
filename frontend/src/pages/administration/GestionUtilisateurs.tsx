@@ -2,17 +2,16 @@ import { useState, useEffect } from 'react';
 import { fetchAdminUtilisateurs } from '../../services/request';
 import { AccessibleModal } from '../../components/accessibility';
 
-// --- INTERFACES ---
 interface Laverie {
     id: number;
     nom: string;
-    statut: string; // 'vert', 'orange', 'rouge', 'noir'
+    statut: string;
 }
 
 interface Professionnel {
     id: number;
     siren: string;
-    statut: 'En attente' | 'Validée' | 'Refuser' | 'Banni';
+    statut: 'En attente' | 'Validé' | 'Refusé' | 'Banni';
     laveries: Laverie[];
 }
 
@@ -21,6 +20,7 @@ interface Utilisateur {
     prenom: string;
     nom: string;
     email: string;
+    statut: string;
     ville?: string;
     codePostal?: string;
     professionnel?: Professionnel;
@@ -50,14 +50,18 @@ export default function GestionUtilisateurs() {
         chargerDonnees();
     }, []);
 
-    // Fonction utilitaire pour la couleur des badges
     const getBadgeStyle = (statut: string) => {
         switch (statut) {
-            case 'Refuser': return 'bg-red-100 text-red-500 border-red-300';
-            case 'En attente': return 'bg-orange-100 text-orange-500 border-orange-300';
-            case 'Validée': return 'bg-green-100 text-green-500 border-green-300';
-            case 'Banni': return 'bg-gray-800 text-white border-gray-900';
-            default: return 'bg-gray-100 text-gray-500 border-gray-300';
+            case 'Refusé':
+                return 'bg-red-100 text-red-500 border-red-300';
+            case 'En attente': 
+                return 'bg-orange-100 text-orange-500 border-orange-300';
+            case 'Validé':
+                return 'bg-green-100 text-green-500 border-green-300';
+            case 'Banni': 
+                return 'bg-gray-800 text-white border-gray-900';
+            default: 
+                return 'bg-gray-100 text-gray-500 border-gray-300';
         }
     };
 
@@ -124,9 +128,8 @@ export default function GestionUtilisateurs() {
                                             {user.professionnel.statut}
                                         </span>
                                     ) : (
-                                        // Statut par défaut pour les utilisateurs lambda
-                                        <span className="px-3 py-1 text-sm rounded-full border bg-orange-100 text-orange-500 border-orange-300">
-                                            En attente
+                                        <span className={`px-3 py-1 text-sm rounded-full border ${getBadgeStyle(user.statut)}`}>
+                                            {user.statut}
                                         </span>
                                     )}
                                     <button className="bg-[#22ACE2] hover:bg-blue-500 p-1.5 rounded-md text-white transition-colors cursor-pointer">
@@ -175,8 +178,6 @@ export default function GestionUtilisateurs() {
                                     </div>
                                 )}
                             </div>
-
-                            {/* Bouton Action (pour les pros "En attente" ou les utilisateurs lambda) */}
                             {(user.professionnel?.statut === 'En attente' || !user.professionnel) && (
                                 <div className="flex justify-end mt-4">
                                     <button
@@ -207,11 +208,11 @@ export default function GestionUtilisateurs() {
                 <AccessibleModal
                     isOpen={modalOuverte}
                     onClose={fermerModal}
-                    title={`Gestion du professionnel : ${utilisateurSelectionne?.professionnel?.siren || ''}`}
+                    title={`Gestion de : ${utilisateurSelectionne?.nom || ''}`}
                 >
                     {utilisateurSelectionne && (
                         <div className="mt-4">
-                            <p className="mb-4">Voulez-vous valider ou refuser le compte professionnel de <strong>{utilisateurSelectionne.prenom} {utilisateurSelectionne.nom}</strong> ?</p>
+                            <p className="mb-4">Voulez-vous valider ou refuser le compte de <strong>{utilisateurSelectionne.prenom} {utilisateurSelectionne.nom}</strong> ?</p>
                             <div className="flex gap-4">
                                 <button className="flex-1 bg-green-500 hover:bg-green-600 cursor-pointer text-white py-2 px-4 rounded-lg font-bold transition-colors">
                                     Valider

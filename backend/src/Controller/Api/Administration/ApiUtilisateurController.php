@@ -26,44 +26,38 @@ class ApiUtilisateurController extends AbstractController
                 'prenom' => $user->getPrenom(),
                 'nom' => $user->getNom(),
                 'email' => $user->getEmail(),
+                'statut' => $user->getStatut(),
             ];
 
             if ($pro) {
-                // 1. STATUT PROFESSIONNEL (Ultra-robuste)
-                $statutBrut = $pro->getStatut();
-                // On récupère la "value" (ex: 'Validé') si c'est un BackedEnum, sinon le nom
-                $statutNom = $statutBrut instanceof \BackedEnum ? $statutBrut->value : ($statutBrut instanceof \UnitEnum ? $statutBrut->name : (string) $statutBrut);
+                //STATUT PROFESSIONNEL
+                $statutNom = $pro->getStatut()->name;
 
                 $statutReact = match($statutNom) {
-                    'STATUT_VALIDE', 'Validé' => 'Validée', 
-                    'STATUT_REFUSE', 'Refusé' => 'Refuser', 
-                    'STATUT_BANNI', 'Banni'   => 'Banni',
-                    default                   => 'En attente'
+                    'STATUT_VALIDE' => 'Validé',
+                    'STATUT_REFUSE' => 'Refusé',
+                    'STATUT_BANNI'  => 'Banni',
+                    default         => 'En attente'
                 };
 
                 if ($statutReact === 'En attente') {
                     $compteEnAttente++;
                 }
 
-                // 2. ADRESSE
+                //ADRESSE
                 $adresse = $pro->getAdresse();
                 if ($adresse) {
                     $userData['ville'] = $adresse->getVille();
                     $userData['codePostal'] = (string) $adresse->getCodePostal();
                 }
 
-                // 3. LAVERIES (Traduction en couleurs)
+                //LAVERIES
                 $laveriesData = [];
                 foreach ($pro->getLaveries() as $laverie) {
-                    $statutLavBrut = $laverie->getStatut();
-                    $statutLavStr = $statutLavBrut instanceof \BackedEnum ? $statutLavBrut->value : ($statutLavBrut instanceof \UnitEnum ? $statutLavBrut->name : (string) $statutLavBrut);
-                    
-                    $couleur = match($statutLavStr) {
-                        'STATUT_VALIDE', 'Validé'           => 'vert',
-                        'STATUT_REFUSE', 'Refusé', 'Refuser'=> 'rouge',
-                        'STATUT_BANNI', 'Banni'             => 'noir',
-                        'STATUT_EN_ATTENTE', 'En attente'   => 'orange',
-                        default                             => 'orange'
+                    $couleur = match($laverie->getStatut()->name) {
+                        'STATUT_VALIDEE' => 'vert',
+                        'STATUT_REFUSEE' => 'rouge',
+                        default          => 'orange'
                     };
 
                     $laveriesData[] = [
