@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router';
+import { Routes, Route, Navigate, useLocation } from 'react-router';
 import './App.css'
 import Header from './components/Header';
 import Footer from './components/Footer/footer';
@@ -12,6 +12,15 @@ const InscriptionPro = React.lazy(() => import('./pages/InscriptionProfessionnel
 const Connexion = React.lazy(() => import('./pages/Connexion'));
 
 function RequireAuth({ children }) {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const tokenInUrl = params.get('token');
+
+  if (tokenInUrl) {
+    localStorage.setItem('token', tokenInUrl);
+    return <Navigate to={location.pathname} replace />;
+  }
+
   const token = localStorage.getItem('token');
 
   if (!token) {
