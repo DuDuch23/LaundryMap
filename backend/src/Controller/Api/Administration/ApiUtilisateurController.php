@@ -21,27 +21,37 @@ class ApiUtilisateurController extends AbstractController
 
         foreach ($utilisateurs as $user) {
             $pro = $user->getProfessionnel();
+            
+            $statutUserNom = $user->getStatut()->name;
+            $statutUserReact = match($statutUserNom) {
+                'STATUT_VALIDE' => 'Validé',
+                'STATUT_REFUSE' => 'Refusé',
+                'STATUT_BANNI'  => 'Banni',
+                default         => 'En attente'
+            };
+
             $userData = [
                 'id' => $user->getId(),
                 'prenom' => $user->getPrenom(),
                 'nom' => $user->getNom(),
                 'email' => $user->getEmail(),
-                'statut' => $user->getStatut(),
+                'statut' => $statutUserReact,
             ];
 
-            if ($pro) {
-                //STATUT PROFESSIONNEL
-                $statutNom = $pro->getStatut()->name;
+            $estEnAttente = false;
 
-                $statutReact = match($statutNom) {
+            if ($pro) {
+                $statutProNom = $pro->getStatut()->name;
+
+                $statutProReact = match($statutProNom) {
                     'STATUT_VALIDE' => 'Validé',
                     'STATUT_REFUSE' => 'Refusé',
                     'STATUT_BANNI'  => 'Banni',
                     default         => 'En attente'
                 };
 
-                if ($statutReact === 'En attente') {
-                    $compteEnAttente++;
+                if ($statutProReact === 'En attente') {
+                    $estEnAttente = true;
                 }
 
                 //ADRESSE
@@ -70,9 +80,17 @@ class ApiUtilisateurController extends AbstractController
                 $userData['professionnel'] = [
                     'id' => $pro->getId(),
                     'siren' => (string) $pro->getSiren(),
-                    'statut' => $statutReact,
+                    'statut' => $statutProReact,
                     'laveries' => $laveriesData
                 ];
+            } else {
+                if ($statutUserReact === 'En attente') {
+                    $estEnAttente = true;
+                }
+            }
+
+            if ($estEnAttente) {
+                $compteEnAttente++;
             }
 
             $tableauFormate[] = $userData;
