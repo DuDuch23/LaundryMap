@@ -100,9 +100,23 @@ export async function connexion(data: ConnexionData) {
     }
 }
 
-export async function fetchAdminUtilisateurs() {
+export interface FiltresUtilisateurs {
+    statut?: string;
+    type?: string;
+    proprietaire?: string;
+    ordre?: string;
+}
+
+export async function fetchAdminUtilisateurs(page: number = 1, filtres?: FiltresUtilisateurs) {
     try {
-        const response = await axios.get(`${API_BASE_URL}/api/admin/utilisateurs`);
+        const params: Record<string, string | number> = { page };
+
+        if (filtres?.statut) params.statut = filtres.statut;
+        if (filtres?.type) params.type = filtres.type;
+        if (filtres?.proprietaire) params.proprietaire = filtres.proprietaire;
+        if (filtres?.ordre) params.ordre = filtres.ordre;
+
+        const response = await axios.get(`${API_BASE_URL}/api/admin/utilisateurs`, { params });
         return response.data;
     } catch (error) {
         console.error("Erreur lors de la récupération des utilisateurs:", error);

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import { fetchAdminUtilisateurs } from '../../services/request';
+import { useState, useEffect, useCallback } from 'react';
+import { fetchAdminUtilisateurs, type FiltresUtilisateurs } from '../../services/request';
 import { AccessibleModal } from '../../components/accessibility';
+import FilterModal, { type FilterSection, type FilterValues } from '../../components/FilterModal';
 
 interface Laverie {
     id: number;
@@ -26,6 +27,63 @@ interface Utilisateur {
     professionnel?: Professionnel;
 }
 
+interface Pagination {
+    pageCourante: number;
+    totalPages: number;
+    totalResultats: number;
+    parPage: number;
+    aPageSuivante: boolean;
+    aPagePrecedente: boolean;
+}
+
+const FILTER_SECTIONS: FilterSection[] = [
+    {
+        label: 'Statut',
+        key: 'statut',
+        options: [
+            { label: 'Tous', value: '' },
+            { label: 'Validée', value: 'Validé' },
+            { label: 'Refusé', value: 'Refusé' },
+            { label: 'En attente', value: 'En attente' },
+        ],
+    },
+    {
+        label: 'Type',
+        key: 'type',
+        options: [
+            { label: 'Tous', value: '' },
+            { label: 'Utilisateurs', value: 'clients' },
+            { label: 'Clients', value: 'clients' },
+            { label: 'Professionnels', value: 'professionnels' },
+        ],
+    },
+    {
+        label: 'Propriétaire',
+        key: 'proprietaire',
+        options: [
+            { label: 'Aléatoire', value: '' },
+            { label: 'Oui', value: 'oui' },
+            { label: 'Non', value: 'non' },
+        ],
+    },
+    {
+        label: 'Ordre',
+        key: 'ordre',
+        options: [
+            { label: 'Aléatoire', value: '' },
+            { label: 'Croissant', value: 'croissant' },
+            { label: 'Décroissant', value: 'decroissant' },
+        ],
+    },
+];
+
+const FILTRES_VIDES: FilterValues = {
+    statut: '',
+    type: '',
+    proprietaire: '',
+    ordre: '',
+};
+
 export default function GestionUtilisateurs() {
     const [utilisateurs, setUtilisateurs] = useState<Utilisateur[]>([]);
     const [enAttenteCount, setEnAttenteCount] = useState<number>(0);
@@ -34,33 +92,52 @@ export default function GestionUtilisateurs() {
     const [modalOuverte, setModalOuverte] = useState<boolean>(false);
     const [utilisateurSelectionne, setUtilisateurSelectionne] = useState<Utilisateur | null>(null);
 
-    useEffect(() => {
-        const chargerDonnees = async () => {
-            try {
-                const data = await fetchAdminUtilisateurs();
-                setUtilisateurs(data.utilisateurs);
-                setEnAttenteCount(data.totalEnAttente);
-            } catch (err) {
-                setErreur("Impossible de charger les utilisateurs.");
-            } finally {
-                setChargement(false);
-            }
-        };
+    // Pagination
+    const [page, setPage] = useState<number>(1);
+    const [pagination, setPagination] = useState<Pagination | null>(null);
 
+    // Filtres
+    const [filtreModalOuverte, setFiltreModalOuverte] = useState<boolean>(false);
+    const [filtresActifs, setFiltresActifs] = useState<FilterValues>({ ...FILTRES_VIDES });
+    const [filtresTemp, setFiltresTemp] = useState<FilterValues>({ ...FILTRES_VIDES });
+
+    const aDesFiltresActifs = Object.values(filtresActifs).some((v) => v !== '');
+
+    const chargerDonnees = useCallback(async () => {
+        setChargement(true);
+        try {
+            const filtresApi: FiltresUtilisateurs = {};
+            if (filtresActifs.statut) filtresApi.statut = filtresActifs.statut;
+            if (filtresActifs.type) filtresApi.type = filtresActifs.type;
+            if (filtresActifs.proprietaire) filtresApi.proprietaire = filtresActifs.proprietaire;
+            if (filtresActifs.ordre) filtresApi.ordre = filtresActifs.ordre;
+
+            const data = await fetchAdminUtilisateurs(page, filtresApi);
+            setUtilisateurs(data.utilisateurs);
+            setEnAttenteCount(data.totalEnAttente);
+            setPagination(data.pagination);
+        } catch {
+            setErreur("Impossible de charger les utilisateurs.");
+        } finally {
+            setChargement(false);
+        }
+    }, [page, filtresActifs]);
+
+    useEffect(() => {
         chargerDonnees();
-    }, []);
+    }, [chargerDonnees]);
 
     const getBadgeStyle = (statut: string) => {
         switch (statut) {
             case 'Refusé':
                 return 'bg-red-100 text-red-500 border-red-300';
-            case 'En attente': 
+            case 'En attente':
                 return 'bg-orange-100 text-orange-500 border-orange-300';
             case 'Validé':
                 return 'bg-green-100 text-green-500 border-green-300';
-            case 'Banni': 
+            case 'Banni':
                 return 'bg-gray-800 text-white border-gray-900';
-            default: 
+            default:
                 return 'bg-gray-100 text-gray-500 border-gray-300';
         }
     };
@@ -75,7 +152,38 @@ export default function GestionUtilisateurs() {
         setUtilisateurSelectionne(null);
     };
 
-    if (chargement) {
+    // Pagination
+    const allerPageSuivante = () => {
+        if (pagination?.aPageSuivante) setPage((p: number) => p + 1);
+    };
+
+    const allerPagePrecedente = () => {
+        if (pagination?.aPagePrecedente) setPage((p: number) => p - 1);
+    };
+
+    // Filtres
+    const ouvrirFiltres = () => {
+        setFiltresTemp({ ...filtresActifs });
+        setFiltreModalOuverte(true);
+    };
+
+    const handleFiltreChange = (key: string, value: string) => {
+        setFiltresTemp((prev: FilterValues) => ({ ...prev, [key]: value }));
+    };
+
+    const appliquerFiltres = (filtres: FilterValues) => {
+        setFiltresActifs(filtres);
+        setPage(1);
+    };
+
+    const effacerFiltres = () => {
+        setFiltresTemp({ ...FILTRES_VIDES });
+        setFiltresActifs({ ...FILTRES_VIDES });
+        setPage(1);
+        setFiltreModalOuverte(false);
+    };
+
+    if (chargement && page === 1 && !aDesFiltresActifs) {
         return <div className="text-center mt-20 font-bold text-[#22ACE2]">Chargement des données...</div>;
     }
 
@@ -96,11 +204,30 @@ export default function GestionUtilisateurs() {
                     </button>
                     <h1 className="text-lg font-bold">Gestion des utilisateurs</h1>
                 </div>
-                <button className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-                    </svg>
-                </button>
+
+                <div className="flex items-center gap-2">
+                    {aDesFiltresActifs && (
+                        <button
+                            onClick={effacerFiltres}
+                            className="text-sm font-medium text-gray-500 hover:text-gray-700 transition"
+                        >
+                            Effacer
+                        </button>
+                    )}
+                    <button
+                        onClick={aDesFiltresActifs ? effacerFiltres : ouvrirFiltres}
+                        className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition"
+                        aria-label={aDesFiltresActifs ? "Effacer les filtres" : "Ouvrir les filtres"}
+                    >
+                        {aDesFiltresActifs ? (
+                            <img src="/src/assets/layers_clear.svg" alt="" className="w-5 h-5" />
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                            </svg>
+                        )}
+                    </button>
+                </div>
             </div>
 
             <div className="px-4">
@@ -110,6 +237,11 @@ export default function GestionUtilisateurs() {
                     <img src="/src/assets/person_outline.svg" alt="Utilisateurs en attente" className="w-10 h-10 mx-auto mb-2 text-black" />
                     <p className="text-green-500 font-bold text-xl">+{enAttenteCount}</p>
                 </div>
+
+                {/* INDICATEUR DE CHARGEMENT */}
+                {chargement && (
+                    <div className="text-center py-4 text-[#22ACE2] font-medium">Chargement...</div>
+                )}
 
                 {/* LISTE DES UTILISATEURS */}
                 <div className="space-y-6">
@@ -163,18 +295,23 @@ export default function GestionUtilisateurs() {
                                     <div className="w-full md:w-48 border border-gray-200 rounded-xl p-3 h-fit">
                                         <p className="font-bold underline text-sm mb-2">Laveries :</p>
                                         <ul className="space-y-1">
-                                            {user.professionnel.laveries.map(laverie => (
+                                            {user.professionnel.laveries.slice(0, 3).map(laverie => (
                                                 <li key={laverie.id} className="flex justify-between items-center text-sm italic text-gray-700">
                                                     {laverie.nom}
                                                     <span className={`w-3 h-3 rounded-full ${
-                                                        laverie.statut === 'vert' ? 'bg-green-500' : 
-                                                        laverie.statut === 'rouge' ? 'bg-red-500' : 
-                                                        laverie.statut === 'noir' ? 'bg-gray-800' : 
+                                                        laverie.statut === 'vert' ? 'bg-green-500' :
+                                                        laverie.statut === 'rouge' ? 'bg-red-500' :
+                                                        laverie.statut === 'noir' ? 'bg-gray-800' :
                                                         'bg-orange-500'
                                                     }`}></span>
                                                 </li>
                                             ))}
                                         </ul>
+                                        {user.professionnel.laveries.length > 3 && (
+                                            <p className="text-xs font-semibold text-[#22ACE2] mt-2 text-right">
+                                                +{user.professionnel.laveries.length - 3}
+                                            </p>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -193,16 +330,39 @@ export default function GestionUtilisateurs() {
                 </div>
 
                 {/* PAGINATION */}
-                <div className="flex justify-center gap-4 mt-8">
-                    <button className="bg-[#22ACE2] hover:bg-blue-500 text-white flex items-center gap-2 px-6 py-2 rounded-full font-medium transition-colors shadow-sm cursor-pointer">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-                        Précédent
-                    </button>
-                    <button className="bg-[#22ACE2] hover:bg-blue-500 text-white flex items-center gap-2 px-6 py-2 rounded-full font-medium transition-colors shadow-sm cursor-pointer">
-                        Suivant
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
-                    </button>
-                </div>
+                {pagination && (
+                    <div className="flex justify-center items-center gap-4 mt-8">
+                        <button
+                            onClick={allerPagePrecedente}
+                            disabled={!pagination.aPagePrecedente}
+                            className={`flex items-center gap-2 px-6 py-2 rounded-full font-medium transition-colors shadow-sm cursor-pointer ${
+                                pagination.aPagePrecedente
+                                    ? 'bg-[#22ACE2] hover:bg-blue-500 text-white'
+                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            }`}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                            Précédent
+                        </button>
+
+                        <span className="text-sm text-gray-500 font-medium">
+                            {pagination.pageCourante} / {pagination.totalPages}
+                        </span>
+
+                        <button
+                            onClick={allerPageSuivante}
+                            disabled={!pagination.aPageSuivante}
+                            className={`flex items-center gap-2 px-6 py-2 rounded-full font-medium transition-colors shadow-sm cursor-pointer ${
+                                pagination.aPageSuivante
+                                    ? 'bg-[#22ACE2] hover:bg-blue-500 text-white'
+                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            }`}
+                        >
+                            Suivant
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                        </button>
+                    </div>
+                )}
 
                 {/* MODALE DE RÉPONSE */}
                 <AccessibleModal
@@ -224,6 +384,17 @@ export default function GestionUtilisateurs() {
                         </div>
                     )}
                 </AccessibleModal>
+
+                {/* MODALE DES FILTRES */}
+                <FilterModal
+                    isOpen={filtreModalOuverte}
+                    onClose={() => setFiltreModalOuverte(false)}
+                    onApply={appliquerFiltres}
+                    onClear={effacerFiltres}
+                    sections={FILTER_SECTIONS}
+                    values={filtresTemp}
+                    onChange={handleFiltreChange}
+                />
             </div>
         </div>
     );

@@ -3,8 +3,11 @@
 namespace App\Controller\Api\Administration;
 
 use App\Repository\UtilisateurRepository;
+use Pagerfanta\Doctrine\ORM\QueryAdapter;
+use Pagerfanta\Pagerfanta;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -12,16 +15,30 @@ class ApiUtilisateurController extends AbstractController
 {
     #[Route('/api/admin/utilisateurs', name: 'api_admin_utilisateurs_liste', methods: ['GET'])]
     #[IsGranted('PUBLIC_ACCESS')]
-    public function getUtilisateurs(UtilisateurRepository $utilisateurRepository): JsonResponse
+    public function getUtilisateurs(
+        Request $request,
+        UtilisateurRepository $utilisateurRepository
+    ): JsonResponse
     {
-        $utilisateurs = $utilisateurRepository->findAll();
-        
-        $tableauFormate = [];
-        $compteEnAttente = 0;
+        $page = max(1, $request->query->getInt('page', 1));
+        $maxParPage = 10;
 
-        foreach ($utilisateurs as $user) {
+        $qb = $utilisateurRepository->createFilteredQueryBuilder(
+            $request->query->get('statut'),
+            $request->query->get('type'),
+            $request->query->get('proprietaire'),
+            $request->query->get('ordre')
+        );
+
+        $adapter = new QueryAdapter($qb);
+        $pagerfanta = new Pagerfanta($adapter);
+        $pagerfanta->setMaxPerPage($maxParPage);
+        $pagerfanta->setCurrentPage($page);
+
+        $tableauFormate = [];
+        foreach ($pagerfanta->getCurrentPageResults() as $user) {
             $pro = $user->getProfessionnel();
-            
+
             $statutUserNom = $user->getStatut()->name;
             $statutUserReact = match($statutUserNom) {
                 'STATUT_VALIDE' => 'Validé',
@@ -38,11 +55,8 @@ class ApiUtilisateurController extends AbstractController
                 'statut' => $statutUserReact,
             ];
 
-            $estEnAttente = false;
-
             if ($pro) {
                 $statutProNom = $pro->getStatut()->name;
-
                 $statutProReact = match($statutProNom) {
                     'STATUT_VALIDE' => 'Validé',
                     'STATUT_REFUSE' => 'Refusé',
@@ -50,18 +64,12 @@ class ApiUtilisateurController extends AbstractController
                     default         => 'En attente'
                 };
 
-                if ($statutProReact === 'En attente') {
-                    $estEnAttente = true;
-                }
-
-                //ADRESSE
                 $adresse = $pro->getAdresse();
                 if ($adresse) {
                     $userData['ville'] = $adresse->getVille();
                     $userData['codePostal'] = (string) $adresse->getCodePostal();
                 }
 
-                //LAVERIES
                 $laveriesData = [];
                 foreach ($pro->getLaveries() as $laverie) {
                     $couleur = match($laverie->getStatut()->name) {
@@ -72,8 +80,8 @@ class ApiUtilisateurController extends AbstractController
 
                     $laveriesData[] = [
                         'id' => $laverie->getId(),
-                        'nom' => $laverie->getNomEtablissement(), 
-                        'statut' => $couleur, 
+                        'nom' => $laverie->getNomEtablissement(),
+                        'statut' => $couleur,
                     ];
                 }
 
@@ -83,22 +91,22 @@ class ApiUtilisateurController extends AbstractController
                     'statut' => $statutProReact,
                     'laveries' => $laveriesData
                 ];
-            } else {
-                if ($statutUserReact === 'En attente') {
-                    $estEnAttente = true;
-                }
-            }
-
-            if ($estEnAttente) {
-                $compteEnAttente++;
             }
 
             $tableauFormate[] = $userData;
         }
 
         return $this->json([
-            'totalEnAttente' => $compteEnAttente,
-            'utilisateurs' => $tableauFormate
+            'totalEnAttente' => $utilisateurRepository->countEnAttente(),
+            'utilisateurs' => $tableauFormate,
+            'pagination' => [
+                'pageCourante' => $pagerfanta->getCurrentPage(),
+                'totalPages' => $pagerfanta->getNbPages(),
+                'totalResultats' => $pagerfanta->getNbResults(),
+                'parPage' => $maxParPage,
+                'aPageSuivante' => $pagerfanta->hasNextPage(),
+                'aPagePrecedente' => $pagerfanta->hasPreviousPage(),
+            ]
         ]);
     }
 }
