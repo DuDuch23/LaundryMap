@@ -192,7 +192,7 @@ export default function GestionUtilisateurs() {
     }
 
     return (
-        <div className="max-w-md mx-auto bg-gray-50 min-h-screen pb-10 font-sans">
+        <div className="w-full pt-24 px-4 pb-16 font-sans">
 
             {/* HEADER */}
             <div className="bg-white flex items-center justify-between p-4 shadow-sm mb-6">

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router';
-import ChangeLanguage from './ChangeLanguage';
 
 export default function Header() {
     const [isOpen, setIsOpen] = useState(false);
@@ -24,7 +23,6 @@ export default function Header() {
                         </svg>
                         <span className='text-white text-xl'>LaundryMap</span>
                     </Link>
-                    <ChangeLanguage />
                     <div className='flex item-right gap-6'>
                         {isAuthenticated && (
                             <button

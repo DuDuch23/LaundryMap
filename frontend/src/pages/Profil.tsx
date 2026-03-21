@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 import {
   getLangues,
   getProfilUtilisateur,
@@ -9,26 +9,28 @@ import {
 } from '../services/request';
 import { getInputFieldClasses } from '../styles/fieldClasses';
 import type { Langue } from '../types/Langue';
+import ChangeLanguage from '../components/ChangeLanguage';
+
 
 export default function Profil() {
-    const navigate = useNavigate();
-    const { i18n } = useTranslation();
+  const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const hasAppliedInitialLanguage = useRef(false);
-    const [profil, setProfil] = useState<ProfilUtilisateurData | null>(null);
-    const [loading, setLoading] = useState(true);
+  const [profil, setProfil] = useState<ProfilUtilisateurData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [erreurChargement, setErreurChargement] = useState('');
   const [erreurFormulaire, setErreurFormulaire] = useState('');
-    const [messageSucces, setMessageSucces] = useState('');
-    const [isSaving, setIsSaving] = useState(false);
+  const [messageSucces, setMessageSucces] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
   const [langues, setLangues] = useState<Langue[]>([]);
   const [langueId, setLangueId] = useState<number | ''>('');
   const [darkMode, setDarkMode] = useState(true);
   const [notifications, setNotifications] = useState(true);
 
-    const [nom, setNom] = useState('');
-    const [prenom, setPrenom] = useState('');
-    const [motDePasse, setMotDePasse] = useState('');
-    const [confirmationMotDePasse, setConfirmationMotDePasse] = useState('');
+  const [nom, setNom] = useState('');
+  const [prenom, setPrenom] = useState('');
+  const [motDePasse, setMotDePasse] = useState('');
+  const [confirmationMotDePasse, setConfirmationMotDePasse] = useState('');
 
     useEffect(() => {
         const chargerProfil = async () => {
@@ -74,7 +76,7 @@ export default function Profil() {
         };
 
         chargerProfil();
-      }, [navigate]);
+      }, [navigate, i18n, t]);
 
     useEffect(() => {
       document.documentElement.classList.toggle('dark', darkMode);
@@ -112,25 +114,25 @@ export default function Profil() {
         setMessageSucces('');
 
         if (!nom.trim()) {
-        setErreurFormulaire('Le nom est requis.');
+        setErreurFormulaire(t('main.profil.erreur_nom'));
           scrollToTop();
             return;
         }
 
         if (!prenom.trim()) {
-        setErreurFormulaire('Le prénom est requis.');
+        setErreurFormulaire(t('main.profil.erreur_prenom'));
           scrollToTop();
             return;
         }
 
         if (motDePasse && motDePasse.length < 8) {
-        setErreurFormulaire('Le mot de passe doit contenir au moins 8 caractères.');
+        setErreurFormulaire(t('main.profil.erreur_mot_de_passe_court'));
           scrollToTop();
             return;
         }
 
         if (motDePasse !== confirmationMotDePasse) {
-        setErreurFormulaire('La confirmation du mot de passe ne correspond pas.');
+        setErreurFormulaire(t('main.profil.erreur_mot_de_passe_confirmation'));
           scrollToTop();
             return;
         }
@@ -152,7 +154,7 @@ export default function Profil() {
             setProfil(profilMisAJour);
             setMotDePasse('');
             setConfirmationMotDePasse('');
-            setMessageSucces('Vos informations ont été mises à jour.');
+            setMessageSucces(t('main.profil.succes'));
 
             if (profilMisAJour.preference?.langueId) {
               setLangueId(profilMisAJour.preference.langueId);
@@ -170,7 +172,7 @@ export default function Profil() {
                 return;
             }
 
-              setErreurFormulaire(error?.message || 'Impossible de mettre à jour le profil.');
+              setErreurFormulaire(error?.message || t('main.profil.erreur_mise_a_jour'));
               scrollToTop();
         } finally {
             setIsSaving(false);
@@ -185,7 +187,7 @@ export default function Profil() {
     if (loading) {
         return (
               <div className="min-h-screen p-4 pt-8 max-w-xl mx-auto">
-                <p className="text-center text-gray-700">Chargement du profil...</p>
+                <p className="text-center text-gray-700">{t('main.profil.chargement')}</p>
             </div>
         );
     }
@@ -207,14 +209,14 @@ export default function Profil() {
     const initiales = `${prenomAffiche.charAt(0)}${nomAffiche.charAt(0)}`.trim().toUpperCase() || 'U';
 
     return (
-      <div className="bg-gray-50 flex justify-center p-4 profil-page">
+      <div className="pt-24 px-4 profil-page">
         <form onSubmit={handleSubmit} className="w-full max-w-md space-y-4 pb-10">
-          <div className="flex flex-col items-center py-6">
+          <div className="flex flex-col items-center">
             <div className="w-24 h-24 rounded-full bg-[#22ACE2] text-white flex items-center justify-center text-3xl font-bold shadow-sm">
               {initiales}
             </div>
             <h1 className="mt-4 text-xl font-bold text-slate-800">{`${prenomAffiche} ${nomAffiche}`.trim() || profil.email}</h1>
-            <p className="text-sm text-slate-500">Membre depuis le {formaterDate(profil.dateCreation)}</p>
+            <p className="text-sm text-slate-500">{t('main.profil.membre_depuis')} {formaterDate(profil.dateCreation)}</p>
           </div>
 
           {messageSucces && (
@@ -229,92 +231,81 @@ export default function Profil() {
             </div>
           )}
 
-          <Section title="Informations du compte">
+          <Section title={t('main.profil.informations_compte')}>
             <InputField
               id="prenom"
-              label="Prénom"
+              label={t('main.profil.prenom')}
               value={prenom}
               onChange={(event) => setPrenom(event.target.value)}
-              placeholder="Votre prénom"
+              placeholder={t('main.profil.prenom_placeholder')}
             />
             <InputField
               id="nom"
-              label="Nom"
+              label={t('main.profil.nom')}
               value={nom}
               onChange={(event) => setNom(event.target.value)}
-              placeholder="Votre nom"
+              placeholder={t('main.profil.nom_placeholder')}
             />
-            <InputField id="email" label="Adresse e-mail" type="email" value={profil.email} readOnly />
+            <InputField id="email" label={t('main.profil.email')} type="email" value={profil.email} readOnly />
           </Section>
 
-          <Section title="Sécurité">
+          <Section title={t('main.profil.securite')}>
             <InputField
               id="password"
-              label="Nouveau mot de passe"
+              label={t('main.profil.nouveau_mot_de_passe')}
               type="password"
               value={motDePasse}
               onChange={(event) => setMotDePasse(event.target.value)}
-              placeholder="Laisser vide pour ne pas modifier"
+              placeholder={t('main.profil.laisser_vide_pour_ne_pas_modifier')}
             />
             <InputField
               id="confirmPassword"
-              label="Confirmer le mot de passe"
+              label={t('main.profil.confirmer_mot_de_passe')}
               type="password"
               value={confirmationMotDePasse}
               onChange={(event) => setConfirmationMotDePasse(event.target.value)}
-              placeholder="Confirmez le nouveau mot de passe"
+              placeholder={t('main.profil.confirmer_mot_de_passe_placeholder')}
             />
           </Section>
 
-          <Section title="Préférences">
+          <Section title={t('main.profil.preferences')}>
             <div className="flex justify-between items-center py-2">
               <div>
-                <p className="text-sm font-semibold text-slate-700">Langue</p>
-                <p className="text-xs text-slate-400">Langue d&apos;affichage de l&apos;application</p>
+                <p className="text-sm font-semibold text-slate-700">{t('main.profil.langue')}</p>
+                <p className="text-xs text-slate-400">{t('main.profil.langue_description')}</p>
               </div>
-              <select
-                value={langueId === '' ? '' : String(langueId)}
-                onChange={handleLangueChange}
-                className="text-sm border border-slate-200 rounded-md p-1 bg-white outline-none"
-              >
-                {langueId === '' && <option value="">Sélectionner</option>}
-                {langues.map((langue) => (
-                  <option key={langue.id} value={langue.id}>
-                    {langue.nom}
-                  </option>
-                ))}
-              </select>
+              <ChangeLanguage />
             </div>
             <ToggleRow
-              label="Thème sombre"
-              subLabel="Basculer entre le mode clair et sombre"
+              label={t('main.profil.theme_sombre')}
+              subLabel={t('main.profil.theme_sombre_description')}
               enabled={darkMode}
               onChange={setDarkMode}
             />
             <ToggleRow
-              label="Notifications Push"
-              subLabel="Mises à jour des commandes et promos"
+              label={t('main.profil.notifications_push')}
+              subLabel={t('main.profil.notifications_push_description')}
               enabled={notifications}
               onChange={setNotifications}
             />
           </Section>
 
-          <Section title="Compte">
-            <DataRow label="Statut" value={profil.statut} />
-            <DataRow label="Compte créé le" value={formaterDate(profil.dateCreation)} />
-            <DataRow label="Dernière connexion" value={formaterDate(profil.dateDerniereConnexion)} />
+          <Section title={t('main.profil.compte')}>
+            <DataRow label={t('main.profil.statut')} value={profil.statut} />
+            <DataRow label={t('main.profil.compte_cree_le')} value={formaterDate(profil.dateCreation)} />
+            <DataRow label={t('main.profil.derniere_connexion')} value={formaterDate(profil.dateDerniereConnexion)} />
           </Section>
 
-          <Section title="Confidentialité & RGPD">
+          <Section title={t('main.profil.confidentialite_rgpd')}>
             <p id="rgpd-description" className="text-xs text-slate-500 leading-relaxed">
-              Gérez vos données et vos paramètres de confidentialité. Vous pouvez demander la suppression de votre compte.
+              {t('main.profil.rgpd_description')}
             </p>
             <button
               type="button"
               aria-describedby="rgpd-description"
               className="w-full flex items-center justify-between p-3 border border-red-100 rounded-xl text-red-500 bg-red-50/30 hover:bg-red-50 transition-colors"
             >
-              <span className="text-sm font-semibold">Supprimer le compte</span>
+              <span className="text-sm font-semibold">{t('main.profil.supprimer_compte')}</span>
               <span aria-hidden="true" className="text-base">🗑</span>
             </button>
           </Section>
@@ -325,14 +316,14 @@ export default function Profil() {
               disabled={isSaving}
               className="w-full bg-[#22ACE2] text-white py-4 rounded-xl font-semibold shadow-sm hover:bg-blue-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {isSaving ? 'Enregistrement...' : 'Enregistrer les modifications'}
+              {isSaving ? t('main.profil.enregistrement') : t('main.profil.enregistrer')}
             </button>
             <button
               type="button"
               onClick={handleDeconnexion}
               className="w-full bg-slate-50 text-slate-600 py-4 rounded-xl font-semibold border border-slate-100 hover:bg-slate-100 transition-colors"
             >
-              Déconnexion
+              {t('main.profil.deconnexion')}
             </button>
                 </div>
         </form>
