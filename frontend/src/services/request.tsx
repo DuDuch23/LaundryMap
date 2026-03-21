@@ -1,6 +1,18 @@
 import axios from 'axios';
 import API_BASE_URL from "./api";
 
+//AXIOS JWT TOKEN
+axios.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('token'); 
+        if (token && config.headers) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
 interface InscriptionProfessionnelData {
     email: string;
     prenom: string;
@@ -172,4 +184,27 @@ export async function updateProfilUtilisateur(payload: UpdateProfilData): Promis
     }
 
     return data.utilisateur as ProfilUtilisateurData;
+}
+export interface FiltresUtilisateurs {
+    statut?: string;
+    type?: string;
+    proprietaire?: string;
+    ordre?: string;
+}
+
+export async function fetchAdminUtilisateurs(page: number = 1, filtres?: FiltresUtilisateurs) {
+    try {
+        const params: Record<string, string | number> = { page };
+
+        if (filtres?.statut) params.statut = filtres.statut;
+        if (filtres?.type) params.type = filtres.type;
+        if (filtres?.proprietaire) params.proprietaire = filtres.proprietaire;
+        if (filtres?.ordre) params.ordre = filtres.ordre;
+
+        const response = await axios.get(`${API_BASE_URL}/api/admin/utilisateurs`, { params });
+        return response.data;
+    } catch (error) {
+        console.error("Erreur lors de la récupération des utilisateurs:", error);
+        throw error;
+    }
 }
