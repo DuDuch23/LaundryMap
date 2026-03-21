@@ -62,10 +62,12 @@ export default function PageConnexion() {
 
       setErreurGenerale("Réponse de connexion invalide.");
     } catch (error: any) {
-      if (error.response && error.response.status === 401) {
+      if (error.response?.status === 401) {
         setErreurGenerale(t("main.connexion.mot_de_passe_invalid"));
+      } else if (!error.response) {
+        setErreurGenerale(t("main.connexion.erreur_reseau") || "Impossible de joindre le serveur.");
       } else {
-        setErreurGenerale(t("main.connexion.google_erreur"));
+        setErreurGenerale(t("main.connexion.erreur_generique") || "Une erreur est survenue.");
       }
     }
   };
