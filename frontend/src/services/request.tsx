@@ -34,16 +34,25 @@ export interface ProfilUtilisateurData {
     statut: string;
     dateCreation: string | null;
     dateDerniereConnexion: string | null;
+    preference?: ProfilPreferenceData | null;
+}
+
+export interface ProfilPreferenceData {
+    langueId: number;
+    langueCode: string;
+    theme: 'clair' | 'sombre' | 'systeme';
+    notifications: boolean;
 }
 
 export interface UpdateProfilData {
     nom: string;
     prenom: string;
     nouveauMotDePasse?: string;
-}
-
-interface HydraCollection<T> {
-    'hydra:member'?: T[];
+    preference?: {
+        langueId?: number;
+        theme?: 'clair' | 'sombre' | 'systeme';
+        notifications?: boolean;
+    };
 }
 
 // export async function InscriptionProfessionnel(data: InscriptionProfessionnelData) {
@@ -88,21 +97,7 @@ export async function getLangues() {
         throw new Error('Erreur lors de la récupération des langues');
     }
 
-    const data = await response.json() as unknown;
-
-    if (Array.isArray(data)) {
-        return data;
-    }
-
-    if (
-        data &&
-        typeof data === 'object' &&
-        Array.isArray((data as HydraCollection<unknown>)['hydra:member'])
-    ) {
-        return (data as HydraCollection<unknown>)['hydra:member'] as unknown[];
-    }
-
-    return [];
+    return await response.json();
 
 }
 

@@ -1,15 +1,27 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
-import { getProfilUtilisateur, updateProfilUtilisateur, type ProfilUtilisateurData } from '../services/request';
+import { useTranslation } from 'react-i18next';
+import {
+  getLangues,
+  getProfilUtilisateur,
+  updateProfilUtilisateur,
+  type ProfilUtilisateurData,
+} from '../services/request';
+import { getInputFieldClasses } from '../styles/fieldClasses';
+import type { Langue } from '../types/Langue';
 
 export default function Profil() {
     const navigate = useNavigate();
+    const { i18n } = useTranslation();
+  const hasAppliedInitialLanguage = useRef(false);
     const [profil, setProfil] = useState<ProfilUtilisateurData | null>(null);
     const [loading, setLoading] = useState(true);
   const [erreurChargement, setErreurChargement] = useState('');
   const [erreurFormulaire, setErreurFormulaire] = useState('');
     const [messageSucces, setMessageSucces] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+  const [langues, setLangues] = useState<Langue[]>([]);
+  const [langueId, setLangueId] = useState<number | ''>('');
   const [darkMode, setDarkMode] = useState(true);
   const [notifications, setNotifications] = useState(true);
 
@@ -21,10 +33,32 @@ export default function Profil() {
     useEffect(() => {
         const chargerProfil = async () => {
             try {
-                const donneesProfil = await getProfilUtilisateur();
+                const [donneesProfil, donneesLangues] = await Promise.all([
+                  getProfilUtilisateur(),
+                  getLangues().catch(() => []),
+                ]);
+
+                const languesDisponibles = Array.isArray(donneesLangues) ? (donneesLangues as Langue[]) : [];
+
                 setProfil(donneesProfil);
+                setLangues(languesDisponibles);
                 setNom(donneesProfil.nom ?? '');
                 setPrenom(donneesProfil.prenom ?? '');
+
+                const preference = donneesProfil.preference;
+                if (preference?.langueId) {
+                  setLangueId(preference.langueId);
+                } else if (languesDisponibles.length > 0) {
+                  setLangueId(languesDisponibles[0].id);
+                }
+
+                if (preference?.langueCode && !hasAppliedInitialLanguage.current) {
+                  hasAppliedInitialLanguage.current = true;
+                  i18n.changeLanguage(preference.langueCode);
+                }
+
+                setDarkMode(preference?.theme === 'sombre');
+                setNotifications(preference?.notifications ?? true);
             } catch (error: any) {
                 if (error?.status === 401 || error?.status === 403) {
                     localStorage.removeItem('token');
@@ -40,7 +74,25 @@ export default function Profil() {
         };
 
         chargerProfil();
-    }, [navigate]);
+      }, [navigate]);
+
+    useEffect(() => {
+      document.documentElement.classList.toggle('dark', darkMode);
+    }, [darkMode]);
+
+    const scrollToTop = () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleLangueChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+      const selectedId = Number(event.target.value);
+      setLangueId(selectedId);
+
+      const langueSelectionnee = langues.find((langue) => langue.id === selectedId);
+      if (langueSelectionnee?.code) {
+        i18n.changeLanguage(langueSelectionnee.code);
+      }
+    };
 
     const formaterDate = (date: string | null): string => {
         if (!date) return 'Non renseignée';
@@ -61,21 +113,25 @@ export default function Profil() {
 
         if (!nom.trim()) {
         setErreurFormulaire('Le nom est requis.');
+          scrollToTop();
             return;
         }
 
         if (!prenom.trim()) {
         setErreurFormulaire('Le prénom est requis.');
+          scrollToTop();
             return;
         }
 
         if (motDePasse && motDePasse.length < 8) {
         setErreurFormulaire('Le mot de passe doit contenir au moins 8 caractères.');
+          scrollToTop();
             return;
         }
 
         if (motDePasse !== confirmationMotDePasse) {
         setErreurFormulaire('La confirmation du mot de passe ne correspond pas.');
+          scrollToTop();
             return;
         }
 
@@ -86,12 +142,27 @@ export default function Profil() {
                 nom: nom.trim(),
                 prenom: prenom.trim(),
                 nouveauMotDePasse: motDePasse || undefined,
+                preference: {
+                  langueId: langueId === '' ? undefined : langueId,
+                  theme: darkMode ? 'sombre' : 'clair',
+                  notifications,
+                },
             });
 
             setProfil(profilMisAJour);
             setMotDePasse('');
             setConfirmationMotDePasse('');
             setMessageSucces('Vos informations ont été mises à jour.');
+
+            if (profilMisAJour.preference?.langueId) {
+              setLangueId(profilMisAJour.preference.langueId);
+            }
+            if (profilMisAJour.preference?.langueCode) {
+              i18n.changeLanguage(profilMisAJour.preference.langueCode);
+            }
+            setDarkMode(profilMisAJour.preference?.theme === 'sombre');
+            setNotifications(profilMisAJour.preference?.notifications ?? notifications);
+            scrollToTop();
         } catch (error: any) {
             if (error?.status === 401 || error?.status === 403) {
                 localStorage.removeItem('token');
@@ -100,6 +171,7 @@ export default function Profil() {
             }
 
               setErreurFormulaire(error?.message || 'Impossible de mettre à jour le profil.');
+              scrollToTop();
         } finally {
             setIsSaving(false);
         }
@@ -130,7 +202,9 @@ export default function Profil() {
         return null;
     }
 
-    const initiales = `${prenom.charAt(0)}${nom.charAt(0)}`.trim().toUpperCase() || 'U';
+    const prenomAffiche = profil.prenom ?? '';
+    const nomAffiche = profil.nom ?? '';
+    const initiales = `${prenomAffiche.charAt(0)}${nomAffiche.charAt(0)}`.trim().toUpperCase() || 'U';
 
     return (
       <div className="min-h-screen bg-gray-50 flex justify-center p-4 profil-page">
@@ -139,7 +213,7 @@ export default function Profil() {
             <div className="w-24 h-24 rounded-full bg-[#22ACE2] text-white flex items-center justify-center text-3xl font-bold shadow-sm">
               {initiales}
             </div>
-            <h1 className="mt-4 text-xl font-bold text-slate-800">{`${prenom} ${nom}`.trim() || profil.email}</h1>
+            <h1 className="mt-4 text-xl font-bold text-slate-800">{`${prenomAffiche} ${nomAffiche}`.trim() || profil.email}</h1>
             <p className="text-sm text-slate-500">Membre depuis le {formaterDate(profil.dateCreation)}</p>
           </div>
 
@@ -198,9 +272,17 @@ export default function Profil() {
                 <p className="text-sm font-semibold text-slate-700">Langue</p>
                 <p className="text-xs text-slate-400">Langue d&apos;affichage de l&apos;application</p>
               </div>
-              <select defaultValue="Français" className="text-sm border border-slate-200 rounded-md p-1 bg-white outline-none">
-                <option>Français</option>
-                <option>English (US)</option>
+              <select
+                value={langueId === '' ? '' : String(langueId)}
+                onChange={handleLangueChange}
+                className="text-sm border border-slate-200 rounded-md p-1 bg-white outline-none"
+              >
+                {langueId === '' && <option value="">Sélectionner</option>}
+                {langues.map((langue) => (
+                  <option key={langue.id} value={langue.id}>
+                    {langue.nom}
+                  </option>
+                ))}
               </select>
             </div>
             <ToggleRow
@@ -294,8 +376,10 @@ export default function Profil() {
           value={value}
           onChange={onChange}
           readOnly={readOnly}
+          aria-readonly={readOnly}
+          tabIndex={readOnly ? -1 : undefined}
           placeholder={placeholder}
-          className="w-full p-3 border border-slate-200 rounded-lg text-slate-700 focus:ring-2 focus:ring-[#22ACE2] focus:border-transparent outline-none transition-all read-only:bg-slate-50 read-only:text-slate-500"
+          className={getInputFieldClasses(readOnly)}
         />
       </div>
     );
