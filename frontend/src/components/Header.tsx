@@ -1,13 +1,20 @@
 import { useState } from 'react';
-import { Link, NavLink, Outlet } from 'react-router';
-import ChangeLanguage from './ChangeLanguage';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router';
 
 export default function Header() {
     const [isOpen, setIsOpen] = useState(false);
+    const navigate = useNavigate();
+    const isAuthenticated = Boolean(localStorage.getItem('token'));
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        setIsOpen(false);
+        navigate('/connexion');
+    };
 
     return (
         <>
-            <header className="relative z-50 bg-slate-900">
+            <header className="fixed w-full z-50 bg-slate-900">
                 <nav className='flex items-center justify-between'>
                     
                     <Link to="/" className='flex items-center gap-2'>
@@ -16,8 +23,17 @@ export default function Header() {
                         </svg>
                         <span className='text-white text-xl'>LaundryMap</span>
                     </Link>
-                    <ChangeLanguage />
                     <div className='flex item-right gap-6'>
+                        {isAuthenticated && (
+                            <button
+                                type="button"
+                                className='text-white font-semibold hidden md:block cursor-pointer'
+                                onClick={handleLogout}
+                            >
+                                Déconnexion
+                            </button>
+                        )}
+
                         <button 
                             className=''
                             aria-controls="search"
@@ -84,13 +100,23 @@ export default function Header() {
                                 </NavLink>
                             </li>
                             <li>
-                                <NavLink 
-                                    to="/connexion" 
-                                    className={({ isActive }) => `block px-6 py-5 font-bold transition-colors hover:bg-blue-50 ${isActive ? 'bg-blue-50/50 text-blue-600' : 'text-[#22ACE2]'}`} 
-                                    onClick={() => setIsOpen(false)}
-                                >
-                                    Connexion
-                                </NavLink>
+                                {isAuthenticated ? (
+                                    <button
+                                        type="button"
+                                        className="block w-full text-left px-6 py-5 font-bold text-[#22ACE2] transition-colors hover:bg-blue-50 cursor-pointer"
+                                        onClick={handleLogout}
+                                    >
+                                        Déconnexion
+                                    </button>
+                                ) : (
+                                    <NavLink 
+                                        to="/connexion" 
+                                        className={({ isActive }) => `block px-6 py-5 font-bold transition-colors hover:bg-blue-50 ${isActive ? 'bg-blue-50/50 text-blue-600' : 'text-[#22ACE2]'}`} 
+                                        onClick={() => setIsOpen(false)}
+                                    >
+                                        Connexion
+                                    </NavLink>
+                                )}
                             </li>
                         </ul>
                     )}

@@ -4,6 +4,13 @@
   box-sizing: inherit !important;
 }
 
+.profil-page {
+  input, button {
+    box-sizing: border-box !important;
+  }
+}
+
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -22,7 +29,6 @@
 
 header{
   background-color: #14A8DE;
-  padding: 10px 20px;
 }
 
 header button{
@@ -43,12 +49,25 @@ header nav{
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 10px 20px;
+  max-width: 1280px;
+  margin: 0 auto;
 }
 
 header nav a{
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+footer{
+
+}
+
+footer .footer__content{
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 a {
@@ -61,7 +80,22 @@ a:hover {
 }
 
 body {
-  margin: 0;
+  /* margin: 0;
   min-width: 320px;
-  min-height: 100vh;
+  min-height: 100vh; */
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
 }
