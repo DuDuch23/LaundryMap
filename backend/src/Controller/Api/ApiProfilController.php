@@ -2,7 +2,11 @@
 
 namespace App\Controller\Api;
 
+use App\Entity\Langue;
 use App\Entity\Utilisateur;
+use App\Entity\UtilisateurPreference;
+use App\Enum\ThemePreferenceEnum;
+use App\Repository\LangueRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -23,6 +27,8 @@ class ApiProfilController extends AbstractController
             return $this->json(['message' => 'Utilisateur non authentifié.'], 401);
         }
 
+        $preference = $utilisateur->getPreference();
+
         return $this->json([
             'id' => $utilisateur->getId(),
             'email' => $utilisateur->getEmail(),
@@ -31,6 +37,12 @@ class ApiProfilController extends AbstractController
             'statut' => $utilisateur->getStatut()->value,
             'dateCreation' => $utilisateur->getDateCreation()?->format(DATE_ATOM),
             'dateDerniereConnexion' => $utilisateur->getDateDerniereConnexion()?->format(DATE_ATOM),
+            'preference' => $preference ? [
+                'langueId' => $preference->getLangue()->getId(),
+                'langueCode' => $preference->getLangue()->getCode(),
+                'theme' => $preference->getTheme()->value,
+                'notifications' => $preference->isNotifications(),
+            ] : null,
         ]);
     }
 
@@ -40,6 +52,7 @@ class ApiProfilController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
+        LangueRepository $langueRepository,
     ): JsonResponse {
         $utilisateur = $this->getUser();
 
@@ -56,6 +69,9 @@ class ApiProfilController extends AbstractController
         $nom = array_key_exists('nom', $payload) ? trim((string) $payload['nom']) : null;
         $prenom = array_key_exists('prenom', $payload) ? trim((string) $payload['prenom']) : null;
         $nouveauMotDePasse = array_key_exists('nouveauMotDePasse', $payload) ? (string) $payload['nouveauMotDePasse'] : '';
+        $preferencePayload = array_key_exists('preference', $payload) && is_array($payload['preference'])
+            ? $payload['preference']
+            : null;
 
         if ($nom !== null && $nom === '') {
             return $this->json(['message' => 'Le nom ne peut pas être vide.'], 400);
@@ -81,7 +97,70 @@ class ApiProfilController extends AbstractController
             $utilisateur->setMotDePasse($passwordHasher->hashPassword($utilisateur, $nouveauMotDePasse));
         }
 
+        if ($preferencePayload !== null) {
+            $preference = $utilisateur->getPreference();
+
+            if (!$preference instanceof UtilisateurPreference) {
+                $preference = new UtilisateurPreference();
+                $preference->setUtilisateur($utilisateur);
+
+                $langueParDefaut = $langueRepository->findOneBy(['code' => 'fr']);
+                if (!$langueParDefaut instanceof Langue) {
+                    $langueParDefaut = $langueRepository->findOneBy([]);
+                }
+
+                if (!$langueParDefaut instanceof Langue) {
+                    return $this->json(['message' => 'Aucune langue disponible pour créer les préférences.'], 500);
+                }
+
+                $preference->setLangue($langueParDefaut);
+                $preference->setTheme(ThemePreferenceEnum::THEME_CLAIR);
+                $preference->setNotifications(true);
+                $entityManager->persist($preference);
+            }
+
+            if (array_key_exists('langueId', $preferencePayload)) {
+                $langueId = (int) $preferencePayload['langueId'];
+                $langue = $langueRepository->find($langueId);
+
+                if (!$langue instanceof Langue) {
+                    return $this->json(['message' => 'La langue sélectionnée est invalide.'], 400);
+                }
+
+                $preference->setLangue($langue);
+            } elseif (array_key_exists('langueCode', $preferencePayload)) {
+                $langueCode = strtolower(trim((string) $preferencePayload['langueCode']));
+                $langue = $langueRepository->findOneBy(['code' => $langueCode]);
+
+                if (!$langue instanceof Langue) {
+                    return $this->json(['message' => 'Le code langue sélectionné est invalide.'], 400);
+                }
+
+                $preference->setLangue($langue);
+            }
+
+            if (array_key_exists('theme', $preferencePayload)) {
+                $theme = ThemePreferenceEnum::tryFrom((string) $preferencePayload['theme']);
+
+                if (!$theme instanceof ThemePreferenceEnum) {
+                    return $this->json(['message' => 'Le thème sélectionné est invalide.'], 400);
+                }
+
+                $preference->setTheme($theme);
+            }
+
+            if (array_key_exists('notifications', $preferencePayload)) {
+                if (!is_bool($preferencePayload['notifications'])) {
+                    return $this->json(['message' => 'Le paramètre notifications doit être un booléen.'], 400);
+                }
+
+                $preference->setNotifications($preferencePayload['notifications']);
+            }
+        }
+
         $entityManager->flush();
+
+        $preference = $utilisateur->getPreference();
 
         return $this->json([
             'message' => 'Profil mis à jour avec succès.',
@@ -93,6 +172,12 @@ class ApiProfilController extends AbstractController
                 'statut' => $utilisateur->getStatut()->value,
                 'dateCreation' => $utilisateur->getDateCreation()?->format(DATE_ATOM),
                 'dateDerniereConnexion' => $utilisateur->getDateDerniereConnexion()?->format(DATE_ATOM),
+                'preference' => $preference ? [
+                    'langueId' => $preference->getLangue()->getId(),
+                    'langueCode' => $preference->getLangue()->getCode(),
+                    'theme' => $preference->getTheme()->value,
+                    'notifications' => $preference->isNotifications(),
+                ] : null,
             ],
         ]);
     }
