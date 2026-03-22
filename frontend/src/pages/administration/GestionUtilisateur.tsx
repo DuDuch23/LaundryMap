@@ -272,9 +272,9 @@ export default function GestionUtilisateurs() {
                                             {user.statut}
                                         </span>
                                     )}
-                                    <button className="bg-[#22ACE2] hover:bg-blue-500 p-1.5 rounded-md text-white transition-colors cursor-pointer">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /><circle cx="5" cy="12" r="2" /></svg>
-                                    </button>
+                                    <Link to={`/admin/utilisateurs/${user.id}`} className="bg-[#22ACE2] hover:bg-blue-500 p-1.5 rounded-md text-white transition-colors cursor-pointer flex items-center justify-center" aria-label="Voir les détails">
+                                        <img src="/src/assets/more_horiz.svg" alt="" className="w-5 h-5" />
+                                    </Link>
                                 </div>
                             </div>
 
@@ -324,7 +324,7 @@ export default function GestionUtilisateurs() {
                             </div>
 
                             {/* Bouton Action */}
-                            {(user.professionnel?.statut === 'En attente' || !user.professionnel) && (
+                            {(user.professionnel?.statut === 'En attente' || (!user.professionnel && user.statut === 'En attente')) && (
                                 <div className="flex justify-end mt-4">
                                     <button
                                         onClick={() => ouvrirModal(user)}

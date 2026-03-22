@@ -123,3 +123,29 @@ export async function fetchAdminUtilisateurs(page: number = 1, filtres?: Filtres
         throw error;
     }
 }
+
+
+export async function fetchUtilisateurDetail(id: string) {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/api/admin/utilisateurs/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error(`Erreur lors de la récupération des détails de l'utilisateur ${id}:`, error);
+        throw error;
+    }
+}
+
+export async function updateUtilisateurStatut(id: number, action: 'accepter' | 'refuser', commentaire?: string) {
+    try {
+        const payload: any = { action };
+        if (commentaire) {
+            payload.commentaire = commentaire;
+        }
+        
+        const response = await axios.post(`${API_BASE_URL}/api/admin/utilisateurs/${id}/statut`, payload);
+        return response.data;
+    } catch (error) {
+        console.error(`Erreur lors de la mise à jour du statut (action: ${action}):`, error);
+        throw error;
+    }
+}

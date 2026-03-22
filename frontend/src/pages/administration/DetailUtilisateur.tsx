@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router';
+// AJOUT : Import des requêtes centralisées
+import { fetchUtilisateurDetail, updateUtilisateurStatut } from '../../services/request';
 
 interface LaverieDetail {
     id: number;
@@ -10,25 +12,43 @@ interface LaverieDetail {
     image?: string;
 }
 
-interface ProfessionnelProps {
-    user: {
+interface UserDetail {
+    id: number;
+    prenom: string;
+    nom: string;
+    email: string;
+    statut: string;
+    ville?: string;
+    codePostal?: string;
+    professionnel?: {
         id: number;
-        prenom: string;
-        nom: string;
-        email: string;
-        ville?: string;
-        codePostal?: string;
-        professionnel: {
-            siren: string;
-            statut: string;
-            laveries: LaverieDetail[];
-        };
+        siren: string;
+        statut: string;
+        laveries: LaverieDetail[];
     };
 }
 
-export default function DetailProfessionnel({ user }: ProfessionnelProps) {
+export default function DetailUtilisateur() {
     const navigate = useNavigate();
+    const { id } = useParams<{ id: string }>();
+    const [user, setUser] = useState<UserDetail | null>(null);
+    const [loading, setLoading] = useState(true);
     const [commentaire, setCommentaire] = useState('');
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                if (!id) return;
+                const data = await fetchUtilisateurDetail(id);
+                setUser(data);
+            } catch (error) {
+                console.error("Erreur de chargement :", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchUser();
+    }, [id]);
 
     const getBadgeStyle = (statut: string) => {
         switch (statut) {
@@ -40,21 +60,19 @@ export default function DetailProfessionnel({ user }: ProfessionnelProps) {
         }
     };
 
-    // Actions
+    if (loading) {
+        return <div className="text-center mt-20 font-bold text-[#22ACE2]">Chargement des détails...</div>;
+    }
+
+    if (!user) {
+        return <div className="text-center mt-20 font-bold text-red-500">Utilisateur introuvable.</div>;
+    }
+
+    // Actions simplifiées grâce à request.tsx
     const handleAccepter = async () => {
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/utilisateurs/${user.id}/statut`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ action: 'accepter' })
-            });
-            if (response.ok) {
-                navigate(-1);
-            }
+            await updateUtilisateurStatut(user.id, 'accepter');
+            navigate(-1);
         } catch (error) {
             console.error("Erreur lors de l'acceptation :", error);
         }
@@ -62,18 +80,8 @@ export default function DetailProfessionnel({ user }: ProfessionnelProps) {
 
     const handleRefuser = async () => {
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/utilisateurs/${user.id}/statut`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ action: 'refuser', commentaire })
-            });
-            if (response.ok) {
-                navigate(-1); // Retour au tableau une fois que c'est fait
-            }
+            await updateUtilisateurStatut(user.id, 'refuser', commentaire);
+            navigate(-1);
         } catch (error) {
             console.error("Erreur lors du refus :", error);
         }
@@ -89,7 +97,7 @@ export default function DetailProfessionnel({ user }: ProfessionnelProps) {
                     className="absolute top-6 left-4 bg-[#22ACE2] p-2 rounded-xl z-10 cursor-pointer"
                     aria-label="Retour"
                 >
-                    <img src="/src/assets/arrow_left_blue.svg" alt="Retour" className="w-6 h-6 invert" />
+                    <img src="/src/assets/arrow_left_blue.svg" alt="Retour" className="w-6 h-6" />
                 </button>
             </div>
 
@@ -105,8 +113,8 @@ export default function DetailProfessionnel({ user }: ProfessionnelProps) {
                     <h1 className="text-2xl font-bold underline decoration-2 underline-offset-4 mb-3">
                         {user.prenom} {user.nom}
                     </h1>
-                    <span className={`px-4 py-1.5 text-sm rounded-full font-medium ${getBadgeStyle(user.professionnel.statut)}`}>
-                        {user.professionnel.statut}
+                    <span className={`px-4 py-1.5 text-sm rounded-full font-medium ${getBadgeStyle(user.professionnel ? user.professionnel.statut : user.statut)}`}>
+                        {user.professionnel ? user.professionnel.statut : user.statut}
                     </span>
                 </div>
 
@@ -115,50 +123,52 @@ export default function DetailProfessionnel({ user }: ProfessionnelProps) {
                     <div className="text-sm space-y-2 flex-1">
                         <p><span className="font-bold">Prénom :</span> <span className="italic text-gray-600">{user.prenom}</span></p>
                         <p><span className="font-bold">Nom :</span> <span className="italic text-gray-600">{user.nom}</span></p>
-                        <p><span className="font-bold">Ville :</span> <span className="italic text-gray-600">{user.ville}</span></p>
-                        <p><span className="font-bold">Code postal :</span> <span className="italic text-gray-600">{user.codePostal}</span></p>
+                        {user.ville && <p><span className="font-bold">Ville :</span> <span className="italic text-gray-600">{user.ville}</span></p>}
+                        {user.codePostal && <p><span className="font-bold">Code postal :</span> <span className="italic text-gray-600">{user.codePostal}</span></p>}
                         <p><span className="font-bold">Email :</span> <span className="italic text-gray-600">{user.email}</span></p>
-                        <p className="mt-3"><span className="font-bold">SIREN/SIRET :</span> <span className="italic text-red-400">{user.professionnel.siren}</span></p>
+                        {user.professionnel && <p className="mt-3"><span className="font-bold">SIREN/SIRET :</span> <span className="italic text-red-400">{user.professionnel.siren}</span></p>}
                     </div>
 
                 </div>
 
                 {/* LISTE DES LAVERIES */}
-                <div className="mb-8">
-                    <h2 className="font-bold text-sm underline underline-offset-4 decoration-1 mb-4">Laveries disponible</h2>
-                    <div className="space-y-4">
-                        {user.professionnel.laveries.map((laverie) => (
-                            <div key={laverie.id} className="flex gap-4 items-center">
-                                {/* Image de la laverie */}
-                                <div className="w-24 h-20 rounded-xl overflow-hidden bg-gray-200 shrink-0 shadow-sm">
-                                    {laverie.image ? (
-                                        <img src={laverie.image} alt={laverie.nom} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">Image</div>
-                                    )}
-                                </div>
+                {user.professionnel && user.professionnel.laveries && (
+                    <div className="mb-8">
+                        <h2 className="font-bold text-sm underline underline-offset-4 decoration-1 mb-4">Laveries disponibles</h2>
+                        <div className="space-y-4">
+                            {user.professionnel.laveries.map((laverie) => (
+                                <div key={laverie.id} className="flex gap-4 items-center">
+                                    {/* Image de la laverie */}
+                                    <div className="w-24 h-20 rounded-xl overflow-hidden bg-gray-200 shrink-0 shadow-sm">
+                                        {laverie.image ? (
+                                            <img src={laverie.image} alt={laverie.nom} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">Image</div>
+                                        )}
+                                    </div>
 
-                                {/* Infos de la laverie */}
-                                <div className="flex-1">
-                                    <h3 className="font-bold text-sm underline decoration-1 underline-offset-2">{laverie.nom}</h3>
-                                    <p className="text-xs font-bold text-gray-800 mt-1">{laverie.adresse || 'Adresse inconnue'}</p>
-                                    <p className="text-xs italic text-gray-500 mb-2">{laverie.distance || 'à X km de votre position'}</p>
-                                    <span className={`px-3 py-1 text-[10px] rounded-full font-medium ${getBadgeStyle(laverie.statut)}`}>
-                                        {laverie.statut}
-                                    </span>
-                                </div>
+                                    {/* Infos de la laverie */}
+                                    <div className="flex-1">
+                                        <h3 className="font-bold text-sm underline decoration-1 underline-offset-2">{laverie.nom}</h3>
+                                        <p className="text-xs font-bold text-gray-800 mt-1">{laverie.adresse || 'Adresse inconnue'}</p>
+                                        <p className="text-xs italic text-gray-500 mb-2">{laverie.distance || 'à X km de votre position'}</p>
+                                        <span className={`px-3 py-1 text-[10px] rounded-full font-medium ${getBadgeStyle(laverie.statut)}`}>
+                                            {laverie.statut}
+                                        </span>
+                                    </div>
 
-                                {/* Bouton "..." */}
-                                <button className="bg-[#22ACE2] text-white p-2 rounded-xl hover:bg-blue-500 transition shadow-sm cursor-pointer shrink-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                        <circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /><circle cx="5" cy="12" r="2" />
-                                    </svg>
-                                </button>
-                            </div>
-                        ))}
+                                    {/* Bouton "..." */}
+                                    <button className="bg-[#22ACE2] text-white p-2 rounded-xl hover:bg-blue-500 transition shadow-sm cursor-pointer shrink-0">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                            <circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /><circle cx="5" cy="12" r="2" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                        <p className="text-xs text-gray-400 mt-4 underline decoration-1 underline-offset-2">Résultat : {user.professionnel.laveries.length}</p>
                     </div>
-                    <p className="text-xs text-gray-400 mt-4 underline decoration-1 underline-offset-2">Résultat : {user.professionnel.laveries.length}</p>
-                </div>
+                )}
 
                 <hr className="border-gray-200 mb-6" />
 

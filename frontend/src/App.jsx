@@ -15,6 +15,7 @@ const InscriptionPro = React.lazy(() => import('./pages/InscriptionProfessionnel
 const Connexion = React.lazy(() => import('./pages/Connexion'));
 const GestionUtilisateur = React.lazy(() => import('./pages/administration/GestionUtilisateur'));
 const TableauDeBord = React.lazy(() => import('./pages/administration/TableauDeBord'));
+const DetailUtilisateur = React.lazy(() => import('./pages/administration/DetailUtilisateur'));
 
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
           <Route path="/connexion" element={<Connexion />} />
           <Route path="/gestion-utilisateurs" element={<GestionUtilisateur />} />
           <Route path="/admin/tableau-de-bord" element={<TableauDeBord />} />
+          <Route path="/admin/detail-utilisateur/:id" element={<DetailUtilisateur />} />
         </Route>
       </Routes>
         <Footer />
