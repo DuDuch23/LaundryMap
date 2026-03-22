@@ -134,12 +134,16 @@
       "enregistrement": "Saving...",
       "deconnexion": "Log out",
       "succes": "Your information has been updated.",
+      "compte_supprime_succes": "Your account has been successfully deleted.",
+      "confirmation_suppression_compte": "Do you confirm the deletion of your account?",
+      "suppression_compte_en_cours": "Deleting account...",
       "erreur_chargement": "Unable to load your profile at the moment.",
       "session_expiree": "Your session has expired. Please log in again.",
       "erreur_nom": "Last name is required.",
       "erreur_prenom": "First name is required.",
       "erreur_mot_de_passe_court": "Password must be at least 8 characters.",
-      "erreur_mot_de_passe_confirmation": "Password confirmation does not match."
+      "erreur_mot_de_passe_confirmation": "Password confirmation does not match.",
+      "erreur_suppression_compte": "Unable to delete your account right now."
     },
     "footer": {
       "cgu": "Terms of Use",
