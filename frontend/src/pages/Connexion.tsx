@@ -130,7 +130,7 @@ export default function PageConnexion() {
 
       <form
         onSubmit={handleSubmit}
-        className="w-full flex flex-col items-center gap-5"
+        className="w-full flex flex-col items-center gap-5 box-border"
       >
         <div className="w-full text-left">
           <AccessibleInput
