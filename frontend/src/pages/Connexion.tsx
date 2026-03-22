@@ -9,11 +9,11 @@ import API_BASE_URL from "../services/api";
 export default function PageConnexion() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [erreurGenerale, setErreurGenerale] = useState<string>("");
+  const [messageSucces, setMessageSucces] = useState<string>("");
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -61,6 +61,9 @@ export default function PageConnexion() {
       if (resultat?.token) {
         localStorage.setItem("token", resultat.token);
         e.preventDefault();
+        setErrors({});
+        setErreurGenerale("");
+        setMessageSucces("");
         navigate("/profil", { replace: true });
         return;
       }

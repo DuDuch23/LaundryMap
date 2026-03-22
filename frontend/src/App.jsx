@@ -10,9 +10,21 @@ const Profil = React.lazy(() => import('./pages/Profil'));
 const InscriptionUtilisateur = React.lazy(() => import('./pages/InscriptionUtilisateur'));
 const InscriptionPro = React.lazy(() => import('./pages/InscriptionProfessionnel'));
 const Connexion = React.lazy(() => import('./pages/Connexion'));
-const GestionUtilisateur = React.lazy(() => import('./pages/administration/GestionUtilisateurs'));
+const GestionUtilisateur = React.lazy(() => import('./pages/administration/GestionUtilisateur'));
+const TableauDeBord = React.lazy(() => import('./pages/administration/TableauDeBord'));
+const DetailUtilisateur = React.lazy(() => import('./pages/administration/DetailUtilisateur'));
+const token = localStorage.getItem('token');
 
-function RequireAuth({ children }) {
+function AuthRoute({ children }) {
+  const location = useLocation();
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return <Navigate to="/connexion" state={{ from: location }} replace />;
+  }
+  return children;
+}
+
+function RequireAdmin({ children }) {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const hash = location.hash?.startsWith('#') ? location.hash.slice(1) : location.hash;
@@ -48,14 +60,16 @@ function App() {
             <Routes>
               <Route element={<Header />}>
                 <Route path="/" element={<Home />} />
-                <Route path="/profil" element={<RequireAuth><Profil /></RequireAuth>} />
+                <Route path="/profil" element={<AuthRoute><Profil /></AuthRoute>} />
                 <Route path="/inscription-utilisateur" element={<InscriptionUtilisateur />} />
                 <Route path="/inscription-pro" element={<InscriptionPro />} />
                 <Route path="/connexion" element={<Connexion />} />
-                <Route path="/gestion-utilisateurs" element={<GestionUtilisateur />} />
+                <Route path="/gestion-utilisateurs" element={<RequireAdmin><GestionUtilisateur /></RequireAdmin>} />
+                <Route path="/admin/tableau-de-bord" element={<RequireAdmin><TableauDeBord /></RequireAdmin>} />
+                <Route path="/admin/utilisateurs/:id" element={<RequireAdmin><DetailUtilisateur /></RequireAdmin>} />
               </Route>
             </Routes>
-        </Suspense>
+          </Suspense>
       </div>
       <Footer />
     </>

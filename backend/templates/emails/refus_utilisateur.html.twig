@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Refus de votre compte</title>
+</head>
+<body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+        <h2 style="color: #EA4335;">Information concernant votre compte LaundryMap</h2>
+        
+        <p>Bonjour {{ user.prenom }} {{ user.nom }},</p>
+        
+        <p>Suite à l'examen de votre demande de compte sur <strong>LaundryMap</strong>, nous sommes au regret de vous informer que celle-ci a été <strong>refusée</strong>.</p>
+        
+        <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid #EA4335; margin: 20px 0;">
+            <strong style="color: #EA4335;">Motif du refus :</strong><br><br>
+            <i>{{ motif|nl2br }}</i>
+        </div>
+        
+        <p>Si vous pensez qu'il s'agit d'une erreur ou si vous souhaitez obtenir plus d'informations, vous pouvez nous contacter en répondant directement à cet e-mail.</p>
+        
+        <p>Cordialement,<br>L'équipe LaundryMap</p>
+    </div>
+</body>
+</html>

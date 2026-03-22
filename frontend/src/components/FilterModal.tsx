@@ -37,6 +37,9 @@ export default function FilterModal({
     const modalRef = useRef<HTMLDivElement>(null);
     const previousFocusRef = useRef<Element | null>(null);
 
+    // --- NOUVEAU : Vérifie s'il y a au moins un filtre actif (non vide, non null) ---
+    const hasActiveFilters = Object.values(values).some(val => val !== '' && val !== null && val !== undefined);
+
     useEffect(() => {
         if (isOpen) {
             previousFocusRef.current = document.activeElement;
@@ -112,26 +115,38 @@ export default function FilterModal({
                             aria-label="Retour"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="m15 18-6-6 6-6"/>
+                                <path d="m15 18-6-6 6-6" />
                             </svg>
                         </button>
                         <h2 id="filter-modal-title" className="text-lg font-bold">Filtres</h2>
                     </div>
 
+                    {/* NOUVEAU : Affichage conditionnel des boutons */}
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={handleEffacer}
-                            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition"
-                        >
-                            Effacer
-                        </button>
-                        <button
-                            onClick={handleEffacer}
-                            className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition"
-                            aria-label="Effacer les filtres"
-                        >
-                            <img src="/src/assets/layers_clear.svg" alt="" className="w-5 h-5 invert" />
-                        </button>
+                        {hasActiveFilters ? (
+                            <>
+                                <button
+                                    onClick={handleEffacer}
+                                    className="text-sm font-medium text-gray-600 hover:text-gray-900 transition cursor-pointer"
+                                >
+                                    Effacer
+                                </button>
+                                <button
+                                    onClick={handleEffacer}
+                                    className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition cursor-pointer"
+                                    aria-label="Effacer les filtres"
+                                >
+                                    <img src="/src/assets/layers_clear.svg" alt="" className="w-5 h-5" />
+                                </button>
+                            </>
+                        ) : (
+                            <button
+                                className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition cursor-default"
+                                aria-label="Filtres"
+                            >
+                                <img src="/src/assets/filter_alt.svg" alt="Aucun filtre" className="w-5 h-5" />
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -139,7 +154,7 @@ export default function FilterModal({
                 <div className="p-5 space-y-6">
                     {sections.map((section) => (
                         <div key={section.key}>
-                            <h3 className="text-[#22ACE2] font-semibold text-sm mb-3 underline underline-offset-4 decoration-1">
+                            <h3 className="text-black font-semibold text-sm mb-3 underline underline-offset-4 decoration-1">
                                 {section.label}
                             </h3>
                             <div className="flex flex-wrap gap-2">
@@ -149,11 +164,10 @@ export default function FilterModal({
                                         <button
                                             key={option.value}
                                             onClick={() => onChange(section.key, option.value)}
-                                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                                                isActive
+                                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer ${isActive
                                                     ? 'bg-[#22ACE2] text-white shadow-sm'
                                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200'
-                                            }`}
+                                                }`}
                                         >
                                             {option.label}
                                         </button>
