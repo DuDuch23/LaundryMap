@@ -55,22 +55,22 @@ export function AccessibleLayout({ children }) {
 // 3. BOUTON ACCESSIBLE
 // ─────────────────────────────────────────────
 export function AccessibleButton({
-  onClick = () => {},
+  onClick,
+  className,
   children,
   ariaLabel = "",
   disabled = false,
   type = 'button',
-  className = '',
 }) {
   return (
     <button
       type={type}
+      className={className}
       onClick={onClick}
       disabled={disabled}
-      className={className}
       aria-label={ariaLabel} // si le texte du bouton n'est pas assez explicite
       aria-disabled={disabled}
-      // focus visible géré en CSS avec :focus-visible
+    // focus visible géré en CSS avec :focus-visible
     >
       {children}
     </button>
@@ -79,6 +79,7 @@ export function AccessibleButton({
 
 export function AccessibleInput({
   id,
+  name,
   label,
   className,
   type = 'text',
@@ -96,15 +97,16 @@ export function AccessibleInput({
         >
           {label}
           {required && (
-          <span aria-hidden="true" style={{ color: 'red' }}>
-            {' '}*
-          </span>
-        )}
-      </label>
+            <span aria-hidden="true" style={{ color: 'red' }}>
+              {' '}*
+            </span>
+          )}
+        </label>
       )}
 
       <input
         id={id}
+        name={name || id}
         type={type}
         value={value}
         className={`
@@ -113,7 +115,7 @@ export function AccessibleInput({
         `}
         onChange={onChange || undefined}
         placeholder={placeholder || undefined}
-        required={required || undefined} 
+        required={required || undefined}
         aria-required={required}
         aria-describedby={error ? `${id}-error` : undefined}
         aria-invalid={error ? 'true' : 'false'}
@@ -142,7 +144,7 @@ export function checkBoxAccessibility({
   placeholder,
   required = false,
   error,
-}){
+}) {
   return (
     <>
       <div>
