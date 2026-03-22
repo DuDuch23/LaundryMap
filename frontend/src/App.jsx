@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router';
 import './App.css'
 import Header from './components/Header';
 import Footer from './components/Footer/footer';
+import HeaderAdmin from './components/HeaderAdmin';
 
 // Pages
 const Home = React.lazy(() => import('./pages/Home'));
@@ -64,9 +65,12 @@ function App() {
               <Route path="/inscription-utilisateur" element={<InscriptionUtilisateur />} />
               <Route path="/inscription-pro" element={<InscriptionPro />} />
               <Route path="/connexion" element={<Connexion />} />
-              <Route path="/admin/gestion-utilisateurs" element={<RequireAdmin><GestionUtilisateur /></RequireAdmin>} />
-              <Route path="/admin/tableau-de-bord" element={<RequireAdmin><TableauDeBord /></RequireAdmin>} />
-              <Route path="/admin/utilisateurs/:id" element={<RequireAdmin><DetailUtilisateur /></RequireAdmin>} />
+            </Route>
+
+            <Route element={<RequireAdmin><HeaderAdmin /></RequireAdmin>}>
+              <Route path="/admin/tableau-de-bord" element={<TableauDeBord />} />
+              <Route path="/admin/gestion-utilisateurs" element={<GestionUtilisateur />} />
+              <Route path="/admin/utilisateurs/:id" element={<DetailUtilisateur />} />
             </Route>
           </Routes>
         </Suspense>
