@@ -9,7 +9,6 @@ import {
 } from '../services/request';
 import { getInputFieldClasses } from '../styles/fieldClasses';
 import type { Langue } from '../types/Langue';
-import ChangeLanguage from '../components/ChangeLanguage';
 
 
 export default function Profil() {
@@ -76,7 +75,7 @@ export default function Profil() {
         };
 
         chargerProfil();
-      }, [navigate, i18n, t]);
+      }, [navigate]);
 
     useEffect(() => {
       document.documentElement.classList.toggle('dark', darkMode);
@@ -274,7 +273,20 @@ export default function Profil() {
                 <p className="text-sm font-semibold text-slate-700">{t('main.profil.langue')}</p>
                 <p className="text-xs text-slate-400">{t('main.profil.langue_description')}</p>
               </div>
-              <ChangeLanguage />
+              <select
+                value={langueId === '' ? '' : String(langueId)}
+                onChange={handleLangueChange}
+                className="w-auto min-w-32 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-700 bg-white outline-none transition-all focus:ring-2 focus:ring-[#22ACE2] focus:border-transparent"
+              >
+                <option value="" disabled>
+                  {t('main.profil.langue')}
+                </option>
+                {langues.map((langue) => (
+                  <option key={langue.id} value={langue.id}>
+                    {langue.nom}
+                  </option>
+                ))}
+              </select>
             </div>
             <ToggleRow
               label={t('main.profil.theme_sombre')}
