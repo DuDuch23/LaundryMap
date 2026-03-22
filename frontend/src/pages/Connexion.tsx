@@ -6,6 +6,20 @@ import { AccessibleInput, AccessibleButton } from "../components/accessibility";
 import { connexion } from "../services/request";
 import API_BASE_URL from "../services/api";
 
+// Fonction utilitaire pour décoder le token JWT et récupérer les rôles
+function getRolesFromToken(token: string): string[] {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      window.atob(base64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
+    );
+    return JSON.parse(jsonPayload).roles || [];
+  } catch (e) {
+    return [];
+  }
+}
+
 export default function PageConnexion() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -27,7 +41,15 @@ export default function PageConnexion() {
 
     if (token) {
       localStorage.setItem("token", token);
-      navigate("/profil", { replace: true });
+
+      // Redirection dynamique selon le rôle (SSO)
+      const roles = getRolesFromToken(token);
+      if (roles.some((role) => role.includes("ADMIN"))) {
+        navigate("/admin/tableau-de-bord", { replace: true });
+      } else {
+        navigate("/profil", { replace: true });
+      }
+
       return;
     }
 
@@ -60,11 +82,18 @@ export default function PageConnexion() {
       });
       if (resultat?.token) {
         localStorage.setItem("token", resultat.token);
-        e.preventDefault();
+
         setErrors({});
         setErreurGenerale("");
         setMessageSucces("");
-        navigate("/profil", { replace: true });
+
+        // Redirection dynamique selon le rôle (Connexion classique)
+        const roles = getRolesFromToken(resultat.token);
+        if (roles.some((role) => role.includes("ADMIN"))) {
+          navigate("/admin/gestion-utilisateurs", { replace: true });
+        } else {
+          navigate("/profil", { replace: true });
+        }
         return;
       }
 
@@ -73,9 +102,9 @@ export default function PageConnexion() {
       if (error.response?.status === 401) {
         setErreurGenerale(t("main.connexion.mot_de_passe_invalid"));
       } else if (!error.response) {
-        setErreurGenerale(t("main.connexion.erreur_reseau") || "Impossible de joindre le serveur.");
+        setErreurGenerale(t("main.connexion.erreur_reseau"));
       } else {
-        setErreurGenerale(t("main.connexion.erreur_generique") || "Une erreur est survenue.");
+        setErreurGenerale(t("main.connexion.erreur_generique"));
       }
     }
   };
@@ -101,11 +130,12 @@ export default function PageConnexion() {
 
       <form
         onSubmit={handleSubmit}
-        className="w-full flex flex-col items-center gap-5"
+        className="w-full flex flex-col items-center gap-5 box-border"
       >
         <div className="w-full text-left">
           <AccessibleInput
             id="email"
+            name="email"
             className={"flex flex-col"}
             label={"Email"}
             type="email"
@@ -120,6 +150,7 @@ export default function PageConnexion() {
 
           <AccessibleInput
             id="password"
+            name="password"
             className={"flex flex-col"}
             label={t("main.connexion.mot_de_passe")}
             type="password"
@@ -140,6 +171,7 @@ export default function PageConnexion() {
 
         <AccessibleInput
           id="submit"
+          name="submit"
           label={false}
           type="submit"
           className="bg-[#22ACE2] w-full font-semibold rounded-lg hover:bg-blue-500 transition-colors shadow-sm cursor-pointer text-center"
@@ -177,27 +209,16 @@ export default function PageConnexion() {
                   fill="#34A853"
                 />
                 <path
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"
                 />
                 <path
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   fill="#EA4335"
                 />
               </svg>
-              {t("main.inscription_utilisateur.continuer_avec_google")}
+              <span className="text-sm font-medium">{t("main.inscription_utilisateur.continuer_avec_google")}</span>
             </div>
           </AccessibleButton>
-        </div>
-
-        <div className="mt-6 text-center text-sm text-gray-600">
-          {t("main.connexion.pas_encore_de_compte")}{" "}
-          <Link
-            to="/inscription-utilisateur"
-            className="text-[#22ACE2] font-bold hover:underline"
-          >
-            {t("main.connexion.sinscrire")}
-          </Link>
         </div>
       </form>
     </div>

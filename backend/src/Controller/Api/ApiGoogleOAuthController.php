@@ -21,7 +21,6 @@ class ApiGoogleOAuthController extends AbstractController
     private const FRONTEND_SUCCESS_PATH = '/profil';
     private const FRONTEND_ERROR_PATH = '/connexion';
     private const ALLOWED_REDIRECT_SCHEMES = ['https', 'http'];
-    private const LOCALHOSTS = ['localhost', '127.0.0.1'];
     private const OAUTH_STATE_COOKIE = 'google_oauth_state';
     private const OAUTH_STATE_TTL_SECONDS = 600;
 
@@ -233,13 +232,13 @@ class ApiGoogleOAuthController extends AbstractController
     private function buildDefaultFrontendUrl(string $path, Request $request): string
     {
         $normalizedPath = str_starts_with($path, '/') ? $path : '/' . $path;
-        $currentEnv = strtolower(trim($this->appEnv));
 
-        if (in_array($currentEnv, ['dev', 'test'], true)) {
-            return 'http://localhost:5173' . $normalizedPath;
+        $configuredFrontendOrigin = $this->resolveConfiguredFrontendOrigin();
+        if ($configuredFrontendOrigin !== null) {
+            return $configuredFrontendOrigin . $normalizedPath;
         }
 
-        return sprintf('https://%s%s', $request->getHost(), $normalizedPath);
+        return $request->getSchemeAndHttpHost() . $normalizedPath;
     }
 
     private function isTrustedRedirectUrl(string $url, Request $request): bool
@@ -257,18 +256,85 @@ class ApiGoogleOAuthController extends AbstractController
             return false;
         }
 
-        $requestHost = strtolower($request->getHost());
-        $allowedHosts = array_unique([...self::LOCALHOSTS, $requestHost]);
-
-        if (!in_array($host, $allowedHosts, true)) {
+        if (!$this->isDevOrTestEnvironment() && $scheme !== 'https') {
             return false;
         }
 
-        if ($scheme === 'http' && !in_array($host, self::LOCALHOSTS, true)) {
+        $origin = $this->buildOriginFromParts($parts);
+        if ($origin === null) {
             return false;
         }
 
-        return true;
+        $allowedOrigins = $this->resolveAllowedRedirectOrigins($request);
+
+        return in_array($origin, $allowedOrigins, true);
+    }
+
+    private function resolveConfiguredFrontendOrigin(): ?string
+    {
+        $configuredOrigins = $this->resolveConfiguredFrontendOrigins();
+
+        return $configuredOrigins[0] ?? null;
+    }
+
+    private function resolveConfiguredFrontendOrigins(): array
+    {
+        $origins = [];
+
+        foreach ([$this->frontendSsoSuccessUrl, $this->frontendSsoErrorUrl] as $configuredUrl) {
+            $normalizedUrl = $this->normalizeConfigValue($configuredUrl);
+
+            if ($normalizedUrl === null) {
+                continue;
+            }
+
+            $parts = parse_url($normalizedUrl);
+            if ($parts === false || !isset($parts['scheme'], $parts['host'])) {
+                continue;
+            }
+
+            $scheme = strtolower((string) $parts['scheme']);
+            if (!in_array($scheme, self::ALLOWED_REDIRECT_SCHEMES, true)) {
+                continue;
+            }
+
+            $origin = $this->buildOriginFromParts($parts);
+            if ($origin !== null) {
+                $origins[] = $origin;
+            }
+        }
+
+        return array_values(array_unique($origins));
+    }
+
+    private function resolveAllowedRedirectOrigins(Request $request): array
+    {
+        $allowedOrigins = array_merge(
+            [$request->getSchemeAndHttpHost()],
+            $this->resolveConfiguredFrontendOrigins()
+        );
+
+        return array_values(array_unique($allowedOrigins));
+    }
+
+    private function buildOriginFromParts(array $parts): ?string
+    {
+        if (!isset($parts['scheme'], $parts['host'])) {
+            return null;
+        }
+
+        $scheme = strtolower((string) $parts['scheme']);
+        $host = strtolower((string) $parts['host']);
+        $port = isset($parts['port']) ? ':' . (int) $parts['port'] : '';
+
+        return sprintf('%s://%s%s', $scheme, $host, $port);
+    }
+
+    private function isDevOrTestEnvironment(): bool
+    {
+        $currentEnv = strtolower(trim($this->appEnv));
+
+        return in_array($currentEnv, ['dev', 'test'], true);
     }
 
     private function normalizeConfigValue(string $value): ?string

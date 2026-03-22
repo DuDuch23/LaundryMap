@@ -47,7 +47,7 @@ export default function Footer() {
 
         {/* Navigation links */}
         <nav aria-label="Liens du footer">
-          <ul className="flex flex-col gap-5">
+          <ul className="flex flex-col gap-5 mt-5 mb-5">
             <li>
               <Link
                 to="/cgu"
