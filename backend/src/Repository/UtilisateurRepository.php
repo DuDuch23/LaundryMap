@@ -34,6 +34,7 @@ class UtilisateurRepository extends ServiceEntityRepository
                 'Refusé', 'Refusée' => StatutUtilisateurEnum::STATUT_REFUSE,
                 'En attente' => StatutUtilisateurEnum::STATUT_EN_ATTENTE,
                 'Banni' => StatutUtilisateurEnum::STATUT_BANNI,
+                'Supprimé' => StatutUtilisateurEnum::STATUT_SUPPRIME,
                 default => null,
             };
 

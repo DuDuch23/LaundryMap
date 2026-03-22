@@ -18,7 +18,7 @@ use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 class ApiUtilisateurController extends AbstractController
 {
     #[Route('/api/admin/utilisateurs', name: 'api_admin_utilisateurs_liste', methods: ['GET'])]
-    #[IsGranted('PUBLIC_ACCESS')]
+    #[IsGranted('IS_ADMIN')]
     public function getUtilisateurs(
         Request $request,
         UtilisateurRepository $utilisateurRepository
@@ -43,12 +43,13 @@ class ApiUtilisateurController extends AbstractController
         foreach ($pagerfanta->getCurrentPageResults() as $user) {
             $pro = $user->getProfessionnel();
 
-            $statutUserNom = $user->getStatut()->name;
-            $statutUserReact = match($statutUserNom) {
-                'STATUT_VALIDE' => 'Validé',
-                'STATUT_REFUSE' => 'Refusé',
-                'STATUT_BANNI'  => 'Banni',
-                default         => 'En attente'
+            $statutUserValeur = $user->getStatut()->value;
+            $statutUserReact = match($statutUserValeur) {
+                'Validé'   => 'Validé',
+                'Refusé'   => 'Refusé',
+                'Banni'    => 'Banni',
+                'Supprimé' => 'Supprimé',
+                default    => 'En attente'
             };
 
             $userData = [
@@ -60,12 +61,12 @@ class ApiUtilisateurController extends AbstractController
             ];
 
             if ($pro) {
-                $statutProNom = $pro->getStatut()->name;
-                $statutProReact = match($statutProNom) {
-                    'STATUT_VALIDE' => 'Validé',
-                    'STATUT_REFUSE' => 'Refusé',
-                    'STATUT_BANNI'  => 'Banni',
-                    default         => 'En attente'
+                $statutProValeur = $pro->getStatut()->value;
+                $statutProReact = match($statutProValeur) {
+                    'Validé' => 'Validé',
+                    'Refusé' => 'Refusé',
+                    'Banni'  => 'Banni',
+                    default  => 'En attente'
                 };
 
                 $adresse = $pro->getAdresse();
@@ -116,7 +117,7 @@ class ApiUtilisateurController extends AbstractController
 
 
     #[Route('/api/admin/utilisateurs/{id}', name: 'api_admin_utilisateur_detail', methods: ['GET'])]
-    #[IsGranted('PUBLIC_ACCESS')]
+    #[IsGranted('IS_ADMIN')]
     public function getUtilisateurDetail(int $id, UtilisateurRepository $utilisateurRepository): JsonResponse
     {
         $user = $utilisateurRepository->find($id);
@@ -208,7 +209,7 @@ class ApiUtilisateurController extends AbstractController
     }
 
     #[Route('/api/admin/utilisateurs/{id}/statut', name: 'api_admin_utilisateur_statut', methods: ['POST'])]
-    #[IsGranted('PUBLIC_ACCESS')]
+    #[IsGranted('IS_ADMIN')]
     public function updateStatut(int $id, Request $request, UtilisateurRepository $utilisateurRepository, EntityManagerInterface $em, MailerInterface $mailer): JsonResponse
     {
         $administrateur = $this->getUser();

@@ -67,6 +67,9 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'date_derniere_connexion', type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $dateDerniereConnexion = null;
 
+    #[ORM\Column(name: 'utilisateur_supprime_le', type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $utilisateurSupprimeLe = null;
+
     #[ORM\OneToOne(mappedBy: 'utilisateur', targetEntity: Professionnel::class)]
     private ?Professionnel $professionnel = null;
 
@@ -189,6 +192,17 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     public function setDateDerniereConnexion(?\DateTimeInterface $date): static
     {
         $this->dateDerniereConnexion = $date;
+        return $this;
+    }
+
+    public function getUtilisateurSupprimeLe(): ?\DateTimeInterface
+    {
+        return $this->utilisateurSupprimeLe;
+    }
+
+    public function setUtilisateurSupprimeLe(?\DateTimeInterface $date): static
+    {
+        $this->utilisateurSupprimeLe = $date;
         return $this;
     }
 

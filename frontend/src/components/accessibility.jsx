@@ -55,17 +55,19 @@ export function AccessibleLayout({ children }) {
 // 3. BOUTON ACCESSIBLE
 // ─────────────────────────────────────────────
 export function AccessibleButton({
-  onClick = undefined,
+  onClick = () => {},
   children,
   ariaLabel = "",
   disabled = false,
   type = 'button',
+  className = '',
 }) {
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled}
+      className={className}
       aria-label={ariaLabel} // si le texte du bouton n'est pas assez explicite
       aria-disabled={disabled}
       // focus visible géré en CSS avec :focus-visible

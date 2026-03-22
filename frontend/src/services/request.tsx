@@ -38,6 +38,36 @@ export interface ConnexionData {
     mot_de_passe: string;
 }
 
+export interface ProfilUtilisateurData {
+    id: number;
+    email: string;
+    prenom: string | null;
+    nom: string | null;
+    statut: string;
+    dateCreation: string | null;
+    dateDerniereConnexion: string | null;
+    utilisateurSupprimeLe?: string | null;
+    preference?: ProfilPreferenceData | null;
+}
+
+export interface ProfilPreferenceData {
+    langueId: number;
+    langueCode: string;
+    theme: 'clair' | 'sombre' | 'systeme';
+    notifications: boolean;
+}
+
+export interface UpdateProfilData {
+    nom: string;
+    prenom: string;
+    nouveauMotDePasse?: string;
+    preference?: {
+        langueId?: number;
+        theme?: 'clair' | 'sombre' | 'systeme';
+        notifications?: boolean;
+    };
+}
+
 // export async function InscriptionProfessionnel(data: InscriptionProfessionnelData) {
 //     try {
 //         const response = await axios.post(`${API_BASE_URL}/api/inscription-professionnel`, data);
@@ -75,7 +105,11 @@ export async function getLangues() {
         method: 'GET',
         headers: { accept: 'application/json' },
     });
-    console.log("Langues récupérées :", response);
+
+    if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des langues');
+    }
+
     return await response.json();
 
 }
@@ -96,6 +130,83 @@ export async function connexion(data: ConnexionData) {
         return response.data;
     } catch (error) {
         console.error("Erreur lors de la connexion:", error);
+        throw error;
+    }
+}
+
+export async function getProfilUtilisateur(): Promise<ProfilUtilisateurData> {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+        throw new Error('Aucun token de connexion trouvé.');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/profil`, {
+        method: 'GET',
+        headers: {
+            accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        const error: any = new Error('Impossible de récupérer le profil utilisateur.');
+        error.status = response.status;
+        throw error;
+    }
+
+    const data = await response.json();
+    return data as ProfilUtilisateurData;
+}
+
+export async function updateProfilUtilisateur(payload: UpdateProfilData): Promise<ProfilUtilisateurData> {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+        throw new Error('Aucun token de connexion trouvé.');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/profil`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+        const error: any = new Error(data?.message || 'Impossible de mettre à jour le profil utilisateur.');
+        error.status = response.status;
+        throw error;
+    }
+
+    return data.utilisateur as ProfilUtilisateurData;
+}
+
+export async function supprimerProfilUtilisateur(): Promise<void> {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+        throw new Error('Aucun token de connexion trouvé.');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/profil`, {
+        method: 'DELETE',
+        headers: {
+            accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+        const error: any = new Error(data?.message || 'Impossible de supprimer le compte utilisateur.');
+        error.status = response.status;
         throw error;
     }
 }

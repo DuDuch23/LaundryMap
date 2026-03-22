@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router';
-import ChangeLanguage from './ChangeLanguage';
 
 export default function Header() {
     const [isOpen, setIsOpen] = useState(false);
@@ -16,7 +15,7 @@ export default function Header() {
 
     return (
         <>
-            <header className="relative z-50 bg-slate-900">
+            <header className="fixed w-full z-50 bg-slate-900">
                 <nav className='flex items-center justify-between'>
 
                     <Link to="/" className='flex items-center gap-2'>
@@ -25,9 +24,18 @@ export default function Header() {
                         </svg>
                         <span className='text-white text-xl'>LaundryMap</span>
                     </Link>
-                    <ChangeLanguage />
                     <div className='flex item-right gap-6'>
-                        <button
+                        {isAuthenticated && (
+                            <button
+                                type="button"
+                                className='text-white font-semibold hidden md:block cursor-pointer'
+                                onClick={handleLogout}
+                            >
+                                Déconnexion
+                            </button>
+                        )}
+
+                        <button 
                             className=''
                             aria-controls="search"
                         >
@@ -65,6 +73,8 @@ export default function Header() {
                                     Accueil
                                 </NavLink>
                             </li>
+                            {
+                                isAuthenticated && (
                             <li className="border-b border-gray-100">
                                 <NavLink
                                     to="/profil"
@@ -74,13 +84,14 @@ export default function Header() {
                                     Profil
                                 </NavLink>
                             </li>
+                            )}
                             <li className="border-b border-gray-100">
                                 <NavLink
                                     to="/inscription-pro"
                                     className={({ isActive }) => `block px-6 py-4 transition-all duration-300 hover:text-[#22ACE2] hover:bg-blue-50 hover:pl-8 ${isActive ? 'bg-blue-50/50 text-[#22ACE2] font-bold' : 'text-gray-700'}`}
                                     onClick={() => setIsOpen(false)}
                                 >
-                                    Inscription Pro
+                                    Inscription Professionnel
                                 </NavLink>
                             </li>
                             <li className="border-b border-gray-100">
@@ -92,30 +103,25 @@ export default function Header() {
                                     Inscription Utilisateur
                                 </NavLink>
                             </li>
-                            {isAuthenticated ? (
-                                <li className="border-b border-gray-100">
-                                    <NavLink
-                                        to="/connexion"
-                                        onClick={() => {
-                                            handleLogout();
-                                            setIsOpen(false);
-                                        }}
-                                        className={({ isActive }) => `block px-6 py-4 transition-all duration-300 hover:text-[#22ACE2] hover:bg-blue-50 hover:pl-8 ${isActive ? 'bg-blue-50/50 text-[#22ACE2] font-bold' : 'text-gray-700'}`}
+                            <li>
+                                {isAuthenticated ? (
+                                    <button
+                                        type="button"
+                                        className="block w-full text-left px-6 py-5 font-bold text-[#22ACE2] transition-colors hover:bg-blue-50 cursor-pointer"
+                                        onClick={handleLogout}
                                     >
                                         Déconnexion
-                                    </NavLink>
-                                </li>
-                            ) : (
-                                <li>
-                                    <NavLink
-                                        to="/connexion"
-                                        className={({ isActive }) => `block px-6 py-4 transition-all duration-300 hover:text-[#22ACE2] hover:bg-blue-50 hover:pl-8 ${isActive ? 'bg-blue-50/50 text-[#22ACE2] font-bold' : 'text-gray-700'}`}
+                                    </button>
+                                ) : (
+                                    <NavLink 
+                                        to="/connexion" 
+                                        className={({ isActive }) => `block px-6 py-5 font-bold transition-colors hover:bg-blue-50 ${isActive ? 'bg-blue-50/50 text-blue-600' : 'text-[#22ACE2]'}`} 
                                         onClick={() => setIsOpen(false)}
                                     >
                                         Connexion
                                     </NavLink>
-                                </li>
-                            )}
+                                )}
+                            </li>
                         </ul>
                     )}
                 </nav>
