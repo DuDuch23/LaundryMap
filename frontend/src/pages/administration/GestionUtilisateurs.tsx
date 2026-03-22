@@ -12,7 +12,7 @@ interface Laverie {
 interface Professionnel {
     id: number;
     siren: string;
-    statut: 'En attente' | 'Validé' | 'Refusé' | 'Banni';
+    statut: 'En attente' | 'Validé' | 'Refusé' | 'Banni' | 'Supprimé';
     laveries: Laverie[];
 }
 
@@ -136,6 +136,7 @@ export default function GestionUtilisateurs() {
             case 'Validé':
                 return 'bg-green-100 text-green-500 border-green-300';
             case 'Banni':
+            case 'Supprimé':
                 return 'bg-gray-800 text-white border-gray-900';
             default:
                 return 'bg-gray-100 text-gray-500 border-gray-300';

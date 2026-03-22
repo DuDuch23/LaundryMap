@@ -39,12 +39,13 @@ class ApiUtilisateurController extends AbstractController
         foreach ($pagerfanta->getCurrentPageResults() as $user) {
             $pro = $user->getProfessionnel();
 
-            $statutUserNom = $user->getStatut()->name;
-            $statutUserReact = match($statutUserNom) {
-                'STATUT_VALIDE' => 'Validé',
-                'STATUT_REFUSE' => 'Refusé',
-                'STATUT_BANNI'  => 'Banni',
-                default         => 'En attente'
+            $statutUserValeur = $user->getStatut()->value;
+            $statutUserReact = match($statutUserValeur) {
+                'Validé'   => 'Validé',
+                'Refusé'   => 'Refusé',
+                'Banni'    => 'Banni',
+                'Supprimé' => 'Supprimé',
+                default    => 'En attente'
             };
 
             $userData = [
@@ -56,12 +57,12 @@ class ApiUtilisateurController extends AbstractController
             ];
 
             if ($pro) {
-                $statutProNom = $pro->getStatut()->name;
-                $statutProReact = match($statutProNom) {
-                    'STATUT_VALIDE' => 'Validé',
-                    'STATUT_REFUSE' => 'Refusé',
-                    'STATUT_BANNI'  => 'Banni',
-                    default         => 'En attente'
+                $statutProValeur = $pro->getStatut()->value;
+                $statutProReact = match($statutProValeur) {
+                    'Validé' => 'Validé',
+                    'Refusé' => 'Refusé',
+                    'Banni'  => 'Banni',
+                    default  => 'En attente'
                 };
 
                 $adresse = $pro->getAdresse();

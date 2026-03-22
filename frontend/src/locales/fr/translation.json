@@ -132,12 +132,16 @@
       "enregistrement": "Enregistrement...",
       "deconnexion": "Déconnexion",
       "succes": "Vos informations ont été mises à jour.",
+      "compte_supprime_succes": "Votre compte a bien été supprimé.",
+      "confirmation_suppression_compte": "Confirmez-vous la suppression de votre compte ?",
+      "suppression_compte_en_cours": "Suppression du compte...",
       "erreur_chargement": "Impossible de charger votre profil pour le moment.",
       "session_expiree": "Votre session a expiré. Veuillez vous reconnecter.",
       "erreur_nom": "Le nom est requis.",
       "erreur_prenom": "Le prénom est requis.",
       "erreur_mot_de_passe_court": "Le mot de passe doit contenir au moins 8 caractères.",
-      "erreur_mot_de_passe_confirmation": "La confirmation du mot de passe ne correspond pas."
+      "erreur_mot_de_passe_confirmation": "La confirmation du mot de passe ne correspond pas.",
+      "erreur_suppression_compte": "Impossible de supprimer votre compte pour le moment."
     },
     "footer": {
       "cgu": "Conditions générales d'utilisation",

@@ -4,11 +4,13 @@ import { useTranslation } from "react-i18next";
 import {
   getLangues,
   getProfilUtilisateur,
+  supprimerProfilUtilisateur,
   updateProfilUtilisateur,
   type ProfilUtilisateurData,
 } from '../services/request';
 import { getInputFieldClasses } from '../styles/fieldClasses';
 import type { Langue } from '../types/Langue';
+import ChangeLanguage from '../components/ChangeLanguage';
 
 
 export default function Profil() {
@@ -21,6 +23,7 @@ export default function Profil() {
   const [erreurFormulaire, setErreurFormulaire] = useState('');
   const [messageSucces, setMessageSucces] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [langues, setLangues] = useState<Langue[]>([]);
   const [langueId, setLangueId] = useState<number | ''>('');
   const [darkMode, setDarkMode] = useState(true);
@@ -83,16 +86,6 @@ export default function Profil() {
 
     const scrollToTop = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    const handleLangueChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-      const selectedId = Number(event.target.value);
-      setLangueId(selectedId);
-
-      const langueSelectionnee = langues.find((langue) => langue.id === selectedId);
-      if (langueSelectionnee?.code) {
-        i18n.changeLanguage(langueSelectionnee.code);
-      }
     };
 
     const formaterDate = (date: string | null): string => {
@@ -176,6 +169,39 @@ export default function Profil() {
         } finally {
             setIsSaving(false);
         }
+    };
+
+    const handleSuppressionCompte = async () => {
+      const confirmation = window.confirm(t('main.profil.confirmation_suppression_compte'));
+
+      if (!confirmation) {
+        return;
+      }
+
+      setErreurFormulaire('');
+      setMessageSucces('');
+      setIsDeleting(true);
+
+      try {
+        await supprimerProfilUtilisateur();
+        localStorage.removeItem('token');
+        sessionStorage.setItem('flashMessageKey', 'main.profil.compte_supprime_succes');
+        navigate('/', {
+          replace: true,
+          state: { flashMessageKey: 'main.profil.compte_supprime_succes' },
+        });
+      } catch (error: any) {
+        if (error?.status === 401 || error?.status === 403) {
+          localStorage.removeItem('token');
+          navigate('/connexion', { replace: true });
+          return;
+        }
+
+        setErreurFormulaire(error?.message || t('main.profil.erreur_suppression_compte'));
+        scrollToTop();
+      } finally {
+        setIsDeleting(false);
+      }
     };
 
           const handleDeconnexion = () => {
@@ -273,20 +299,11 @@ export default function Profil() {
                 <p className="text-sm font-semibold text-slate-700">{t('main.profil.langue')}</p>
                 <p className="text-xs text-slate-400">{t('main.profil.langue_description')}</p>
               </div>
-              <select
-                value={langueId === '' ? '' : String(langueId)}
-                onChange={handleLangueChange}
-                className="w-auto min-w-32 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-700 bg-white outline-none transition-all focus:ring-2 focus:ring-[#22ACE2] focus:border-transparent"
-              >
-                <option value="" disabled>
-                  {t('main.profil.langue')}
-                </option>
-                {langues.map((langue) => (
-                  <option key={langue.id} value={langue.id}>
-                    {langue.nom}
-                  </option>
-                ))}
-              </select>
+              <ChangeLanguage
+                langues={langues}
+                selectedLangueId={langueId}
+                onSelectLangueId={setLangueId}
+              />
             </div>
             <ToggleRow
               label={t('main.profil.theme_sombre')}
@@ -314,10 +331,14 @@ export default function Profil() {
             </p>
             <button
               type="button"
+              onClick={handleSuppressionCompte}
+              disabled={isDeleting}
               aria-describedby="rgpd-description"
-              className="w-full flex items-center justify-between p-3 border border-red-100 rounded-xl text-red-500 bg-red-50/30 hover:bg-red-50 transition-colors"
+              className="w-full flex items-center justify-between p-3 border border-red-100 rounded-xl text-red-500 bg-red-50/30 hover:bg-red-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <span className="text-sm font-semibold">{t('main.profil.supprimer_compte')}</span>
+              <span className="text-sm font-semibold">
+                {isDeleting ? t('main.profil.suppression_compte_en_cours') : t('main.profil.supprimer_compte')}
+              </span>
               <span aria-hidden="true" className="text-base">🗑</span>
             </button>
           </Section>

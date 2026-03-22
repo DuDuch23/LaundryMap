@@ -5,6 +5,7 @@ namespace App\Controller\Api;
 use App\Entity\Langue;
 use App\Entity\Utilisateur;
 use App\Entity\UtilisateurPreference;
+use App\Enum\StatutUtilisateurEnum;
 use App\Enum\ThemePreferenceEnum;
 use App\Repository\LangueRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -37,6 +38,7 @@ class ApiProfilController extends AbstractController
             'statut' => $utilisateur->getStatut()->value,
             'dateCreation' => $utilisateur->getDateCreation()?->format(DATE_ATOM),
             'dateDerniereConnexion' => $utilisateur->getDateDerniereConnexion()?->format(DATE_ATOM),
+            'utilisateurSupprimeLe' => $utilisateur->getUtilisateurSupprimeLe()?->format(DATE_ATOM),
             'preference' => $preference ? [
                 'langueId' => $preference->getLangue()->getId(),
                 'langueCode' => $preference->getLangue()->getCode(),
@@ -172,6 +174,7 @@ class ApiProfilController extends AbstractController
                 'statut' => $utilisateur->getStatut()->value,
                 'dateCreation' => $utilisateur->getDateCreation()?->format(DATE_ATOM),
                 'dateDerniereConnexion' => $utilisateur->getDateDerniereConnexion()?->format(DATE_ATOM),
+                'utilisateurSupprimeLe' => $utilisateur->getUtilisateurSupprimeLe()?->format(DATE_ATOM),
                 'preference' => $preference ? [
                     'langueId' => $preference->getLangue()->getId(),
                     'langueCode' => $preference->getLangue()->getCode(),
@@ -180,5 +183,35 @@ class ApiProfilController extends AbstractController
                 ] : null,
             ],
         ]);
+    }
+
+    #[Route('/api/profil', name: 'api_profil_delete', methods: ['DELETE'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function deleteProfil(EntityManagerInterface $entityManager): JsonResponse
+    {
+        $utilisateur = $this->getUser();
+
+        if (!$utilisateur instanceof Utilisateur) {
+            return $this->json(['message' => 'Utilisateur non authentifié.'], 401);
+        }
+
+        $dateSuppression = new \DateTime();
+
+        $utilisateur
+            ->setStatut(StatutUtilisateurEnum::STATUT_SUPPRIME)
+            ->setUtilisateurSupprimeLe($dateSuppression);
+
+        $professionnel = $utilisateur->getProfessionnel();
+        if ($professionnel !== null) {
+            foreach ($professionnel->getLaveries() as $laverie) {
+                if ($laverie->getSupprimee_le() === null) {
+                    $laverie->setSupprimee_le($dateSuppression);
+                }
+            }
+        }
+
+        $entityManager->flush();
+
+        return $this->json(['message' => 'Votre compte a bien été supprimé.']);
     }
 }

@@ -46,6 +46,7 @@ export interface ProfilUtilisateurData {
     statut: string;
     dateCreation: string | null;
     dateDerniereConnexion: string | null;
+    utilisateurSupprimeLe?: string | null;
     preference?: ProfilPreferenceData | null;
 }
 
@@ -185,6 +186,31 @@ export async function updateProfilUtilisateur(payload: UpdateProfilData): Promis
 
     return data.utilisateur as ProfilUtilisateurData;
 }
+
+export async function supprimerProfilUtilisateur(): Promise<void> {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+        throw new Error('Aucun token de connexion trouvé.');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/profil`, {
+        method: 'DELETE',
+        headers: {
+            accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+        const error: any = new Error(data?.message || 'Impossible de supprimer le compte utilisateur.');
+        error.status = response.status;
+        throw error;
+    }
+}
+
 export interface FiltresUtilisateurs {
     statut?: string;
     type?: string;
