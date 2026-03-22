@@ -19,25 +19,15 @@
         "symfony/console": "^8.0.7",
         "symfony/dotenv": "^8.0.7",
         "symfony/flex": "^2.10",
-<<<<<<< HEAD
-        "symfony/framework-bundle": "^8.0.6",
-        "symfony/http-client": "^8.0.6",
-        "symfony/mailer": "^8.0",
-=======
+        "symfony/mailer": "^8.0.6",
         "symfony/framework-bundle": "^8.0.7",
         "symfony/http-client": "^8.0.7",
->>>>>>> 02015de60b9e8a35858ea19819a76b96963621f4
         "symfony/property-access": "^8.0.4",
         "symfony/property-info": "^8.0.7",
         "symfony/runtime": "^8.0.1",
-<<<<<<< HEAD
-        "symfony/serializer": "^8.0.6",
-        "symfony/twig-bundle": "^8.0",
-        "symfony/validator": "^8.0.6",
-=======
+        "symfony/twig-bundle": "^8.0.4",
         "symfony/serializer": "^8.0.7",
         "symfony/validator": "^8.0.7",
->>>>>>> 02015de60b9e8a35858ea19819a76b96963621f4
         "symfony/yaml": "^8.0.6"
     },
     "config": {
