@@ -178,9 +178,7 @@ export default function DetailUtilisateur() {
 
                                     {/* Bouton "..." */}
                                     <button className="bg-[#22ACE2] text-white p-2 rounded-xl hover:bg-blue-500 transition shadow-sm cursor-pointer shrink-0">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                            <circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /><circle cx="5" cy="12" r="2" />
-                                        </svg>
+                                        <img src="/src/assets/more_horiz.svg" alt="Options" className="w-4 h-4" />
                                     </button>
                                 </div>
                             ))}
