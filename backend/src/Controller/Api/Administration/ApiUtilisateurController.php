@@ -18,7 +18,7 @@ use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 class ApiUtilisateurController extends AbstractController
 {
     #[Route('/api/admin/utilisateurs', name: 'api_admin_utilisateurs_liste', methods: ['GET'])]
-    #[IsGranted('IS_ADMIN')]
+    #[IsGranted('ROLE_ADMIN')]
     public function getUtilisateurs(
         Request $request,
         UtilisateurRepository $utilisateurRepository
@@ -117,7 +117,7 @@ class ApiUtilisateurController extends AbstractController
 
 
     #[Route('/api/admin/utilisateurs/{id}', name: 'api_admin_utilisateur_detail', methods: ['GET'])]
-    #[IsGranted('IS_ADMIN')]
+    #[IsGranted('ROLE_ADMIN')]
     public function getUtilisateurDetail(int $id, UtilisateurRepository $utilisateurRepository): JsonResponse
     {
         $user = $utilisateurRepository->find($id);
@@ -209,7 +209,7 @@ class ApiUtilisateurController extends AbstractController
     }
 
     #[Route('/api/admin/utilisateurs/{id}/statut', name: 'api_admin_utilisateur_statut', methods: ['POST'])]
-    #[IsGranted('IS_ADMIN')]
+    #[IsGranted('ROLE_ADMIN')]
     public function updateStatut(int $id, Request $request, UtilisateurRepository $utilisateurRepository, EntityManagerInterface $em, MailerInterface $mailer): JsonResponse
     {
         $administrateur = $this->getUser();

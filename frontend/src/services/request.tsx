@@ -68,16 +68,6 @@ export interface UpdateProfilData {
     };
 }
 
-// export async function InscriptionProfessionnel(data: InscriptionProfessionnelData) {
-//     try {
-//         const response = await axios.post(`${API_BASE_URL}/api/inscription-professionnel`, data);
-//         return response.data;
-//     } catch (error) {
-//         console.error("Error during professional registration:", error);
-//         throw error;
-//     }
-// }
-
 export async function inscriptionProfessionnel(data: InscriptionProfessionnelData) {
     const response = await fetch(`${API_BASE_URL}/api/inscription-professionnel`, {
         method: 'POST',
@@ -90,7 +80,7 @@ export async function inscriptionProfessionnel(data: InscriptionProfessionnelDat
 
     const resultat = await response.json();
 
-    if(!response.ok){
+    if (!response.ok) {
         const error: any = new Error('Erreur lors de l\'inscription professionnel');
         error.response = { data: resultat };
         throw error;
@@ -100,7 +90,6 @@ export async function inscriptionProfessionnel(data: InscriptionProfessionnelDat
 }
 
 export async function getLangues() {
-
     const response = await fetch(`${API_BASE_URL}/api/langues`, {
         method: 'GET',
         headers: { accept: 'application/json' },
@@ -111,12 +100,16 @@ export async function getLangues() {
     }
 
     return await response.json();
-
 }
 
 export async function inscriptionUtilisateur(data: InscriptionUtilisateurData) {
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/inscription-utilisateur`, data);
+        const response = await axios.post(`${API_BASE_URL}/api/inscription-utilisateur`, data, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
         return response.data;
     } catch (error) {
         console.error("Erreur lors de l'inscription utilisateur:", error);
@@ -126,7 +119,12 @@ export async function inscriptionUtilisateur(data: InscriptionUtilisateurData) {
 
 export async function connexion(data: ConnexionData) {
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/connexion`, data);
+        const response = await axios.post(`${API_BASE_URL}/api/connexion`, data, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
         return response.data;
     } catch (error) {
         console.error("Erreur lors de la connexion:", error);
@@ -235,7 +233,6 @@ export async function fetchAdminUtilisateurs(page: number = 1, filtres?: Filtres
     }
 }
 
-
 export async function fetchUtilisateurDetail(id: string) {
     try {
         const response = await axios.get(`${API_BASE_URL}/api/admin/utilisateurs/${id}`);
@@ -252,8 +249,12 @@ export async function updateUtilisateurStatut(id: number, action: 'accepter' | '
         if (commentaire) {
             payload.commentaire = commentaire;
         }
-        
-        const response = await axios.post(`${API_BASE_URL}/api/admin/utilisateurs/${id}/statut`, payload);
+        const response = await axios.post(`${API_BASE_URL}/api/admin/utilisateurs/${id}/statut`, payload, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
         return response.data;
     } catch (error) {
         console.error(`Erreur lors de la mise à jour du statut (action: ${action}):`, error);
