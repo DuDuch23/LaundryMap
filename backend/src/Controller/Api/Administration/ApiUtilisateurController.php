@@ -164,9 +164,9 @@ class ApiUtilisateurController extends AbstractController
                 }
 
                 $couleur = match($laverie->getStatut()->name) {
-                    'STATUT_VALIDEE' => 'vert',
-                    'STATUT_REFUSEE' => 'rouge',
-                    default          => 'orange'
+                    'STATUT_VALIDEE' => 'Validé',
+                    'STATUT_REFUSEE' => 'Refusé',
+                    default          => 'En attente'
                 };
 
                 //SI ADRESSE COMPLETE

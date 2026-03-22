@@ -40,7 +40,7 @@ function App() {
           <Route path="/connexion" element={<Connexion />} />
           <Route path="/gestion-utilisateurs" element={<GestionUtilisateur />} />
           <Route path="/admin/tableau-de-bord" element={<TableauDeBord />} />
-          <Route path="/admin/detail-utilisateur/:id" element={<DetailUtilisateur />} />
+          <Route path="/admin/utilisateurs/:id" element={<DetailUtilisateur />} />
         </Route>
       </Routes>
         <Footer />

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
-// AJOUT : Import des requêtes centralisées
 import { fetchUtilisateurDetail, updateUtilisateurStatut } from '../../services/request';
 
 interface LaverieDetail {
@@ -10,6 +9,7 @@ interface LaverieDetail {
     adresse: string;
     distance?: string;
     image?: string;
+    imageAlt?: string;
 }
 
 interface UserDetail {
@@ -52,11 +52,16 @@ export default function DetailUtilisateur() {
 
     const getBadgeStyle = (statut: string) => {
         switch (statut) {
-            case 'Refusé': return 'bg-red-100 text-red-500';
-            case 'En attente': return 'bg-orange-200 text-orange-600';
-            case 'Validée':
-            case 'Validé': return 'bg-[#34A853] text-white';
-            default: return 'bg-gray-100 text-gray-500';
+            case 'Refusé':
+                return 'bg-red-100 text-red-500 border border-red-300';
+            case 'En attente':
+                return 'bg-orange-100 text-orange-500 border border-orange-300';
+            case 'Validé':
+                return 'bg-green-100 text-green-500 border border-green-300';
+            case 'Banni':
+                return 'bg-gray-800 text-white border border-gray-900';
+            default:
+                return 'bg-gray-100 text-gray-500 border border-gray-300';
         }
     };
 
@@ -92,6 +97,13 @@ export default function DetailUtilisateur() {
 
             {/* HEADER BACKGROUND (Placeholder pour l'image de fond) */}
             <div className="relative h-56 bg-slate-800 w-full overflow-hidden">
+                {user.professionnel?.laveries?.[0]?.image && (
+                    <img
+                        src={user.professionnel.laveries[0].image}
+                        alt={user.professionnel.laveries[0].imageAlt || user.professionnel.laveries[0].nom}
+                        className="absolute inset-0 w-full h-full object-cover opacity-80"
+                    />
+                )}
                 <button
                     onClick={() => navigate(-1)}
                     className="absolute top-6 left-4 bg-[#22ACE2] p-2 rounded-xl z-10 cursor-pointer"
@@ -109,7 +121,7 @@ export default function DetailUtilisateur() {
                 </div>
 
                 {/* NOM ET STATUT */}
-                <div className="text-center mb-6 mt-2">
+                <div className="text-start mb-6 mt-2">
                     <h1 className="text-2xl font-bold underline decoration-2 underline-offset-4 mb-3">
                         {user.prenom} {user.nom}
                     </h1>
@@ -141,7 +153,7 @@ export default function DetailUtilisateur() {
                                     {/* Image de la laverie */}
                                     <div className="w-24 h-20 rounded-xl overflow-hidden bg-gray-200 shrink-0 shadow-sm">
                                         {laverie.image ? (
-                                            <img src={laverie.image} alt={laverie.nom} className="w-full h-full object-cover" />
+                                            <img src={laverie.image} alt={laverie.imageAlt || laverie.nom} className="w-full h-full object-cover" />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">Image</div>
                                         )}
@@ -173,8 +185,11 @@ export default function DetailUtilisateur() {
                 <hr className="border-gray-200 mb-6" />
 
                 {/* ZONE DE COMMENTAIRE */}
-                <div className="mb-6 relative">
-                    <label htmlFor="commentaire" className="absolute -top-2 left-4 bg-white px-1 text-xs font-bold text-gray-800">
+                <div className="mb-6 relative w-[90%]">
+                    <label
+                        htmlFor="commentaire"
+                        className="absolute -top-2.5 left-4 bg-white px-2 text-[13px] font-medium text-gray-800"
+                    >
                         Commentaire (Facultatif)
                     </label>
                     <textarea
@@ -183,7 +198,7 @@ export default function DetailUtilisateur() {
                         value={commentaire}
                         onChange={(e) => setCommentaire(e.target.value)}
                         placeholder="Tapez votre description..."
-                        className="w-full border-2 border-black rounded-xl p-4 pt-3 text-sm focus:outline-none focus:border-[#22ACE2] resize-none"
+                        className="block w-full box-border border-[1.5px] border-black rounded-[1rem] p-4 text-sm focus:outline-none focus:border-[#22ACE2] resize-none bg-transparent"
                     ></textarea>
                 </div>
 
@@ -202,7 +217,6 @@ export default function DetailUtilisateur() {
                         Refuser
                     </button>
                 </div>
-
             </div>
         </div>
     );
