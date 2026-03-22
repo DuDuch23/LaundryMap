@@ -8,9 +8,12 @@ use Pagerfanta\Pagerfanta;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Entity\UtilisateurHistoriqueInteraction;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 
 class ApiUtilisateurController extends AbstractController
 {
@@ -206,8 +209,14 @@ class ApiUtilisateurController extends AbstractController
 
     #[Route('/api/admin/utilisateurs/{id}/statut', name: 'api_admin_utilisateur_statut', methods: ['POST'])]
     #[IsGranted('PUBLIC_ACCESS')]
-    public function updateStatut(int $id, Request $request, UtilisateurRepository $utilisateurRepository, EntityManagerInterface $em): JsonResponse
+    public function updateStatut(int $id, Request $request, UtilisateurRepository $utilisateurRepository, EntityManagerInterface $em, MailerInterface $mailer): JsonResponse
     {
+        $administrateur = $this->getUser();
+
+        if (!$administrateur) {
+            return $this->json(['message' => 'Action non autorisée. Aucun administrateur connecté.'], 403);
+        }
+
         $user = $utilisateurRepository->find($id);
 
         if (!$user) {
@@ -216,12 +225,22 @@ class ApiUtilisateurController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
         $action = $data['action'] ?? null;
+        $motif = $data['commentaire'] ?? null;
 
         if (!in_array($action, ['accepter', 'refuser'])) {
             return $this->json(['message' => 'Action invalide'], 400);
         }
 
+        if ($action === 'refuser' && empty(trim($motif))) {
+            return $this->json(['message' => 'Un motif de refus est obligatoire.'], 400);
+        }
+
         $pro = $user->getProfessionnel();
+
+        $historique = new UtilisateurHistoriqueInteraction();
+        $historique->setUtilisateur($user);
+        $historique->setAdministrateur($administrateur);
+        $historique->setDate(new \DateTime());
 
         if ($action === 'accepter') {
             $user->setStatut(\App\Enum\StatutUtilisateurEnum::STATUT_VALIDE);
@@ -229,13 +248,28 @@ class ApiUtilisateurController extends AbstractController
                 $pro->setStatut(\App\Enum\StatutProfessionnelEnum::STATUT_VALIDE);
                 $pro->setDateValidation(new \DateTime());
             }
+            $historique->setAction('Validation du compte');
+            $historique->setMotifAction($motif ?: 'Compte vérifié et validé.');
         } else {
             $user->setStatut(\App\Enum\StatutUtilisateurEnum::STATUT_REFUSE);
             if ($pro) {
                 $pro->setStatut(\App\Enum\StatutProfessionnelEnum::STATUT_REFUSE);
             }
+            $historique->setAction('Refus du compte');
+            $historique->setMotifAction($motif ?: 'Compte refusé par l\'administration.');
+            
+            //ENVOIE DU MAIL EN CAS DE REFUS
+            $email = (new TemplatedEmail())
+                ->from('noreply@laundrymap.fr')
+                ->to($user->getEmail())
+                ->subject('Information concernant votre compte LaundryMap')
+                ->htmlTemplate('emails/refus_utilisateur.html.twig')
+                ->context(['user' => $user, 'motif' => $motif]);
+            
+            $mailer->send($email);
         }
 
+        $em->persist($historique);
         $em->flush();
 
         return $this->json(['message' => 'Statut mis à jour avec succès']);

@@ -95,7 +95,7 @@ export default function Header() {
                             {isAuthenticated ? (
                                 <li className="border-b border-gray-100">
                                     <NavLink
-                                        to="/"
+                                        to="/connexion"
                                         onClick={() => {
                                             handleLogout();
                                             setIsOpen(false);

@@ -34,6 +34,7 @@ export default function DetailUtilisateur() {
     const [user, setUser] = useState<UserDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [commentaire, setCommentaire] = useState('');
+    const [errorMsg, setErrorMsg] = useState('');
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -76,7 +77,7 @@ export default function DetailUtilisateur() {
     // Actions simplifiées grâce à request.tsx
     const handleAccepter = async () => {
         try {
-            await updateUtilisateurStatut(user.id, 'accepter');
+            await updateUtilisateurStatut(user.id, 'accepter', commentaire);
             navigate(-1);
         } catch (error) {
             console.error("Erreur lors de l'acceptation :", error);
@@ -84,11 +85,17 @@ export default function DetailUtilisateur() {
     };
 
     const handleRefuser = async () => {
+        if (!commentaire.trim()) {
+            setErrorMsg('Le commentaire est obligatoire pour justifier un refus.');
+            return;
+        }
+
         try {
             await updateUtilisateurStatut(user.id, 'refuser', commentaire);
             navigate(-1);
         } catch (error) {
             console.error("Erreur lors du refus :", error);
+            setErrorMsg('Une erreur est survenue lors du refus.');
         }
     };
 
@@ -201,6 +208,10 @@ export default function DetailUtilisateur() {
                         className="block w-full box-border border-[1.5px] border-black rounded-[1rem] p-4 text-sm focus:outline-none focus:border-[#22ACE2] resize-none bg-transparent"
                     ></textarea>
                 </div>
+
+                {errorMsg && (
+                    <p className="text-red-500 text-sm mb-4 font-semibold text-center">{errorMsg}</p>
+                )}
 
                 {/* BOUTONS D'ACTION */}
                 <div className="flex gap-4">
