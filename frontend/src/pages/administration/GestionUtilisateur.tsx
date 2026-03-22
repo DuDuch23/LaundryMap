@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router';
 import { fetchAdminUtilisateurs, type FiltresUtilisateurs } from '../../services/request';
 import { AccessibleModal } from '../../components/accessibility';
 import FilterModal, { type FilterSection, type FilterValues } from '../../components/FilterModal';
@@ -201,11 +202,9 @@ export default function GestionUtilisateurs() {
             {/* HEADER */}
             <div className="bg-white flex items-center justify-between p-4 shadow-sm mb-6">
                 <div className="flex items-center gap-3">
-                    <button className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition" aria-label="Retour">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="m15 18-6-6 6-6" />
-                        </svg>
-                    </button>
+                    <Link to="/admin/tableau-de-bord" className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition block" aria-label="Retour">
+                        <img src="/src/assets/arrow_back_ios.svg" alt="" className="w-5 h-5" />
+                    </Link>
                     <h1 className="text-lg font-bold">Gestion des utilisateurs</h1>
                 </div>
 
@@ -244,7 +243,7 @@ export default function GestionUtilisateurs() {
                 <div className="bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm mb-8 mx-4">
                     <h2 className="font-bold mb-4">Utilisateurs en attentes</h2>
                     <img src="/src/assets/person_outline.svg" alt="Utilisateurs en attente" className="w-10 h-10 mx-auto mb-2 text-black" />
-                    <p className="text-orange-400 font-bold text-xl">+{enAttenteCount}</p>
+                    <p className="text-green-500 font-bold text-xl">+{enAttenteCount}</p>
                 </div>
 
                 {/* INDICATEUR DE CHARGEMENT */}

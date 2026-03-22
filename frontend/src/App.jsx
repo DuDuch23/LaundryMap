@@ -13,7 +13,9 @@ const Profil = React.lazy(() => import('./pages/Profil'));
 const InscriptionUtilisateur = React.lazy(() => import('./pages/InscriptionUtilisateur'));
 const InscriptionPro = React.lazy(() => import('./pages/InscriptionProfessionnel'));
 const Connexion = React.lazy(() => import('./pages/Connexion'));
-const GestionUtilisateur = React.lazy(() => import('./pages/administration/GestionUtilisateurs'));
+const GestionUtilisateur = React.lazy(() => import('./pages/administration/GestionUtilisateur'));
+const TableauDeBord = React.lazy(() => import('./pages/administration/TableauDeBord'));
+
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -36,6 +38,7 @@ function App() {
           <Route path="/inscription-pro" element={<InscriptionPro />} />
           <Route path="/connexion" element={<Connexion />} />
           <Route path="/gestion-utilisateurs" element={<GestionUtilisateur />} />
+          <Route path="/admin/tableau-de-bord" element={<TableauDeBord />} />
         </Route>
       </Routes>
         <Footer />
