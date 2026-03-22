@@ -6,7 +6,9 @@ use App\Entity\Utilisateur;
 use App\Enum\StatutUtilisateurEnum;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,22 +18,43 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class ApiGoogleOAuthController extends AbstractController
 {
+    private const FRONTEND_SUCCESS_PATH = '/profil';
+    private const FRONTEND_ERROR_PATH = '/connexion';
+    private const ALLOWED_REDIRECT_SCHEMES = ['https', 'http'];
+    private const LOCALHOSTS = ['localhost', '127.0.0.1'];
+    private const OAUTH_STATE_COOKIE = 'google_oauth_state';
+    private const OAUTH_STATE_TTL_SECONDS = 600;
+
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly JWTTokenManagerInterface $jwtTokenManager
+        private readonly JWTTokenManagerInterface $jwtTokenManager,
+        #[Autowire('%env(string:GOOGLE_CLIENT_ID)%')]
+        private readonly string $googleClientId,
+        #[Autowire('%env(string:GOOGLE_CLIENT_SECRET)%')]
+        private readonly string $googleClientSecret,
+        #[Autowire('%env(string:GOOGLE_REDIRECT_URI)%')]
+        private readonly string $googleRedirectUri,
+        #[Autowire('%env(string:FRONTEND_SSO_SUCCESS_URL)%')]
+        private readonly string $frontendSsoSuccessUrl,
+        #[Autowire('%env(string:FRONTEND_SSO_ERROR_URL)%')]
+        private readonly string $frontendSsoErrorUrl,
+        #[Autowire('%kernel.environment%')]
+        private readonly string $appEnv
     ) {
     }
 
     #[Route('/api/oauth/google/redirect', name: 'api_google_oauth_redirect', methods: ['GET'])]
     #[IsGranted('PUBLIC_ACCESS')]
-    public function redirectToGoogle(): RedirectResponse
+    public function redirectToGoogle(Request $request): RedirectResponse
     {
-        $clientId = $_ENV['GOOGLE_CLIENT_ID'] ?? null;
-        $redirectUri = $_ENV['GOOGLE_REDIRECT_URI'] ?? null;
+        $clientId = $this->normalizeConfigValue($this->googleClientId);
+        $redirectUri = $this->normalizeConfigValue($this->googleRedirectUri);
 
         if (!$clientId || !$redirectUri) {
-            return $this->redirect($this->buildFrontendErrorUrl('configuration_manquante'));
+            return $this->redirect($this->buildFrontendErrorUrl('configuration_manquante', $request));
         }
+
+        $state = $this->generateOauthState();
 
         $queryParams = http_build_query([
             'client_id' => $clientId,
@@ -40,27 +63,47 @@ class ApiGoogleOAuthController extends AbstractController
             'scope' => 'openid email profile',
             'access_type' => 'online',
             'prompt' => 'select_account',
+            'state' => $state,
         ]);
 
-        return $this->redirect('https://accounts.google.com/o/oauth2/v2/auth?' . $queryParams);
+        $response = $this->redirect('https://accounts.google.com/o/oauth2/v2/auth?' . $queryParams);
+        $response->headers->setCookie($this->createOauthStateCookie($state, $request));
+
+        return $response;
     }
 
     #[Route('/api/oauth/google/callback', name: 'api_google_oauth_callback', methods: ['GET'])]
     #[IsGranted('PUBLIC_ACCESS')]
     public function callback(Request $request): RedirectResponse|JsonResponse
     {
+        $requestState = $request->query->get('state');
+        $cookieState = $request->cookies->get(self::OAUTH_STATE_COOKIE);
+
+        if (!is_string($requestState) || !is_string($cookieState) || !hash_equals($cookieState, $requestState)) {
+            return $this->redirectWithClearedOauthState(
+                $this->buildFrontendErrorUrl('etat_oauth_invalide', $request),
+                $request
+            );
+        }
+
         $authorizationCode = $request->query->get('code');
 
         if (!$authorizationCode) {
-            return $this->redirect($this->buildFrontendErrorUrl('code_google_absent'));
+            return $this->redirectWithClearedOauthState(
+                $this->buildFrontendErrorUrl('code_google_absent', $request),
+                $request
+            );
         }
 
-        $clientId = $_ENV['GOOGLE_CLIENT_ID'] ?? null;
-        $clientSecret = $_ENV['GOOGLE_CLIENT_SECRET'] ?? null;
-        $redirectUri = $_ENV['GOOGLE_REDIRECT_URI'] ?? null;
+        $clientId = $this->normalizeConfigValue($this->googleClientId);
+        $clientSecret = $this->normalizeConfigValue($this->googleClientSecret);
+        $redirectUri = $this->normalizeConfigValue($this->googleRedirectUri);
 
         if (!$clientId || !$clientSecret || !$redirectUri) {
-            return $this->redirect($this->buildFrontendErrorUrl('configuration_manquante'));
+            return $this->redirectWithClearedOauthState(
+                $this->buildFrontendErrorUrl('configuration_manquante', $request),
+                $request
+            );
         }
 
         try {
@@ -80,7 +123,10 @@ class ApiGoogleOAuthController extends AbstractController
             $accessToken = $tokenData['access_token'] ?? null;
 
             if (!$accessToken) {
-                return $this->redirect($this->buildFrontendErrorUrl('jeton_google_invalide'));
+                return $this->redirectWithClearedOauthState(
+                    $this->buildFrontendErrorUrl('jeton_google_invalide', $request),
+                    $request
+                );
             }
 
             $userInfoResponse = $httpClient->request('GET', 'https://openidconnect.googleapis.com/v1/userinfo', [
@@ -92,9 +138,13 @@ class ApiGoogleOAuthController extends AbstractController
             $userInfo = $userInfoResponse->toArray(false);
             $email = $userInfo['email'] ?? null;
             $googleUserId = $userInfo['sub'] ?? null;
+            $emailVerified = filter_var($userInfo['email_verified'] ?? false, FILTER_VALIDATE_BOOL);
 
-            if (!$email || !$googleUserId) {
-                return $this->redirect($this->buildFrontendErrorUrl('profil_google_invalide'));
+            if (!$email || !$googleUserId || !$emailVerified) {
+                return $this->redirectWithClearedOauthState(
+                    $this->buildFrontendErrorUrl('profil_google_invalide', $request),
+                    $request
+                );
             }
 
             $utilisateurRepository = $this->entityManager->getRepository(Utilisateur::class);
@@ -112,6 +162,13 @@ class ApiGoogleOAuthController extends AbstractController
 
                 $this->entityManager->persist($utilisateur);
             } else {
+                if ($utilisateur->getStatut() !== StatutUtilisateurEnum::STATUT_VALIDE) {
+                    return $this->redirectWithClearedOauthState(
+                        $this->buildFrontendErrorUrl('compte_non_valide', $request),
+                        $request
+                    );
+                }
+
                 if (!$utilisateur->getOauthId()) {
                     $utilisateur->setOauthId('google:' . $googleUserId);
                 }
@@ -122,25 +179,149 @@ class ApiGoogleOAuthController extends AbstractController
 
             $jwt = $this->jwtTokenManager->create($utilisateur);
 
-            return $this->redirect($this->buildFrontendSuccessUrl($jwt));
+            return $this->redirectWithClearedOauthState(
+                $this->buildFrontendSuccessUrl($jwt, $request),
+                $request
+            );
         } catch (\Throwable) {
-            return $this->redirect($this->buildFrontendErrorUrl('echec_authentification_google'));
+            return $this->redirectWithClearedOauthState(
+                $this->buildFrontendErrorUrl('echec_authentification_google', $request),
+                $request
+            );
         }
     }
 
-    private function buildFrontendSuccessUrl(string $jwt): string
+    private function buildFrontendSuccessUrl(string $jwt, Request $request): string
     {
-        $baseUrl = $_ENV['FRONTEND_SSO_SUCCESS_URL'] ?? 'http://localhost:5173/connexion';
-        $separator = str_contains($baseUrl, '?') ? '&' : '?';
+        $baseUrl = $this->resolveAndValidateFrontendUrl(
+            $this->normalizeConfigValue($this->frontendSsoSuccessUrl),
+            $this->buildDefaultFrontendUrl(self::FRONTEND_SUCCESS_PATH, $request),
+            $request
+        );
+        $baseUrl = strtok($baseUrl, '#') ?: $baseUrl;
+        $fragment = http_build_query(['token' => $jwt]);
 
-        return sprintf('%s%stoken=%s', $baseUrl, $separator, urlencode($jwt));
+        return sprintf('%s#%s', $baseUrl, $fragment);
     }
 
-    private function buildFrontendErrorUrl(string $error): string
+    private function buildFrontendErrorUrl(string $error, Request $request): string
     {
-        $baseUrl = $_ENV['FRONTEND_SSO_ERROR_URL'] ?? 'http://localhost:5173/connexion';
-        $separator = str_contains($baseUrl, '?') ? '&' : '?';
+        $baseUrl = $this->resolveAndValidateFrontendUrl(
+            $this->normalizeConfigValue($this->frontendSsoErrorUrl),
+            $this->buildDefaultFrontendUrl(self::FRONTEND_ERROR_PATH, $request),
+            $request
+        );
+        $baseUrl = strtok($baseUrl, '#') ?: $baseUrl;
+        $fragment = http_build_query(['error' => $error]);
 
-        return sprintf('%s%serror=%s', $baseUrl, $separator, urlencode($error));
+        return sprintf('%s#%s', $baseUrl, $fragment);
+    }
+
+    private function resolveAndValidateFrontendUrl(?string $url, string $fallbackUrl, Request $request): string
+    {
+        if ($url && $this->isTrustedRedirectUrl($url, $request)) {
+            return $url;
+        }
+
+        if ($this->isTrustedRedirectUrl($fallbackUrl, $request)) {
+            return $fallbackUrl;
+        }
+
+        return $this->buildDefaultFrontendUrl(self::FRONTEND_ERROR_PATH, $request);
+    }
+
+    private function buildDefaultFrontendUrl(string $path, Request $request): string
+    {
+        $normalizedPath = str_starts_with($path, '/') ? $path : '/' . $path;
+        $currentEnv = strtolower(trim($this->appEnv));
+
+        if (in_array($currentEnv, ['dev', 'test'], true)) {
+            return 'http://localhost:5173' . $normalizedPath;
+        }
+
+        return sprintf('https://%s%s', $request->getHost(), $normalizedPath);
+    }
+
+    private function isTrustedRedirectUrl(string $url, Request $request): bool
+    {
+        $parts = parse_url($url);
+
+        if ($parts === false || !isset($parts['scheme'], $parts['host'])) {
+            return false;
+        }
+
+        $scheme = strtolower((string) $parts['scheme']);
+        $host = strtolower((string) $parts['host']);
+
+        if (!in_array($scheme, self::ALLOWED_REDIRECT_SCHEMES, true)) {
+            return false;
+        }
+
+        $requestHost = strtolower($request->getHost());
+        $allowedHosts = array_unique([...self::LOCALHOSTS, $requestHost]);
+
+        if (!in_array($host, $allowedHosts, true)) {
+            return false;
+        }
+
+        if ($scheme === 'http' && !in_array($host, self::LOCALHOSTS, true)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function normalizeConfigValue(string $value): ?string
+    {
+        $trimmedValue = trim($value);
+
+        return $trimmedValue !== '' ? $trimmedValue : null;
+    }
+
+    private function generateOauthState(): string
+    {
+        return rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+    }
+
+    private function createOauthStateCookie(string $state, Request $request): Cookie
+    {
+        $isSecure = $request->isSecure();
+
+        return Cookie::create(
+            self::OAUTH_STATE_COOKIE,
+            $state,
+            time() + self::OAUTH_STATE_TTL_SECONDS,
+            '/api/oauth/google',
+            null,
+            $isSecure,
+            true,
+            false,
+            Cookie::SAMESITE_LAX
+        );
+    }
+
+    private function createClearedOauthStateCookie(Request $request): Cookie
+    {
+        $isSecure = $request->isSecure();
+
+        return Cookie::create(
+            self::OAUTH_STATE_COOKIE,
+            '',
+            1,
+            '/api/oauth/google',
+            null,
+            $isSecure,
+            true,
+            false,
+            Cookie::SAMESITE_LAX
+        );
+    }
+
+    private function redirectWithClearedOauthState(string $url, Request $request): RedirectResponse
+    {
+        $response = $this->redirect($url);
+        $response->headers->setCookie($this->createClearedOauthStateCookie($request));
+
+        return $response;
     }
 }

@@ -14,8 +14,10 @@ const GestionUtilisateur = React.lazy(() => import('./pages/administration/Gesti
 
 function RequireAuth({ children }) {
   const location = useLocation();
-  const params = new URLSearchParams(location.search);
-  const tokenInUrl = params.get('token');
+  const searchParams = new URLSearchParams(location.search);
+  const hash = location.hash?.startsWith('#') ? location.hash.slice(1) : location.hash;
+  const hashParams = new URLSearchParams(hash || '');
+  const tokenInUrl = hashParams.get('token') ?? searchParams.get('token');
 
   if (tokenInUrl) {
     localStorage.setItem('token', tokenInUrl);
