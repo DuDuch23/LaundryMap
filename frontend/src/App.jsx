@@ -17,10 +17,27 @@ const token = localStorage.getItem('token');
 
 function AuthRoute({ children }) {
   const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const hash = location.hash?.startsWith('#') ? location.hash.slice(1) : location.hash;
+  const hashParams = new URLSearchParams(hash || '');
+  const tokenInUrl = hashParams.get('token') ?? searchParams.get('token');
+  const oauthError = hashParams.get('error') ?? searchParams.get('error');
+
+  if (tokenInUrl) {
+    localStorage.setItem('token', tokenInUrl);
+    return <Navigate to={location.pathname} replace />;
+  }
+
+  if (oauthError) {
+    return <Navigate to="/connexion" replace />;
+  }
+
   const token = localStorage.getItem('token');
+
   if (!token) {
     return <Navigate to="/connexion" state={{ from: location }} replace />;
   }
+
   return children;
 }
 
