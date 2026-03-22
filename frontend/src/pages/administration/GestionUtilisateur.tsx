@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router';
 import { fetchAdminUtilisateurs, type FiltresUtilisateurs } from '../../services/request';
 import { AccessibleModal } from '../../components/accessibility';
 import FilterModal, { type FilterSection, type FilterValues } from '../../components/FilterModal';
@@ -12,7 +13,7 @@ interface Laverie {
 interface Professionnel {
     id: number;
     siren: string;
-    statut: 'En attente' | 'Validé' | 'Refusé' | 'Banni';
+    statut: 'En attente' | 'Validé' | 'Refusé' | 'Banni' | 'Supprimé';
     laveries: Laverie[];
 }
 
@@ -52,7 +53,6 @@ const FILTER_SECTIONS: FilterSection[] = [
         key: 'type',
         options: [
             { label: 'Tous', value: '' },
-            { label: 'Utilisateurs', value: 'clients' },
             { label: 'Clients', value: 'clients' },
             { label: 'Professionnels', value: 'professionnels' },
         ],
@@ -98,7 +98,10 @@ export default function GestionUtilisateurs() {
 
     // Filtres
     const [filtreModalOuverte, setFiltreModalOuverte] = useState<boolean>(false);
-    const [filtresActifs, setFiltresActifs] = useState<FilterValues>({ ...FILTRES_VIDES });
+    const [filtresActifs, setFiltresActifs] = useState<FilterValues>(() => {
+        const savedFiltres = localStorage.getItem('utilisateursFiltres');
+        return savedFiltres ? JSON.parse(savedFiltres) : { ...FILTRES_VIDES };
+    });
     const [filtresTemp, setFiltresTemp] = useState<FilterValues>({ ...FILTRES_VIDES });
 
     const aDesFiltresActifs = Object.values(filtresActifs).some((v) => v !== '');
@@ -136,6 +139,7 @@ export default function GestionUtilisateurs() {
             case 'Validé':
                 return 'bg-green-100 text-green-500 border-green-300';
             case 'Banni':
+            case 'Supprimé':
                 return 'bg-gray-800 text-white border-gray-900';
             default:
                 return 'bg-gray-100 text-gray-500 border-gray-300';
@@ -173,12 +177,14 @@ export default function GestionUtilisateurs() {
 
     const appliquerFiltres = (filtres: FilterValues) => {
         setFiltresActifs(filtres);
+        localStorage.setItem('utilisateursFiltres', JSON.stringify(filtres));
         setPage(1);
     };
 
     const effacerFiltres = () => {
         setFiltresTemp({ ...FILTRES_VIDES });
         setFiltresActifs({ ...FILTRES_VIDES });
+        localStorage.removeItem('utilisateursFiltres');
         setPage(1);
         setFiltreModalOuverte(false);
     };
@@ -197,34 +203,39 @@ export default function GestionUtilisateurs() {
             {/* HEADER */}
             <div className="bg-white flex items-center justify-between p-4 shadow-sm mb-6">
                 <div className="flex items-center gap-3">
-                    <button className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition" aria-label="Retour">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="m15 18-6-6 6-6"/>
-                        </svg>
-                    </button>
+                    <Link to="/admin/tableau-de-bord" className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition block" aria-label="Retour">
+                        <img src="/src/assets/arrow_back_ios.svg" alt="" className="w-5 h-5" />
+                    </Link>
                     <h1 className="text-lg font-bold">Gestion des utilisateurs</h1>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    {aDesFiltresActifs && (
+                {/* Boutons de Filtre (Logique conditionnelle) */}
+                <div className="flex items-center gap-3">
+                    {aDesFiltresActifs ? (
+                        <>
+                            <button
+                                onClick={effacerFiltres}
+                                className="text-sm font-medium text-gray-500 hover:text-gray-800 transition cursor-pointer"
+                            >
+                                Effacer
+                            </button>
+                            <button
+                                onClick={ouvrirFiltres}
+                                className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition cursor-pointer"
+                                aria-label="Ouvrir les filtres (Filtres actifs)"
+                            >
+                                <img src="/src/assets/layers_clear.svg" alt="Filtres actifs" className="w-5 h-5" />
+                            </button>
+                        </>
+                    ) : (
                         <button
-                            onClick={effacerFiltres}
-                            className="text-sm font-medium text-gray-500 hover:text-gray-700 transition"
+                            onClick={ouvrirFiltres}
+                            className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition cursor-pointer"
+                            aria-label="Ouvrir les filtres"
                         >
-                            Effacer
+                            <img src="/src/assets/filter_alt.svg" alt="Aucun filtre" className="w-5 h-5" />
                         </button>
                     )}
-                    <button
-                        onClick={aDesFiltresActifs ? effacerFiltres : ouvrirFiltres}
-                        className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition"
-                        aria-label={aDesFiltresActifs ? "Effacer les filtres" : "Ouvrir les filtres"}
-                    >
-                        {aDesFiltresActifs ? (
-                            <img src="/src/assets/layers_clear.svg" alt="" className="w-5 h-5" />
-                        ) : (
-                            <img src="/src/assets/filter_alt.svg" alt="" className="w-5 h-5" />
-                        )}
-                    </button>
                 </div>
             </div>
 
@@ -242,7 +253,7 @@ export default function GestionUtilisateurs() {
                 )}
 
                 {/* LISTE DES UTILISATEURS */}
-                <div className="space-y-6">
+                <div className={`space-y-6 ${chargement ? 'opacity-50' : 'opacity-100'} transition-opacity`}>
                     {utilisateurs.map((user) => (
                         <div key={user.id} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm relative">
 
@@ -262,9 +273,9 @@ export default function GestionUtilisateurs() {
                                             {user.statut}
                                         </span>
                                     )}
-                                    <button className="bg-[#22ACE2] hover:bg-blue-500 p-1.5 rounded-md text-white transition-colors cursor-pointer">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /><circle cx="5" cy="12" r="2" /></svg>
-                                    </button>
+                                    <Link to={`/admin/utilisateurs/${user.id}`} className="bg-[#22ACE2] hover:bg-blue-500 p-1.5 rounded-md text-white transition-colors cursor-pointer flex items-center justify-center" aria-label="Voir les détails">
+                                        <img src="/src/assets/more_horiz.svg" alt="" className="w-5 h-5" />
+                                    </Link>
                                 </div>
                             </div>
 
@@ -296,12 +307,11 @@ export default function GestionUtilisateurs() {
                                             {user.professionnel.laveries.slice(0, 3).map(laverie => (
                                                 <li key={laverie.id} className="flex justify-between items-center text-sm italic text-gray-700">
                                                     {laverie.nom}
-                                                    <span className={`w-3 h-3 rounded-full ${
-                                                        laverie.statut === 'vert' ? 'bg-green-500' :
-                                                        laverie.statut === 'rouge' ? 'bg-red-500' :
-                                                        laverie.statut === 'noir' ? 'bg-gray-800' :
-                                                        'bg-orange-500'
-                                                    }`}></span>
+                                                    <span className={`w-3 h-3 rounded-full ${laverie.statut === 'vert' ? 'bg-green-500' :
+                                                            laverie.statut === 'rouge' ? 'bg-red-500' :
+                                                                laverie.statut === 'noir' ? 'bg-gray-800' :
+                                                                    'bg-orange-500'
+                                                        }`}></span>
                                                 </li>
                                             ))}
                                         </ul>
@@ -313,7 +323,9 @@ export default function GestionUtilisateurs() {
                                     </div>
                                 )}
                             </div>
-                            {(user.professionnel?.statut === 'En attente' || !user.professionnel) && (
+
+                            {/* Bouton Action */}
+                            {(user.professionnel?.statut === 'En attente' || (!user.professionnel && user.statut === 'En attente')) && (
                                 <div className="flex justify-end mt-4">
                                     <button
                                         onClick={() => ouvrirModal(user)}
@@ -333,11 +345,10 @@ export default function GestionUtilisateurs() {
                         <button
                             onClick={allerPagePrecedente}
                             disabled={!pagination.aPagePrecedente}
-                            className={`flex items-center gap-2 px-6 py-2 rounded-full font-medium transition-colors shadow-sm cursor-pointer ${
-                                pagination.aPagePrecedente
-                                    ? 'bg-[#22ACE2] hover:bg-blue-500 text-white'
+                            className={`flex items-center gap-2 px-6 py-2 rounded-full font-medium transition-colors shadow-sm ${pagination.aPagePrecedente
+                                    ? 'bg-[#22ACE2] hover:bg-blue-500 text-white cursor-pointer'
                                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                            }`}
+                                }`}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
                             Précédent
@@ -350,11 +361,10 @@ export default function GestionUtilisateurs() {
                         <button
                             onClick={allerPageSuivante}
                             disabled={!pagination.aPageSuivante}
-                            className={`flex items-center gap-2 px-6 py-2 rounded-full font-medium transition-colors shadow-sm cursor-pointer ${
-                                pagination.aPageSuivante
-                                    ? 'bg-[#22ACE2] hover:bg-blue-500 text-white'
+                            className={`flex items-center gap-2 px-6 py-2 rounded-full font-medium transition-colors shadow-sm ${pagination.aPageSuivante
+                                    ? 'bg-[#22ACE2] hover:bg-blue-500 text-white cursor-pointer'
                                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                            }`}
+                                }`}
                         >
                             Suivant
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>

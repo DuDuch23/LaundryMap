@@ -34,11 +34,12 @@ class UtilisateurRepository extends ServiceEntityRepository
                 'Refusé', 'Refusée' => StatutUtilisateurEnum::STATUT_REFUSE,
                 'En attente' => StatutUtilisateurEnum::STATUT_EN_ATTENTE,
                 'Banni' => StatutUtilisateurEnum::STATUT_BANNI,
+                'Supprimé' => StatutUtilisateurEnum::STATUT_SUPPRIME,
                 default => null,
             };
 
             if ($statutEnum) {
-                $qb->andWhere('u.statut = :statut OR p.statut = :statut')
+                $qb->andWhere('(p.id IS NULL AND u.statut = :statut) OR (p.id IS NOT NULL AND p.statut = :statut)')
                    ->setParameter('statut', $statutEnum);
             }
         }

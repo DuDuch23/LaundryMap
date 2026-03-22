@@ -8,4 +8,5 @@ enum StatutUtilisateurEnum: string
     case STATUT_VALIDE = 'Validé';
     case STATUT_REFUSE = 'Refusé';
     case STATUT_BANNI = 'Banni';
+    case STATUT_SUPPRIME = 'Supprimé';
 }

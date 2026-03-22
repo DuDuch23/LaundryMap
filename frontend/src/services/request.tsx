@@ -46,6 +46,7 @@ export interface ProfilUtilisateurData {
     statut: string;
     dateCreation: string | null;
     dateDerniereConnexion: string | null;
+    utilisateurSupprimeLe?: string | null;
     preference?: ProfilPreferenceData | null;
 }
 
@@ -185,6 +186,31 @@ export async function updateProfilUtilisateur(payload: UpdateProfilData): Promis
 
     return data.utilisateur as ProfilUtilisateurData;
 }
+
+export async function supprimerProfilUtilisateur(): Promise<void> {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+        throw new Error('Aucun token de connexion trouvé.');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/profil`, {
+        method: 'DELETE',
+        headers: {
+            accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+        const error: any = new Error(data?.message || 'Impossible de supprimer le compte utilisateur.');
+        error.status = response.status;
+        throw error;
+    }
+}
+
 export interface FiltresUtilisateurs {
     statut?: string;
     type?: string;
@@ -205,6 +231,32 @@ export async function fetchAdminUtilisateurs(page: number = 1, filtres?: Filtres
         return response.data;
     } catch (error) {
         console.error("Erreur lors de la récupération des utilisateurs:", error);
+        throw error;
+    }
+}
+
+
+export async function fetchUtilisateurDetail(id: string) {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/api/admin/utilisateurs/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error(`Erreur lors de la récupération des détails de l'utilisateur ${id}:`, error);
+        throw error;
+    }
+}
+
+export async function updateUtilisateurStatut(id: number, action: 'accepter' | 'refuser', commentaire?: string) {
+    try {
+        const payload: any = { action };
+        if (commentaire) {
+            payload.commentaire = commentaire;
+        }
+        
+        const response = await axios.post(`${API_BASE_URL}/api/admin/utilisateurs/${id}/statut`, payload);
+        return response.data;
+    } catch (error) {
+        console.error(`Erreur lors de la mise à jour du statut (action: ${action}):`, error);
         throw error;
     }
 }

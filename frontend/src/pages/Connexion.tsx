@@ -9,16 +9,21 @@ import API_BASE_URL from "../services/api";
 export default function PageConnexion() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [erreurGenerale, setErreurGenerale] = useState<string>("");
+  const [messageSucces, setMessageSucces] = useState<string>("");
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
-    const oauthError = params.get("error");
+    const searchParams = new URLSearchParams(window.location.search);
+    const hash = window.location.hash.startsWith("#")
+      ? window.location.hash.slice(1)
+      : window.location.hash;
+    const hashParams = new URLSearchParams(hash);
+
+    const token = hashParams.get("token") ?? searchParams.get("token");
+    const oauthError = hashParams.get("error") ?? searchParams.get("error");
 
     if (token) {
       localStorage.setItem("token", token);
@@ -56,6 +61,9 @@ export default function PageConnexion() {
       if (resultat?.token) {
         localStorage.setItem("token", resultat.token);
         e.preventDefault();
+        setErrors({});
+        setErreurGenerale("");
+        setMessageSucces("");
         navigate("/profil", { replace: true });
         return;
       }
