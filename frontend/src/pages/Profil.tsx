@@ -281,7 +281,7 @@ export default function Profil() {
               type="password"
               value={motDePasse}
               onChange={(event) => setMotDePasse(event.target.value)}
-              placeholder={t('main.profil.laisser_vide_pour_ne_pas_modifier')}
+              placeholder={t('main.profil.nouveau_mot_de_passe_placeholder')}
             />
             <InputField
               id="confirmPassword"
