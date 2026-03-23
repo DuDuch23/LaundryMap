@@ -24,7 +24,7 @@ class UtilisateurPreference
     private Langue $langue;
 
     #[ORM\Column(enumType: ThemePreferenceEnum::class)]
-    private ThemePreferenceEnum $theme = ThemePreferenceEnum::THEME_CLAIR->value;
+    private ThemePreferenceEnum $theme = ThemePreferenceEnum::THEME_CLAIR;
 
     #[ORM\Column(type: 'boolean')]
     private bool $notifications;

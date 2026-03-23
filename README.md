@@ -74,10 +74,19 @@ cd frontend
 # Installer les dépendances
 npm install
 
-# Configurer l'URL de l'API dans .env avec les informations de l'API propriétaire
+# Configurer l'URL de l'API dans frontend/.env
+# VITE_API_BASE_URL=http://localhost:8000
 
 # Lancer le serveur de développement
-npm start
+npm run dev
+
+### Configuration Google Cloud (SSO)
+
+1. Créer un identifiant OAuth 2.0 (type **Application Web**) dans Google Cloud Console.
+2. Ajouter l'URI suivante dans **Authorized redirect URIs** :
+	- `http://localhost:8000/api/oauth/google/callback`
+3. Ajouter le client ID et le client secret dans les variables backend.
+4. Le bouton "Continuer avec Google" est disponible sur les pages inscription utilisateur et connexion.
 ```
 
 ## 📁 Structure du projet

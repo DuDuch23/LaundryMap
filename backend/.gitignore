@@ -8,5 +8,11 @@
 /public/bundles/
 /var/
 /vendor/
-/config/jwt/
+
+/config/jwt/private.pem
+/config/jwt/public.pem
 ###< symfony/framework-bundle ###
+
+###> lexik/jwt-authentication-bundle ###
+/config/jwt/*.pem
+###< lexik/jwt-authentication-bundle ###

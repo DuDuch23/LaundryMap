@@ -1,45 +1,64 @@
 <?php
-
 namespace App\Entity;
 
 use App\Repository\UtilisateurRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use App\Enum\StatutUtilisateurEnum;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Attribute\Groups;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
 #[ORM\Table(name: 'utilisateur')]
-class Utilisateur
-{
-    public const STATUT_EN_ATTENTE = 'En attente';
-    public const STATUT_VALIDE     = 'Validé';
-    public const STATUT_REFUSE     = 'Refusé';
-    public const STATUT_BANNI      = 'Banni';
+#[ORM\HasLifecycleCallbacks]
+#[UniqueEntity(
+    fields: ['email'],
+    message: 'Cet email a déjà été utilisé.'
+)]
+#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
 
+class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
+{
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
+    #[Groups(['utilisateur:read'])]
     private ?int $id = null;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    #[ORM\Column(type: 'string', length: 255, unique: true)]
+    #[Assert\NotBlank(message: "L'adresse email ne peut pas être vide.")]
+    #[Assert\Email(message: "L'adresse email '{{ value }}' n'est pas valide.")]
+    #[Groups(['utilisateur:read', 'utilisateur:write'])]
     private string $email;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['utilisateur:read', 'utilisateur:write'])]
     private ?string $nom = null;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['utilisateur:read', 'utilisateur:write'])]
     private ?string $prenom = null;
 
     #[ORM\Column(name: 'mot_de_passe', type: 'string', length: 255, nullable: true)]
+    #[Assert\NotBlank(message: "Le mot de passe est obligatoire.")]
+    #[Assert\Length(min: 8, minMessage: "Le mot de passe doit faire au moins {{ limit }} caractères.")]
+    #[Groups(['utilisateur:write'])]
     private ?string $motDePasse = null;
 
-    #[ORM\Column(type: 'string', enumType: null)]
-    private string $statut = self::STATUT_EN_ATTENTE;
+    #[ORM\Column(type: 'string', enumType: StatutUtilisateurEnum::class)]
+    #[Groups(['utilisateur:read'])]
+    private StatutUtilisateurEnum $statut = StatutUtilisateurEnum::STATUT_EN_ATTENTE;
 
     #[ORM\Column(name: 'date_creation', type: 'datetime', nullable: true)]
+    #[Groups(['utilisateur:read'])]
     private ?\DateTimeInterface $dateCreation = null;
 
     #[ORM\Column(name: 'date_modification', type: 'datetime', nullable: true)]
+    #[Groups(['utilisateur:read'])]
     private ?\DateTimeInterface $dateModification = null;
 
     #[ORM\Column(name: 'oauth_id', type: 'string', length: 255, nullable: true)]
@@ -47,6 +66,9 @@ class Utilisateur
 
     #[ORM\Column(name: 'date_derniere_connexion', type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $dateDerniereConnexion = null;
+
+    #[ORM\Column(name: 'utilisateur_supprime_le', type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $utilisateurSupprimeLe = null;
 
     #[ORM\OneToOne(mappedBy: 'utilisateur', targetEntity: Professionnel::class)]
     private ?Professionnel $professionnel = null;
@@ -119,12 +141,12 @@ class Utilisateur
         return $this;
     }
 
-    public function getStatut(): string
+    public function getStatut(): StatutUtilisateurEnum
     {
         return $this->statut;
     }
 
-    public function setStatut(string $statut): static
+    public function setStatut(StatutUtilisateurEnum $statut): static
     {
         $this->statut = $statut;
         return $this;
@@ -173,6 +195,17 @@ class Utilisateur
         return $this;
     }
 
+    public function getUtilisateurSupprimeLe(): ?\DateTimeInterface
+    {
+        return $this->utilisateurSupprimeLe;
+    }
+
+    public function setUtilisateurSupprimeLe(?\DateTimeInterface $date): static
+    {
+        $this->utilisateurSupprimeLe = $date;
+        return $this;
+    }
+
     public function getProfessionnel(): ?Professionnel
     {
         return $this->professionnel;
@@ -196,5 +229,38 @@ class Utilisateur
     public function getHistoriqueInteractions(): Collection
     {
         return $this->historiqueInteractions;
+    }
+
+    #[ORM\PrePersist]
+    public function setDatesLorsDeLaCreation(): void
+    {
+        $this->dateCreation = new \DateTime();
+        $this->dateModification = new \DateTime();
+    }
+
+    #[ORM\PreUpdate]
+    public function setDateLorsDeLaModification(): void
+    {
+        $this->dateModification = new \DateTime();
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->email;
+    }
+
+    public function getRoles(): array
+    {
+        return ['ROLE_USER'];
+    }
+
+    public function getPassword(): ?string
+    {
+        return $this->motDePasse;
+    }
+
+    public function eraseCredentials(): void
+    {
+        // Vide intentionnellement
     }
 }

@@ -6,7 +6,7 @@ use App\Repository\LaverieRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use App\Enum\StatueLaverieEnum;
+use App\Enum\StatutLaverieEnum;
 
 #[ORM\Entity(repositoryClass: LaverieRepository::class)]
 #[ORM\Table(name: 'laverie')]
@@ -21,8 +21,8 @@ class Laverie
     #[ORM\JoinColumn(name: 'professionnel_id', referencedColumnName: 'id', nullable: false)]
     private Professionnel $professionnel;
 
-    #[ORM\Column(type: 'string')]
-    private string $statut = StatueLaverieEnum::STATUT_EN_ATTENTE->value;
+    #[ORM\Column(enumType: StatutLaverieEnum::class)]
+    private StatutLaverieEnum $statut = StatutLaverieEnum::STATUT_EN_ATTENTE;
 
     #[ORM\Column(name: 'wi_line_reference', type: 'integer', nullable: true)]
     private ?int $wiLineReference = null;
@@ -109,11 +109,11 @@ class Laverie
         return $this;
     }
 
-    public function getStatut(): string
+    public function getStatut(): StatutLaverieEnum
     {
         return $this->statut;
     }
-    public function setStatut(string $statut): static
+    public function setStatut(StatutLaverieEnum $statut): static
     {
         $this->statut = $statut;
         return $this;
