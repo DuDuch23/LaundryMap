@@ -78,7 +78,7 @@
       "mot_de_passe_requis": "Password is required",
       "mot_de_passe_invalide": "Password does not meet the criteria",
       "conditions_requis": "You must accept the terms of use",
-      "succes": "Your account has been successfully created!",
+      "succes": "Your account has been successfully created! An email has been sent to you to validate your email address.",
       "mot_de_passe_caractere_minimum": "12 characters minimum",
       "une_majuscule": "One uppercase letter",
       "une_minuscule": "One lowercase letter",
@@ -152,5 +152,20 @@
       "partager": "Share",
       "partager_aria": "Share this page"
     }
+  },
+  "email_verification": {
+    "titre_succes": "Verification successful!",
+    "message_succes": "Your account has been successfully validated. You can now log in.",
+    "bouton_connexion": "Go to login page",
+    "titre_erreur": "An error occurred",
+    "erreur_invalid_token": "This verification link is invalid. Make sure you clicked on the most recent link received by email, or request a new link.",
+    "erreur_expired_token": "This verification link has expired. Please request a new link to validate your account.",
+    "erreur_user_not_found": "The user associated with this link was not found. Please check your registration.",
+    "erreur_inconnue": "An unknown error occurred. Please contact support.",
+    "bouton_renvoyer": "Resend verification link",
+    "titre_info": "Information",
+    "info_deja_verifie": "Your account has already been verified. You can log in directly.",
+    "titre_page_introuvable": "Page not found",
+    "message_page_introuvable": "No verification information found. Make sure you use the link received by email."
   }
 }

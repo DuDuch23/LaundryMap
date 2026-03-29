@@ -7,12 +7,15 @@ use Pagerfanta\Doctrine\ORM\QueryAdapter;
 use Pagerfanta\Pagerfanta;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\UtilisateurHistoriqueInteraction;
 use App\Entity\ProfessionnelHistoriqueInteraction;
+use App\Repository\EmailVerificationTokenRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 
@@ -281,5 +284,91 @@ class ApiUtilisateurController extends AbstractController
         $em->flush();
 
         return $this->json(['message' => 'Statut mis à jour avec succès']);
+    }
+
+    #[IsGranted('PUBLIC_ACCESS')]
+    #[Route('/api/verify-email/{token}', name: 'api_verify_email', methods: ['GET'])]
+    public function verifyUserEmail(string $token, EmailVerificationTokenRepository $tokenRepository, EntityManagerInterface $em): Response {
+        $frontendBaseUrl = $this->getParameter('app.frontend_url');
+
+        $verificationToken = $tokenRepository->findOneBy(['token' => $token]);
+
+        if (!$verificationToken) {
+            return $this->redirect($frontendBaseUrl . '/email-verifie?error=invalid_token');
+        }
+
+        if ($verificationToken->getVerifiedAt() !== null) {
+            return $this->redirect($frontendBaseUrl . '/connexion?info=already_verified');
+        }
+
+        if ($verificationToken->getExpiresAt() < new \DateTimeImmutable()) {
+            $user = $verificationToken->getUser();
+            $email = $user ? $user->getEmail() : '';
+            $em->remove($verificationToken);
+            $em->flush();
+            return $this->redirect($frontendBaseUrl . '/email-verifie?error=expired_token&email=' . urlencode($email));
+        }
+
+        $user = $verificationToken->getUser();
+        if (!$user) {
+            return $this->redirect($frontendBaseUrl . '/email-verifie?error=user_not_found');
+        }
+
+        $user->setStatut(\App\Enum\StatutUtilisateurEnum::STATUT_VALIDE);
+        $verificationToken->setVerifiedAt(new \DateTimeImmutable());
+
+        $em->flush();
+
+        return $this->redirect($frontendBaseUrl . '/email-verifie?success=true');
+    }
+
+    #[IsGranted('PUBLIC_ACCESS')]
+    #[Route('/api/resend-verification', name: 'api_resend_verification', methods: ['POST'])]
+    public function resendVerificationEmail(Request $request, UtilisateurRepository $utilisateurRepository, EntityManagerInterface $em, MailerInterface $mailer): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+        $email = $data['email'] ?? null;
+
+        if (!$email) {
+            return $this->json(['message' => 'L\'adresse e-mail est manquante.'], 400);
+        }
+
+        $user = $utilisateurRepository->findOneBy(['email' => $email]);
+
+        if (!$user) {
+            return $this->json(['message' => 'Si un compte existe avec cette adresse, un nouveau lien a été envoyé.']);
+        }
+
+        if ($user->getStatut() === \App\Enum\StatutUtilisateurEnum::STATUT_VALIDE) {
+            return $this->json(['message' => 'Ce compte est déjà validé. Vous pouvez vous connecter.'], 400);
+        }
+
+        $token = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+        $expiresAt = new \DateTimeImmutable('+2 hours');
+
+        $verificationToken = new \App\Entity\EmailVerificationToken();
+        $verificationToken->setUser($user);
+        $verificationToken->setToken($token);
+        $verificationToken->setCreatedAt(new \DateTimeImmutable());
+        $verificationToken->setExpiresAt($expiresAt);
+
+        $em->persist($verificationToken);
+        $em->flush();
+
+        $verificationUrl = $this->generateUrl('api_verify_email', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        $emailMessage = (new TemplatedEmail())
+            ->from('noreply@laundrymap.fr')
+            ->to($user->getEmail())
+            ->subject('Nouveau lien de confirmation pour LaundryMap')
+            ->htmlTemplate('emails/confirmation_email.html.twig')
+            ->context([
+                'user' => $user,
+                'verificationUrl' => $verificationUrl,
+                'expiresAt' => $expiresAt,
+            ]);
+
+        $mailer->send($emailMessage);
+
+        return $this->json(['message' => 'Un nouveau lien de vérification a été envoyé à votre adresse e-mail.']);
     }
 }
