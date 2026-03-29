@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { AccessibleButton, AccessibleInput } from '../components/accessibility';
 import axios from 'axios';
@@ -106,7 +106,7 @@ export default function EmailVerification() {
     const renderActions = () => {
         if (status === 'success' || status === 'info') {
             return (
-                <Link to="/connexion" className="inline-block bg-[#22ACE2] text-white font-semibold py-3 px-8 rounded-lg hover:bg-blue-500 transition-colors shadow-sm cursor-pointer text-center">
+                <Link to="/connexion" className="inline-block bg-[#22ACE2] !text-white font-semibold py-3 px-8 rounded-lg hover:bg-blue-500 transition-colors shadow-sm cursor-pointer text-center">
                     {t('main.email_verification.bouton_connexion')}
                 </Link>
             );

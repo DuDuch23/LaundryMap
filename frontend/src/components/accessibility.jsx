@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from 'react';
+
 export function SkipLink() {
   return (
     <a
@@ -211,8 +213,6 @@ export function AccessibleIcon({ icon: Icon, label, decorative = false }) {
 // ─────────────────────────────────────────────
 // 7. MODAL ACCESSIBLE
 // ─────────────────────────────────────────────
-import { useEffect, useRef } from 'react';
-
 export function AccessibleModal({ isOpen, onClose, title, children }) {
   const modalRef = useRef(null);
   const previousFocusRef = useRef(null);
@@ -294,8 +294,6 @@ export function AccessibleModal({ isOpen, onClose, title, children }) {
 // ─────────────────────────────────────────────
 // 8. NAVIGATION PAR TABS (clavier)
 // ─────────────────────────────────────────────
-import { useState } from 'react';
-
 export function AccessibleTabs({ tabs }) {
   const [activeIndex, setActiveIndex] = useState(0);
 
