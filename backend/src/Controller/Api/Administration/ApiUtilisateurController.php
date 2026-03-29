@@ -9,6 +9,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\UtilisateurHistoriqueInteraction;
+use App\Entity\ProfessionnelHistoriqueInteraction;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -238,8 +239,14 @@ class ApiUtilisateurController extends AbstractController
 
         $pro = $user->getProfessionnel();
 
-        $historique = new UtilisateurHistoriqueInteraction();
-        $historique->setUtilisateur($user);
+        if ($pro) {
+            $historique = new ProfessionnelHistoriqueInteraction();
+            $historique->setProfessionnel($pro);
+        } else {
+            $historique = new UtilisateurHistoriqueInteraction();
+            $historique->setUtilisateur($user);
+        }
+
         $historique->setAdministrateur($administrateur);
         $historique->setDate(new \DateTime());
 
