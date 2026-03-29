@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router';
 
 export default function Header() {
     const [isOpen, setIsOpen] = useState(false);
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     //AUTH
     const isAuthenticated = !!localStorage.getItem('token');
@@ -15,7 +17,7 @@ export default function Header() {
 
     return (
         <>
-            <header className="fixed w-full z-50 bg-slate-900">
+            <header className="fixed w-full z-50 bg-slate-900" role="banner" aria-label={t("main.header.aria_label")}>
                 <nav className='flex items-center justify-between'>
 
                     <Link to="/" className='flex items-center gap-2'>
@@ -24,6 +26,25 @@ export default function Header() {
                         </svg>
                         <span className='text-white text-xl'>LaundryMap</span>
                     </Link>
+                    <ul className='hidden md:flex items-center gap-6'>
+                        <li>
+                            <NavLink to="/" end className={({ isActive }) => `block px-6 py-4 transition-all duration-300 hover:text-[#22ACE2] ${isActive ? 'is-active' : ''}`}>
+                                Accueilsff
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink to="/inscription-pro" className={({ isActive }) => `block px-6 py-4 transition-all duration-300 hover:text-[#22ACE2] ${isActive ? 'is-active' : ''}`}>
+                                <span className='min-[744px]:block min-[1280px]:hidden'>Inscription Pro</span>
+                                <span className='hidden min-[1280px]:block'>Inscription Professionnel</span>
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink to="/inscription-utilisateur" className={({ isActive }) => `block px-6 py-4 transition-all duration-300 hover:text-[#22ACE2] ${isActive ? 'is-active' : ''}`}>
+                                <span className='min-[744px]:block min-[1280px]:hidden'>Inscription Utilisateur</span>
+                                <span className='hidden min-[1280px]:block'>Inscription Utilisateur</span>
+                            </NavLink>
+                        </li>
+                    </ul>
                     <div className='flex item-right gap-6'>
                         {isAuthenticated && (
                             <button
@@ -67,7 +88,7 @@ export default function Header() {
                                 <NavLink
                                     to="/"
                                     end
-                                    className={({ isActive }) => `block px-6 py-4 transition-all duration-300 hover:text-[#22ACE2] hover:bg-blue-50 hover:pl-8 ${isActive ? 'bg-blue-50/50 text-[#22ACE2] font-bold' : 'text-gray-700'}`}
+                                    className={({ isActive }) => `block px-6 py-4 transition-all duration-300 hover:text-[#22ACE2]  ${isActive ? 'bg-blue-50/50 text-[#22ACE2] font-bold' : 'text-gray-700'}`}
                                     onClick={() => setIsOpen(false)}
                                 >
                                     Accueil
@@ -78,7 +99,7 @@ export default function Header() {
                             <li className="border-b border-gray-100">
                                 <NavLink
                                     to="/profil"
-                                    className={({ isActive }) => `block px-6 py-4 transition-all duration-300 hover:text-[#22ACE2] hover:bg-blue-50 hover:pl-8 ${isActive ? 'bg-blue-50/50 text-[#22ACE2] font-bold' : 'text-gray-700'}`}
+                                    className={({ isActive }) => `block px-6 py-4 transition-all duration-300 hover:text-[#22ACE2]  ${isActive ? 'bg-blue-50/50 text-[#22ACE2] font-bold' : 'text-gray-700'}`}
                                     onClick={() => setIsOpen(false)}
                                 >
                                     Profil
@@ -88,7 +109,7 @@ export default function Header() {
                             <li className="border-b border-gray-100">
                                 <NavLink
                                     to="/inscription-pro"
-                                    className={({ isActive }) => `block px-6 py-4 transition-all duration-300 hover:text-[#22ACE2] hover:bg-blue-50 hover:pl-8 ${isActive ? 'bg-blue-50/50 text-[#22ACE2] font-bold' : 'text-gray-700'}`}
+                                    className={({ isActive }) => `block px-6 py-4 transition-all duration-300 hover:text-[#22ACE2]  ${isActive ? 'bg-blue-50/50 text-[#22ACE2] font-bold' : 'text-gray-700'}`}
                                     onClick={() => setIsOpen(false)}
                                 >
                                     Inscription Professionnel
@@ -97,7 +118,7 @@ export default function Header() {
                             <li className="border-b border-gray-100">
                                 <NavLink
                                     to="/inscription-utilisateur"
-                                    className={({ isActive }) => `block px-6 py-4 transition-all duration-300 hover:text-[#22ACE2] hover:bg-blue-50 hover:pl-8 ${isActive ? 'bg-blue-50/50 text-[#22ACE2] font-bold' : 'text-gray-700'}`}
+                                    className={({ isActive }) => `block px-6 py-4 transition-all duration-300 hover:text-[#22ACE2]  ${isActive ? 'bg-blue-50/50 text-[#22ACE2] font-bold' : 'text-gray-700'}`}
                                     onClick={() => setIsOpen(false)}
                                 >
                                     Inscription Utilisateur

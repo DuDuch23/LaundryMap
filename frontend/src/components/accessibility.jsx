@@ -88,6 +88,7 @@ export function AccessibleInput({
   placeholder,
   required = false,
   error,
+  children = null,
 }) {
   return (
     <div role="group" className={className}>
@@ -131,6 +132,7 @@ export function AccessibleInput({
           {error}
         </span>
       )}
+      {children}
     </div>
   );
 }
