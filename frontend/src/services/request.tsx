@@ -1,11 +1,24 @@
 import axios from 'axios';
 import API_BASE_URL from "./api";
 
+const publicApiEndpoints = [
+    '/api/inscription-utilisateur',
+    '/api/connexion',
+    '/api/resend-verification',
+    '/api/inscription-pro',
+    '/api/verify-email'
+    // Les endpoints suivants sont des exemples et devront être ajoutés s'ils sont implémentés avec axios
+    // '/api/mot-de-passe-oublie',
+    // '/api/reinitialiser-mot-de-passe',
+];
+
 //AXIOS JWT TOKEN
 axios.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token'); 
-        if (token && config.headers) {
+        const token = localStorage.getItem('token');
+        const isPublicEndpoint = publicApiEndpoints.some(endpoint => config.url?.includes(endpoint));
+
+        if (token && config.headers && !isPublicEndpoint) {
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;

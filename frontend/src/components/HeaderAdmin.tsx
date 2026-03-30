@@ -17,7 +17,7 @@ export default function HeaderAdmin() {
             label: 'Tableau de bord' },
         {
             to: '/admin/gestion-utilisateurs',
-            label: 'Utilisateurs'
+            label: 'Gestion des utilisateurs',
         },
     ];
 
@@ -91,14 +91,18 @@ export default function HeaderAdmin() {
                                     </NavLink>
                                 </li>
                             ))}
-                            <li>
-                                <button
-                                    type="button"
-                                    className="block w-full text-left px-6 py-5 font-bold text-[#22ACE2] transition-colors hover:bg-blue-50 cursor-pointer"
+                            <li className="border-b border-gray-100">
+                                <NavLink
+                                    to="/"
+                                    className={({ isActive }) =>
+                                        `block px-6 py-4 transition-all duration-300 hover:text-[#22ACE2] hover:bg-blue-50 hover:pl-8 ${
+                                            isActive ? 'bg-blue-50/50 text-[#22ACE2] font-bold' : 'text-gray-700'
+                                        }`
+                                    }
                                     onClick={handleLogout}
                                 >
                                     Déconnexion
-                                </button>
+                                </NavLink>
                             </li>
                         </ul>
                     )}

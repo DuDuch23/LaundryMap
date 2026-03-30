@@ -83,7 +83,7 @@
       "mot_de_passe_requis": "Le mot de passe est requis",
       "mot_de_passe_invalide": "Le mot de passe ne respecte pas les critères",
       "conditions_requis": "Vous devez accepter les conditions d'utilisation",
-      "succes": "Votre compte a été créé avec succès !",
+      "succes": "Votre compte a été créé avec succès ! Un mail vous a été envoyé pour valider votre adresse e-mail.",
       "continuer_avec_google": "Continuer avec Google"
     },
     "connexion": {
@@ -149,6 +149,21 @@
       "mentions_legales": "Mentions légales",
       "partager": "Partager",
       "partager_aria": "Partager la page"
+    },
+    "email_verification": {
+      "titre_succes": "Vérification réussie !",
+      "message_succes": "Votre compte a été validé avec succès. Vous pouvez maintenant vous connecter.",
+      "bouton_connexion": "Aller à la page de connexion",
+      "titre_erreur": "Une erreur est survenue",
+      "erreur_invalid_token": "Ce lien de vérification est invalide. Assurez-vous d'avoir cliqué sur le lien le plus récent reçu par e-mail, ou demandez un nouveau lien.",
+      "erreur_expired_token": "Ce lien de vérification a expiré. Veuillez demander un nouveau lien pour valider votre compte.",
+      "erreur_user_not_found": "L'utilisateur associé à ce lien n'a pas été trouvé. Veuillez vérifier votre inscription.",
+      "erreur_inconnue": "Une erreur inconnue est survenue. Veuillez contacter le support.",
+      "bouton_renvoyer": "Renvoyer un lien de vérification",
+      "titre_info": "Information",
+      "info_deja_verifie": "Votre compte a déjà été vérifié. Vous pouvez vous connecter directement.",
+      "titre_page_introuvable": "Page introuvable",
+      "message_page_introuvable": "Aucune information de vérification trouvée. Assurez-vous d'utiliser le lien reçu par e-mail."
     }
   }
 }

@@ -45,6 +45,8 @@ security:
         - { path: ^/api/inscription-professionnel, roles: PUBLIC_ACCESS }
         - { path: ^/api/mot-de-passe-oublie, roles: PUBLIC_ACCESS }
         - { path: ^/api/langues, roles: PUBLIC_ACCESS }
+        - { path: ^/api/verify-email, roles: PUBLIC_ACCESS }
+        - { path: ^/api/resend-verification, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
