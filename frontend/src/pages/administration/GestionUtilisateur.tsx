@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { fetchAdminUtilisateurs, type FiltresUtilisateurs } from '../../services/request';
 import { AccessibleModal } from '../../components/accessibility';
 import FilterModal, { type FilterSection, type FilterValues } from '../../components/FilterModal';
@@ -189,6 +189,8 @@ export default function GestionUtilisateurs() {
         setFiltreModalOuverte(false);
     };
 
+    const navigate = useNavigate();
+
     if (chargement && page === 1 && !aDesFiltresActifs) {
         return <div className="text-center mt-20 font-bold text-[#22ACE2]">Chargement des données...</div>;
     }
@@ -301,7 +303,7 @@ export default function GestionUtilisateurs() {
 
                                 {/* Laveries (Si pro) */}
                                 {user.professionnel && user.professionnel.laveries && user.professionnel.laveries.length > 0 && (
-                                    <div className="w-full md:w-48 border border-gray-200 rounded-xl p-3 h-fit">
+                                    <div className="w-[90%] md:w-48 border border-gray-200 rounded-xl p-3 h-fit">
                                         <p className="font-bold underline text-sm mb-2">Laveries :</p>
                                         <ul className="space-y-1">
                                             {user.professionnel.laveries.slice(0, 3).map(laverie => (
@@ -326,15 +328,16 @@ export default function GestionUtilisateurs() {
 
                             {/* Bouton Action */}
                             {(user.professionnel?.statut === 'En attente' || (!user.professionnel && user.statut === 'En attente')) && (
-                                <div className="flex justify-end mt-4">
-                                    <button
-                                        onClick={() => ouvrirModal(user)}
-                                        className="bg-[#22ACE2] hover:bg-blue-500 cursor-pointer text-white font-medium py-2 px-6 rounded-full text-sm transition-colors shadow-sm"
-                                    >
-                                        Répondre
-                                    </button>
-                                </div>
-                            )}
+                            <div className="flex justify-end mt-4">
+                                <button
+                                    /* On remplace ouvrirModal par navigate vers la bonne route */
+                                    onClick={() => navigate(`/admin/utilisateurs/${user.id}`)}
+                                    className="bg-[#22ACE2] hover:bg-blue-500 cursor-pointer text-white font-medium py-2 px-6 rounded-full text-sm transition-colors shadow-sm"
+                                >
+                                    Répondre
+                                </button>
+                            </div>
+                        )}
                         </div>
                     ))}
                 </div>
