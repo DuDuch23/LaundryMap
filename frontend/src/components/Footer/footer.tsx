@@ -18,7 +18,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-[#22ACE2] px-6 pt-10 pb-6 flex flex-col gap-8 text-left">
+    <footer className="bg-[#22ACE2] px-6 pt-10 pb-6 flex flex-col gap-8 text-left" aria-label={t("main.footer.aria_label")}>
       <div className="footer__content">
       {/* Logo */}
         <div className="flex items-center gap-3">

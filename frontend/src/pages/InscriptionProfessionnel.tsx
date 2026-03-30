@@ -1,11 +1,11 @@
 import { useTranslation} from 'react-i18next';
 import {AccessibleInput} from '../components/accessibility';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { inscriptionProfessionnel } from '../services/request';
 import { useNavigate } from 'react-router';
 
 export default function InscriptionProfessionnel() {
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [prenom, setprenom] = useState<string>("");
     const [nom, setnom] = useState<string>("");
@@ -27,7 +27,6 @@ export default function InscriptionProfessionnel() {
     const sirenRegex = /^\d{9}$/;
     const siretRegex = /^\d{14}$/;
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#])[A-Za-z\d@$!%*?&^#]{12,}$/;
-
 
     const handleChangeprenom = (e: any) => setprenom(e.target.value);
     const handleChangenom = (e: any) => setnom(e.target.value);
@@ -72,8 +71,6 @@ export default function InscriptionProfessionnel() {
         if(!rgpdAccepted){
             newsErrors.rgpdAccepted = t('main.inscription_professionnel.conditions_requis');
         }
-
-        // Adresse
 
         if (!adresse.trim()) {
             newsErrors.adresse = t('main.inscription_professionnel.adresse_requise');
@@ -130,150 +127,176 @@ export default function InscriptionProfessionnel() {
             <h1 className='text-2xl font-bold text-[#22ACE2] mb-2 text-center w-full'>
                 {t('main.inscription_professionnel.titre')}
             </h1>
+
             <form action="#" className='w-full flex flex-col gap-5' onSubmit={handleSubmit}>
 
-                <AccessibleInput 
-                    id="nom"
-                    className={'flex flex-col'}
-                    label={t('main.inscription_professionnel.nom')}
-                    type='text'
-                    value={nom}
-                    onChange={handleChangenom}
-                    placeholder={t('main.inscription_professionnel.placeholder_nom')}
-                    error={null}
-                />
-                <AccessibleInput 
-                    id="prenom"
-                    className={'flex flex-col'}
-                    label={t('main.inscription_professionnel.prenom')}
-                    type='text'
-                    value={prenom}
-                    onChange={handleChangeprenom}
-                    placeholder={t('main.inscription_professionnel.placeholder_prenom')}
-                    error={null}
-                />
-                <AccessibleInput 
-                    id="email"
-                    className={'flex flex-col'}
-                    label={t('main.inscription_professionnel.email')}
-                    type='email'
-                    value={email}
-                    onChange={handleChangeEmail}
-                    placeholder={t('main.inscription_professionnel.placeholder_email')}
-                    // required
-                    error={errors.email}
-                />
-                <AccessibleInput 
-                    id="password"
-                    className={'flex flex-col'}
-                    label={t('main.inscription_professionnel.mot_de_passe')}
-                    type='password'
-                    value={password}
-                    onChange={handleChangePassword}
-                    placeholder={t('main.inscription_professionnel.placeholder_mot_de_passe')}
-                    // required
-                    error={errors.password}
-                />
-                <ul style={{ fontSize: '0.8rem', color: '#666' }}>
-                    <li style={{ color: password.length >= 12 ? 'green' : 'red' }}>
-                        ✓ {t('main.inscription_professionnel.mot_de_passe_caractere_minimum')}
-                    </li>
-                    <li style={{ color: /[A-Z]/.test(password) ? 'green' : 'red' }}>
-                        ✓ {t('main.inscription_professionnel.une_majuscule')}
-                    </li>
-                    <li style={{ color: /[a-z]/.test(password) ? 'green' : 'red' }}>
-                        ✓ {t('main.inscription_professionnel.une_minuscule')}
-                    </li>
-                    <li style={{ color: /\d/.test(password) ? 'green' : 'red' }}>
-                        ✓ {t('main.inscription_professionnel.un_chiffre')}
-                    </li>
-                    <li style={{ color: /[@$!%*?&^#]/.test(password) ? 'green' : 'red' }}>
-                        ✓ {t('main.inscription_professionnel.un_caractere_special')}
-                    </li>
-                </ul>
+                <div className='w-full grid grid-cols-1 min-[744px]:grid-cols-2 gap-5'>
+                    <AccessibleInput
+                        id="nom"
+                        name="nom"
+                        className='flex flex-col'
+                        label={t('main.inscription_professionnel.nom')}
+                        type='text'
+                        value={nom}
+                        onChange={handleChangenom}
+                        placeholder={t('main.inscription_professionnel.placeholder_nom')}
+                        error={null}
+                    />
+                    <AccessibleInput
+                        id="prenom"
+                        name="prenom"
+                        className='flex flex-col'
+                        label={t('main.inscription_professionnel.prenom')}
+                        type='text'
+                        value={prenom}
+                        onChange={handleChangeprenom}
+                        placeholder={t('main.inscription_professionnel.placeholder_prenom')}
+                        error={null}
+                    />
+                </div>
+
+                <div className='w-full grid grid-cols-1  gap-5'>
+                    <AccessibleInput
+                        id="email"
+                        name="email"
+                        className='flex flex-col'
+                        label={t('main.inscription_professionnel.email')}
+                        type='email'
+                        value={email}
+                        onChange={handleChangeEmail}
+                        placeholder={t('main.inscription_professionnel.placeholder_email')}
+                        error={errors.email}
+                    />
+                    <AccessibleInput
+                        id="password"
+                        name="password"
+                        className='flex flex-col'
+                        label={t('main.inscription_professionnel.mot_de_passe')}
+                        type='password'
+                        value={password}
+                        onChange={handleChangePassword}
+                        placeholder={t('main.inscription_professionnel.placeholder_mot_de_passe')}
+                        error={errors.password}
+                        children={
+                        <ul style={{ fontSize: '0.8rem', color: '#666' }}>
+                            <li style={{ color: password.length >= 12 ? 'green' : 'red' }}>
+                                ✓ {t('main.inscription_professionnel.mot_de_passe_caractere_minimum')}
+                            </li>
+                            <li style={{ color: /[A-Z]/.test(password) ? 'green' : 'red' }}>
+                                ✓ {t('main.inscription_professionnel.une_majuscule')}
+                            </li>
+                            <li style={{ color: /[a-z]/.test(password) ? 'green' : 'red' }}>
+                                ✓ {t('main.inscription_professionnel.une_minuscule')}
+                            </li>
+                            <li style={{ color: /\d/.test(password) ? 'green' : 'red' }}>
+                                ✓ {t('main.inscription_professionnel.un_chiffre')}
+                            </li>
+                            <li style={{ color: /[@$!%*?&^#]/.test(password) ? 'green' : 'red' }}>
+                                ✓ {t('main.inscription_professionnel.un_caractere_special')}
+                            </li>
+                        </ul>
+                        }
+                    >
+                    </AccessibleInput>
+                </div>
+
+                <div className='w-full min-[744px]:grid-cols-2 gap-5'>
+                    <AccessibleInput
+                        id="siren_ou_siret"
+                        name="siren_ou_siret"
+                        className='flex flex-col'
+                        label={t('main.inscription_professionnel.num_siren_ou_siret')}
+                        type="text"
+                        value={sirenOrSiret}
+                        onChange={handleChangeSirenOrSiret}
+                        placeholder={t('main.inscription_professionnel.placeholder_num_siren_ou_siret')}
+                        error={errors.sirenOrSiret}
+                    />
+                </div>
+
+                <div className='w-full grid grid-cols-1 min-[744px]:grid-cols-2 min-[1280px]:grid-cols-2 gap-5'>
+                    <AccessibleInput
+                        id="adresse"
+                        name="adresse"
+                        className='flex flex-col'
+                        label={t('main.inscription_professionnel.adresse')}
+                        type="text"
+                        value={adresse}
+                        onChange={handleChangeAdresse}
+                        placeholder={t('main.inscription_professionnel.placeholder_adresse')}
+                        error={errors.adresse}
+                    />
+                    <AccessibleInput
+                        id="rue"
+                        name="rue"
+                        className='flex flex-col'
+                        label={t('main.inscription_professionnel.rue')}
+                        type="text"
+                        value={rue}
+                        onChange={handleChangeRue}
+                        placeholder={t('main.inscription_professionnel.placeholder_rue')}
+                        error={errors.rue}
+                    />
+                </div>
+                <div className='w-full grid grid-cols-1 min-[744px]:grid-cols-2 min-[1280px]:grid-cols-3 gap-5'>
+                    <AccessibleInput
+                        id="code_postal"
+                        name="code_postal"
+                        className='flex flex-col'
+                        label={t('main.inscription_professionnel.code_postal')}
+                        type="text"
+                        value={codePostal}
+                        onChange={handleChangeCodePostal}
+                        placeholder={t('main.inscription_professionnel.placeholder_code_postal')}
+                        error={errors.codePostal}
+                    />
+                    <AccessibleInput
+                        id="ville"
+                        name="ville"
+                        className='flex flex-col'
+                        label={t('main.inscription_professionnel.ville')}
+                        type="text"
+                        value={ville}
+                        onChange={handleChangeVille}
+                        placeholder={t('main.inscription_professionnel.placeholder_ville')}
+                        error={errors.ville}
+                    />
+                    <AccessibleInput
+                        id="pays"
+                        name="pays"
+                        className='flex flex-col'
+                        label={t('main.inscription_professionnel.pays')}
+                        type="text"
+                        value={pays}
+                        onChange={handleChangePays}
+                        placeholder={t('main.inscription_professionnel.placeholder_pays')}
+                        error={errors.pays}
+                    />
+                </div>
+
                 <AccessibleInput
-                    id="siren_ou_siret"
-                    className={'flex flex-col'}
-                    label={t('main.inscription_professionnel.num_siren_ou_siret')}
-                    type="text"
-                    value={sirenOrSiret}
-                    onChange={handleChangeSirenOrSiret}
-                    placeholder={t('main.inscription_professionnel.placeholder_num_siren_ou_siret')}
-                    // required
-                    error={errors.sirenOrSiret}
-                />
-                <AccessibleInput
-                    id="adresse"
-                    className='flex flex-col'
-                    label={t('main.inscription_professionnel.adresse')}
-                    type="text"
-                    value={adresse}
-                    onChange={handleChangeAdresse}
-                    placeholder={t('main.inscription_professionnel.placeholder_adresse')}
-                    // required
-                    error={errors.adresse}
-                />
-                <AccessibleInput
-                    id="rue"
-                    className='flex flex-col'
-                    label={t('main.inscription_professionnel.rue')}
-                    type="text"
-                    value={rue}
-                    onChange={handleChangeRue}
-                    placeholder={t('main.inscription_professionnel.placeholder_rue')}
-                    // required
-                    error={errors.rue}
-                />
-                <AccessibleInput
-                    id="code_postal"
-                    className='flex flex-col'
-                    label={t('main.inscription_professionnel.code_postal')}
-                    type="text"
-                    value={codePostal}
-                    onChange={handleChangeCodePostal}
-                    placeholder={t('main.inscription_professionnel.placeholder_code_postal')}
-                    // required
-                    error={errors.codePostal}
-                />
-                <AccessibleInput
-                    id="ville"
-                    className='flex flex-col'
-                    label={t('main.inscription_professionnel.ville')}
-                    type="text"
-                    value={ville}
-                    onChange={handleChangeVille}
-                    placeholder={t('main.inscription_professionnel.placeholder_ville')}
-                    // required
-                    error={errors.ville}
-                />
-                <AccessibleInput
-                    id="pays"
-                    className='flex flex-col'
-                    label={t('main.inscription_professionnel.pays')}
-                    type="text"
-                    value={pays}
-                    onChange={handleChangePays}
-                    placeholder={t('main.inscription_professionnel.placeholder_pays')}
-                    // required
-                    error={errors.pays}
-                />
-                <AccessibleInput 
                     id="rgpd"
+                    name="rgpd"
                     label={t('main.inscription_professionnel.accepte_condition')}
                     type='checkbox'
-                    className={'flex flex-row-reverse justify-end'}
+                    className='flex flex-row-reverse justify-end'
                     value={rgpdAccepted}
                     onChange={handleChangeRgpd}
                     placeholder={t('main.inscription_professionnel.placeholder_num_siren_ou_siret')}
-                    // required
                     error={errors.rgpdAccepted}
                 />
+
+                {errors.global && (
+                    <p role="alert" className='text-red-500 text-sm text-center'>{errors.global}</p>
+                )}
+
                 <AccessibleInput
                     id="submit"
+                    name="submit"
                     label={false}
                     type="submit"
                     className="bg-[#22ACE2] w-full font-semibold rounded-lg hover:bg-blue-500 transition-colors shadow-sm cursor-pointer text-center"
-                    value={t('main.inscription_professionnel.sinscrire')}
+                    value={isLoading ? '...' : t('main.inscription_professionnel.sinscrire')}
                     onChange={false}
                     error={false}
                     placeholder={t('main.inscription_professionnel.placeholder_sinscrire')}
