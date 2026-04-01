@@ -261,6 +261,21 @@ class ApiUtilisateurController extends AbstractController
             }
             $historique->setAction('Validation du compte');
             $historique->setMotifAction($motif ?: 'Compte vérifié et validé.');
+
+            //ENVOIE DU MAIL EN CAS DE VALIDATION
+            $frontendBaseUrl = $this->getParameter('app.frontend_url');
+            $email = (new TemplatedEmail())
+                ->from('noreply@laundrymap.fr')
+                ->to($user->getEmail())
+                ->subject('Votre compte LaundryMap a été validé !')
+                ->htmlTemplate('emails/validation_utilisateur.html.twig')
+                ->context([
+                    'user' => $user,
+                    'motif' => $motif,
+                    'loginUrl' => $frontendBaseUrl . '/connexion',
+                ]);
+
+            $mailer->send($email);
         } else {
             $user->setStatut(\App\Enum\StatutUtilisateurEnum::STATUT_REFUSE);
             if ($pro) {
