@@ -46,6 +46,22 @@ export default function InscriptionProfessionnel() {
         e.preventDefault();
         const newsErrors: Record<string, string> = {};
 
+        if (!prenom.trim()) {
+            newsErrors.prenom = t('main.inscription_professionnel.prenom_requis');
+        } else if (prenom.trim().length < 2) {
+            newsErrors.prenom = t('main.inscription_professionnel.prenom_trop_court');
+        } else if (prenom.trim().length > 50) {
+            newsErrors.prenom = t('main.inscription_professionnel.prenom_trop_long');
+        }
+
+        if (!nom.trim()) {
+            newsErrors.nom = t('main.inscription_professionnel.nom_requis');
+        } else if (nom.trim().length < 2) {
+            newsErrors.nom = t('main.inscription_professionnel.nom_trop_court');
+        } else if (nom.trim().length > 50) {
+            newsErrors.nom = t('main.inscription_professionnel.nom_trop_long');
+        }
+
         if(!password.trim()){
             newsErrors.password = t('main.inscription_professionnel.mot_de_passe_requis');
         }else if(!passwordRegex.test(password)){
@@ -140,7 +156,8 @@ export default function InscriptionProfessionnel() {
                         value={nom}
                         onChange={handleChangenom}
                         placeholder={t('main.inscription_professionnel.placeholder_nom')}
-                        error={null}
+                        error={errors.nom}
+                        maxLength={50}
                     />
                     <AccessibleInput
                         id="prenom"
@@ -151,7 +168,8 @@ export default function InscriptionProfessionnel() {
                         value={prenom}
                         onChange={handleChangeprenom}
                         placeholder={t('main.inscription_professionnel.placeholder_prenom')}
-                        error={null}
+                        error={errors.prenom}
+                        maxLength={50}
                     />
                 </div>
 

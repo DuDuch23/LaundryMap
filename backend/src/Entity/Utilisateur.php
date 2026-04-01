@@ -36,10 +36,12 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     private string $email;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Assert\Length(max: 50, maxMessage: "ERROR_LASTNAME_TOO_LONG")]
     #[Groups(['utilisateur:read', 'utilisateur:write'])]
     private ?string $nom = null;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Assert\Length(max: 50, maxMessage: "ERROR_FIRSTNAME_TOO_LONG")]
     #[Groups(['utilisateur:read', 'utilisateur:write'])]
     private ?string $prenom = null;
 
