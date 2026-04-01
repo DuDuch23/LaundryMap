@@ -113,8 +113,7 @@ export default function DetailUtilisateur() {
                 )}
                 <button
                     onClick={() => navigate(-1)}
-                    /* Changement : w-14 h-14 pour une taille fixe plus grande, rounded-2xl pour des coins proportionnels */
-                    className="absolute top-20 left-4 w-14 h-14 rounded-2xl shadow-md z-10 hover:bg-gray-50 transition-colors cursor-pointer flex items-center justify-center"
+                    className="absolute top-20 left-4 w-14 h-14 rounded-2xl shadow-md z-10 transition-colors cursor-pointer flex items-center justify-center"
                     aria-label="Retour"
                 >
                     {/* On agrandit aussi un peu l'icône (w-8 h-8 au lieu de w-6 h-6) pour qu'elle ne paraisse pas perdue */}
