@@ -84,7 +84,10 @@
       "mot_de_passe_invalide": "Le mot de passe ne respecte pas les critères",
       "conditions_requis": "Vous devez accepter les conditions d'utilisation",
       "succes": "Votre compte a été créé avec succès ! Un mail vous a été envoyé pour valider votre adresse e-mail.",
-      "continuer_avec_google": "Continuer avec Google"
+      "continuer_avec_google": "Continuer avec Google",
+      "confirmation_mot_de_passe_requise": "La confirmation du mot de passe est requise",
+      "mots_de_passe_differents": "Les mots de passe ne correspondent pas",
+      "confirmer_mot_de_passe": "Confirmer le mot de passe"
     },
     "connexion": {
       "continuer_avec_google": "Continuer avec Google",
