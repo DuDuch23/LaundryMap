@@ -86,7 +86,12 @@
       "un_caractere_special": "One special character (@$!%*?&^#)",
       "num_siren_ou_siret_requis": "SIREN or SIRET number is required",
       "num_siren_ou_siret_incorrect": "Number must contain 9 digits (SIREN) or 14 digits (SIRET)",
-      "continuer_avec_google": "Continue with Google"
+      "continuer_avec_google": "Continue with Google",
+      "confirmation_mot_de_passe_requise": "Password confirmation is required",
+      "mots_de_passe_differents": "Passwords do not match",
+      "confirmer_mot_de_passe": "Confirm password",
+      "nom_trop_long": "Last name cannot exceed 50 characters",
+      "prenom_trop_long": "First name cannot exceed 50 characters"
     },
     "connexion": {
       "continuer_avec_google": "Continue with Google",
@@ -102,7 +107,12 @@
       "mot_de_passe_oublie": "Forgot your password?",
       "pas_encore_de_compte": "Don't have an account yet?",
       "sinscrire": "Sign Up",
-      "ou": "or"
+      "ou": "or",
+      "erreur_reseau": "A network error occurred. Please check your connection and try again.",
+      "erreur_generique": "An error occurred. Please try again.",
+      "erreur_compte_en_attente": "Your account is pending validation. Please check your email to validate your account before logging in.",
+      "erreur_compte_banni": "Your account has been banned. Please contact the administrator for more information.",
+      "erreur_compte_refuse": "Your account has been refused by the administration. Please contact the administrator for more information."
     },
     "profil": {
       "chargement": "Loading profile...",

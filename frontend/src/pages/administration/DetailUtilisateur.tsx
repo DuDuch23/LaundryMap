@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
+import { ArrowLeft, UserRound, MoreHorizontal } from 'lucide-react';
 import { fetchUtilisateurDetail, updateUtilisateurStatut } from '../../services/request';
 
 interface LaverieDetail {
@@ -113,12 +114,10 @@ export default function DetailUtilisateur() {
                 )}
                 <button
                     onClick={() => navigate(-1)}
-                    /* Changement : w-14 h-14 pour une taille fixe plus grande, rounded-2xl pour des coins proportionnels */
-                    className="absolute top-20 left-4 w-14 h-14 rounded-2xl shadow-md z-10 hover:bg-gray-50 transition-colors cursor-pointer flex items-center justify-center"
+                    className="absolute top-20 left-4 w-8 h-8 rounded-xl shadow-md z-10 transition-colors cursor-pointer flex items-center justify-center bg-[#14A8DE]"
                     aria-label="Retour"
                 >
-                    {/* On agrandit aussi un peu l'icône (w-8 h-8 au lieu de w-6 h-6) pour qu'elle ne paraisse pas perdue */}
-                    <img src="/src/assets/arrow_left_blue.svg" alt="Retour" className="w-8 h-8" />
+                    <ArrowLeft size={16} className="text-white" />
                 </button>
             </div>
 
@@ -126,7 +125,7 @@ export default function DetailUtilisateur() {
             <div className="relative bg-white rounded-t-[3rem] px-6 pt-12 pb-8 -mt-12 shadow-lg min-h-screen">
                 <div className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gray-300 rounded-full"></div>
                 <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-20 h-20 bg-white rounded-[2rem] flex items-center justify-center shadow-sm">
-                    <img src="/src/assets/person_outline.svg" alt="" className="w-10 h-10" />
+                    <UserRound size={40} className="text-gray-600" />
                 </div>
 
                 {/* NOM ET STATUT */}
@@ -180,7 +179,7 @@ export default function DetailUtilisateur() {
 
                                     {/* Bouton "..." */}
                                     <button className="bg-[#22ACE2] text-white p-2 rounded-xl hover:bg-blue-500 transition shadow-sm cursor-pointer shrink-0">
-                                        <img src="/src/assets/more_horiz.svg" alt="Options" className="w-4 h-4" />
+                                        <MoreHorizontal size={16} />
                                     </button>
                                 </div>
                             ))}

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { ChevronLeft, ListX, SlidersHorizontal, UserRound, MoreHorizontal } from 'lucide-react';
 import { fetchAdminUtilisateurs, type FiltresUtilisateurs } from '../../services/request';
 import { AccessibleModal } from '../../components/accessibility';
 import FilterModal, { type FilterSection, type FilterValues } from '../../components/FilterModal';
@@ -84,6 +85,11 @@ const FILTRES_VIDES: FilterValues = {
     ordre: '',
 };
 
+const FILTRES_DEFAUT: FilterValues = {
+    ...FILTRES_VIDES,
+    ordre: 'decroissant', 
+};
+
 export default function GestionUtilisateurs() {
     const [utilisateurs, setUtilisateurs] = useState<Utilisateur[]>([]);
     const [enAttenteCount, setEnAttenteCount] = useState<number>(0);
@@ -100,9 +106,9 @@ export default function GestionUtilisateurs() {
     const [filtreModalOuverte, setFiltreModalOuverte] = useState<boolean>(false);
     const [filtresActifs, setFiltresActifs] = useState<FilterValues>(() => {
         const savedFiltres = localStorage.getItem('utilisateursFiltres');
-        return savedFiltres ? JSON.parse(savedFiltres) : { ...FILTRES_VIDES };
+        return savedFiltres ? JSON.parse(savedFiltres) : { ...FILTRES_DEFAUT };
     });
-    const [filtresTemp, setFiltresTemp] = useState<FilterValues>({ ...FILTRES_VIDES });
+    const [filtresTemp, setFiltresTemp] = useState<FilterValues>({ ...FILTRES_DEFAUT });
 
     const aDesFiltresActifs = Object.values(filtresActifs).some((v) => v !== '');
 
@@ -116,7 +122,17 @@ export default function GestionUtilisateurs() {
             if (filtresActifs.ordre) filtresApi.ordre = filtresActifs.ordre;
 
             const data = await fetchAdminUtilisateurs(page, filtresApi);
-            setUtilisateurs(data.utilisateurs);
+
+            const utilisateursTries = data.utilisateurs.sort((a: Utilisateur, b: Utilisateur) => {
+                const aEnAttente = a.professionnel?.statut === 'En attente' || (!a.professionnel && a.statut === 'En attente');
+                const bEnAttente = b.professionnel?.statut === 'En attente' || (!b.professionnel && b.statut === 'En attente');
+                
+                if (aEnAttente && !bEnAttente) return -1;
+                if (!aEnAttente && bEnAttente) return 1;
+                return 0;
+            });
+
+            setUtilisateurs(utilisateursTries);
             setEnAttenteCount(data.totalEnAttente);
             setPagination(data.pagination);
         } catch {
@@ -206,7 +222,7 @@ export default function GestionUtilisateurs() {
             <div className="bg-white flex items-center justify-between p-4 shadow-sm mb-6">
                 <div className="flex items-center gap-3">
                     <Link to="/admin/tableau-de-bord" className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition block" aria-label="Retour">
-                        <img src="/src/assets/arrow_back_ios.svg" alt="" className="w-5 h-5" />
+                        <ChevronLeft size={20} />
                     </Link>
                     <h1 className="text-lg font-bold">Gestion des utilisateurs</h1>
                 </div>
@@ -226,7 +242,7 @@ export default function GestionUtilisateurs() {
                                 className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition cursor-pointer"
                                 aria-label="Ouvrir les filtres (Filtres actifs)"
                             >
-                                <img src="/src/assets/layers_clear.svg" alt="Filtres actifs" className="w-5 h-5" />
+                                <ListX size={20} />
                             </button>
                         </>
                     ) : (
@@ -235,7 +251,7 @@ export default function GestionUtilisateurs() {
                             className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition cursor-pointer"
                             aria-label="Ouvrir les filtres"
                         >
-                            <img src="/src/assets/filter_alt.svg" alt="Aucun filtre" className="w-5 h-5" />
+                            <SlidersHorizontal size={20} />
                         </button>
                     )}
                 </div>
@@ -245,7 +261,7 @@ export default function GestionUtilisateurs() {
                 {/* ENCART "UTILISATEURS EN ATTENTE" */}
                 <div className="bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm mb-8 mx-4">
                     <h2 className="font-bold mb-4">Utilisateurs en attentes</h2>
-                    <img src="/src/assets/person_outline.svg" alt="Utilisateurs en attente" className="w-10 h-10 mx-auto mb-2 text-black" />
+                    <UserRound size={40} className="mx-auto mb-2 text-black" />
                     <p className="text-green-500 font-bold text-xl">+{enAttenteCount}</p>
                 </div>
 
@@ -276,7 +292,7 @@ export default function GestionUtilisateurs() {
                                         </span>
                                     )}
                                     <Link to={`/admin/utilisateurs/${user.id}`} className="bg-[#22ACE2] hover:bg-blue-500 p-1.5 rounded-md text-white transition-colors cursor-pointer flex items-center justify-center" aria-label="Voir les détails">
-                                        <img src="/src/assets/more_horiz.svg" alt="" className="w-5 h-5" />
+                                        <MoreHorizontal size={20} />
                                     </Link>
                                 </div>
                             </div>

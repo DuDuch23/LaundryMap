@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { ListX, SlidersHorizontal } from 'lucide-react';
 
 export interface FilterSection {
     label: string;
@@ -136,7 +137,7 @@ export default function FilterModal({
                                     className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition cursor-pointer"
                                     aria-label="Effacer les filtres"
                                 >
-                                    <img src="/src/assets/layers_clear.svg" alt="" className="w-5 h-5" />
+                                    <ListX size={20} />
                                 </button>
                             </>
                         ) : (
@@ -144,7 +145,7 @@ export default function FilterModal({
                                 className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition cursor-default"
                                 aria-label="Filtres"
                             >
-                                <img src="/src/assets/filter_alt.svg" alt="Aucun filtre" className="w-5 h-5" />
+                                <SlidersHorizontal size={20} />
                             </button>
                         )}
                     </div>

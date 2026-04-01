@@ -23,6 +23,7 @@ security:
             pattern: ^/api/connexion
             stateless: true
             provider: chain_provider
+            user_checker: App\Security\UserChecker
             json_login:
                 check_path: /api/connexion
                 username_path: email

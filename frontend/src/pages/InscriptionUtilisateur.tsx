@@ -11,6 +11,7 @@ export default function RegisterUser() {
   const [lastName, setLastName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [cguAccepted, setCguAccepted] = useState<boolean>(false);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -28,9 +29,12 @@ export default function RegisterUser() {
     setEmail(e.target.value);
   const handleChangePassword = (e: React.ChangeEvent<HTMLInputElement>) =>
     setPassword(e.target.value);
+  const handleChangeConfirmPassword = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setConfirmPassword(e.target.value);
   const handleChangeCgu = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCguAccepted(e.target.checked);
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newsErrors: Record<string, string> = {};
@@ -44,12 +48,18 @@ export default function RegisterUser() {
         "main.inscription_utilisateur.prenom_trop_court",
       );
     }
+    else if (firstName.trim().length > 50) {
+      newsErrors.firstName = t("main.inscription_utilisateur.prenom_trop_long");
+    }
 
     if (!lastName.trim()) {
       newsErrors.lastName = t("main.inscription_utilisateur.nom_requis");
     } else if (lastName.trim().length < 2) {
       newsErrors.lastName = t("main.inscription_utilisateur.nom_trop_court");
+    } else if (lastName.trim().length > 50) {
+      newsErrors.lastName = t("main.inscription_utilisateur.nom_trop_long");
     }
+    
 
     if (!password.trim()) {
       newsErrors.password = t(
@@ -59,6 +69,12 @@ export default function RegisterUser() {
       newsErrors.password = t(
         "main.inscription_utilisateur.mot_de_passe_invalide",
       );
+    }
+
+    if (!confirmPassword.trim()) {
+      newsErrors.confirmPassword = t("main.inscription_utilisateur.confirmation_mot_de_passe_requise");
+    } else if (password !== confirmPassword) {
+      newsErrors.confirmPassword = t("main.inscription_utilisateur.mots_de_passe_differents");
     }
 
     if (!email.trim()) {
@@ -93,18 +109,25 @@ export default function RegisterUser() {
       setLastName("");
       setEmail("");
       setPassword("");
+      setConfirmPassword("");
       setCguAccepted(false);
     } catch (error: any) {
-      console.error("Erreur :", error);
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.erreurs
-      ) {
+      console.error("Erreur lors de l'inscription :", error);
+      
+      if (error.response?.data?.erreurs) {
         setErrors(error.response.data.erreurs);
-      } else {
+      } 
+      else if (error.response?.data?.message) {
+        setErrors({ global: error.response.data.message });
+      } 
+      else if (!error.response) {
+        setErrors({ 
+          global: t("main.connexion.erreur_reseau") 
+        });
+      } 
+      else {
         setErrors({
-          global: "Une erreur est survenue lors de la connexion au serveur.",
+          global: t("main.connexion.erreur_generique"),
         });
       }
     }
@@ -148,6 +171,7 @@ export default function RegisterUser() {
           onChange={handleChangeFirstName}
           placeholder={t("main.inscription_utilisateur.placeholder_prenom")}
           error={errors.firstName}
+          maxLength={50}
         />
 
         <AccessibleInput
@@ -159,6 +183,7 @@ export default function RegisterUser() {
           onChange={handleChangeLastName}
           placeholder={t("main.inscription_utilisateur.placeholder_nom")}
           error={errors.lastName}
+          maxLength={50}
         />
 
         <AccessibleInput
@@ -174,7 +199,7 @@ export default function RegisterUser() {
 
         <AccessibleInput
           id="password"
-          className={"flex flex-col mb-2"}
+          className={"flex flex-col"}
           label={t("main.inscription_utilisateur.mot_de_passe")}
           type="password"
           value={password}
@@ -183,6 +208,19 @@ export default function RegisterUser() {
             "main.inscription_utilisateur.placeholder_mot_de_passe",
           )}
           error={errors.password}
+        />
+
+        <AccessibleInput
+          id="confirmPassword"
+          className={"flex flex-col mb-2"}
+          label={t("main.inscription_utilisateur.confirmer_mot_de_passe")}
+          type="password"
+          value={confirmPassword}
+          onChange={handleChangeConfirmPassword}
+          placeholder={t(
+            "main.inscription_utilisateur.placeholder_mot_de_passe",
+          )}
+          error={errors.confirmPassword}
         />
 
         <ul className="text-xs text-gray-600 mb-6 pl-2 space-y-1">

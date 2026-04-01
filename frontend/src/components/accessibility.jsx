@@ -90,6 +90,7 @@ export function AccessibleInput({
   placeholder,
   required = false,
   error,
+  maxLength,
   children = null,
 }) {
   return (

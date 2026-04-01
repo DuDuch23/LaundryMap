@@ -100,11 +100,29 @@ export default function PageConnexion() {
       setErreurGenerale("Réponse de connexion invalide.");
     } catch (error: any) {
       if (error.response?.status === 401) {
-        setErreurGenerale(t("main.connexion.mot_de_passe_invalid"));
-      } else if (!error.response) {
-        setErreurGenerale(t("main.connexion.erreur_reseau"));
-      } else {
-        setErreurGenerale(t("main.connexion.erreur_generique"));
+        const serverMessage = error.response.data?.message;
+
+        if (serverMessage === 'ACCOUNT_REFUSED') {
+          setErreurGenerale(t("main.connexion.erreur_compte_refuse") as string);
+        } 
+        else if (serverMessage === 'ACCOUNT_BANNED') {
+          setErreurGenerale(t("main.connexion.erreur_compte_banni") as string);
+        } 
+        else if (serverMessage === 'ACCOUNT_PENDING') {
+          setErreurGenerale(t("main.connexion.erreur_compte_en_attente") as string);
+        } 
+        else if (serverMessage === 'Invalid credentials.') {
+          setErreurGenerale(t("main.connexion.mot_de_passe_invalid") as string);
+        } 
+        else {
+          setErreurGenerale(serverMessage || (t("main.connexion.erreur_generique") as string));
+        }
+      } 
+      else if (!error.response) {
+        setErreurGenerale(t("main.connexion.erreur_reseau") as string);
+      } 
+      else {
+        setErreurGenerale(t("main.connexion.erreur_generique") as string);
       }
     }
   };
