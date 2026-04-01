@@ -4,6 +4,7 @@ namespace App\Security;
 
 use App\Entity\Utilisateur;
 use App\Enum\StatutUtilisateurEnum;
+use App\Enum\StatutProfessionnelEnum;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAccountStatusException;
 use Symfony\Component\Security\Core\User\UserCheckerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -27,6 +28,22 @@ class UserChecker implements UserCheckerInterface
         
         if ($user->getStatut() === StatutUtilisateurEnum::STATUT_EN_ATTENTE) {
             throw new CustomUserMessageAccountStatusException('ACCOUNT_PENDING');
+        }
+
+        $professionnel = $user->getProfessionnel();
+
+        if ($professionnel) {
+            if ($professionnel->getStatut() === StatutProfessionnelEnum::STATUT_REFUSE) {
+                throw new CustomUserMessageAccountStatusException('ACCOUNT_REFUSED');
+            }
+
+            if ($professionnel->getStatut() === StatutProfessionnelEnum::STATUT_BANNI) {
+                throw new CustomUserMessageAccountStatusException('ACCOUNT_BANNED');
+            }
+            
+            if ($professionnel->getStatut() === StatutProfessionnelEnum::STATUT_EN_ATTENTE) {
+                throw new CustomUserMessageAccountStatusException('ACCOUNT_PENDING');
+            }
         }
     }
 
