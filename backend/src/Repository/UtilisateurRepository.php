@@ -65,9 +65,9 @@ class UtilisateurRepository extends ServiceEntityRepository
 
         // Ordre
         if ($ordre === 'croissant') {
-            $qb->orderBy('u.nom', 'ASC');
+            $qb->orderBy('u.id', 'ASC');
         } elseif ($ordre === 'decroissant') {
-            $qb->orderBy('u.nom', 'DESC');
+            $qb->orderBy('u.id', 'DESC');
         } else {
             $qb->orderBy('u.id', 'ASC');
         }

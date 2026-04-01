@@ -84,6 +84,11 @@ const FILTRES_VIDES: FilterValues = {
     ordre: '',
 };
 
+const FILTRES_DEFAUT: FilterValues = {
+    ...FILTRES_VIDES,
+    ordre: 'decroissant', 
+};
+
 export default function GestionUtilisateurs() {
     const [utilisateurs, setUtilisateurs] = useState<Utilisateur[]>([]);
     const [enAttenteCount, setEnAttenteCount] = useState<number>(0);
@@ -100,9 +105,10 @@ export default function GestionUtilisateurs() {
     const [filtreModalOuverte, setFiltreModalOuverte] = useState<boolean>(false);
     const [filtresActifs, setFiltresActifs] = useState<FilterValues>(() => {
         const savedFiltres = localStorage.getItem('utilisateursFiltres');
-        return savedFiltres ? JSON.parse(savedFiltres) : { ...FILTRES_VIDES };
+        // 3. On utilise FILTRES_DEFAUT ici s'il n'y a pas de sauvegarde
+        return savedFiltres ? JSON.parse(savedFiltres) : { ...FILTRES_DEFAUT };
     });
-    const [filtresTemp, setFiltresTemp] = useState<FilterValues>({ ...FILTRES_VIDES });
+    const [filtresTemp, setFiltresTemp] = useState<FilterValues>({ ...FILTRES_DEFAUT });
 
     const aDesFiltresActifs = Object.values(filtresActifs).some((v) => v !== '');
 
@@ -116,7 +122,17 @@ export default function GestionUtilisateurs() {
             if (filtresActifs.ordre) filtresApi.ordre = filtresActifs.ordre;
 
             const data = await fetchAdminUtilisateurs(page, filtresApi);
-            setUtilisateurs(data.utilisateurs);
+
+            const utilisateursTries = data.utilisateurs.sort((a: Utilisateur, b: Utilisateur) => {
+                const aEnAttente = a.professionnel?.statut === 'En attente' || (!a.professionnel && a.statut === 'En attente');
+                const bEnAttente = b.professionnel?.statut === 'En attente' || (!b.professionnel && b.statut === 'En attente');
+                
+                if (aEnAttente && !bEnAttente) return -1;
+                if (!aEnAttente && bEnAttente) return 1;
+                return 0;
+            });
+
+            setUtilisateurs(utilisateursTries);
             setEnAttenteCount(data.totalEnAttente);
             setPagination(data.pagination);
         } catch {
