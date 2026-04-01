@@ -136,6 +136,10 @@ export default function InscriptionProfessionnel() {
                     ERROR_LASTNAME_TOO_LONG: t('main.inscription_professionnel.nom_trop_long'),
                     ERROR_FIRSTNAME_TOO_LONG: t('main.inscription_professionnel.prenom_trop_long'),
                     ERROR_EMAIL_IS_USING: t('main.inscription_professionnel.email_deja_utilise'),
+                    ERROR_EMAIL_REQUIRED: t('main.inscription_professionnel.email_requis'),
+                    ERROR_EMAIL_INVALID: t('main.inscription_professionnel.email_invalid'),
+                    ERROR_PASSWORD_REQUIRED: t('main.inscription_professionnel.mot_de_passe_requis'),
+                    ERROR_PASSWORD_TOO_SHORT: t('main.inscription_professionnel.mot_de_passe_invalide'),
                 };
 
                 const mappedErrors: Record<string, string> = {};

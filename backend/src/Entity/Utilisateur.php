@@ -30,8 +30,8 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 255, unique: true)]
-    #[Assert\NotBlank(message: "L'adresse email ne peut pas être vide.")]
-    #[Assert\Email(message: "L'adresse email '{{ value }}' n'est pas valide.")]
+    #[Assert\NotBlank(message: "ERROR_EMAIL_REQUIRED")]
+    #[Assert\Email(message: "ERROR_EMAIL_INVALID")]
     #[Groups(['utilisateur:read', 'utilisateur:write'])]
     private string $email;
 
@@ -46,8 +46,8 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $prenom = null;
 
     #[ORM\Column(name: 'mot_de_passe', type: 'string', length: 255, nullable: true)]
-    #[Assert\NotBlank(message: "Le mot de passe est obligatoire.")]
-    #[Assert\Length(min: 8, minMessage: "Le mot de passe doit faire au moins {{ limit }} caractères.")]
+    #[Assert\NotBlank(message: "ERROR_PASSWORD_REQUIRED")]
+    #[Assert\Length(min: 8, minMessage: "ERROR_PASSWORD_TOO_SHORT")]
     #[Groups(['utilisateur:write'])]
     private ?string $motDePasse = null;
 
