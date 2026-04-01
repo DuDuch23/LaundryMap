@@ -89,7 +89,9 @@
       "continuer_avec_google": "Continue with Google",
       "confirmation_mot_de_passe_requise": "Password confirmation is required",
       "mots_de_passe_differents": "Passwords do not match",
-      "confirmer_mot_de_passe": "Confirm password"
+      "confirmer_mot_de_passe": "Confirm password",
+      "nom_trop_long": "Last name cannot exceed 50 characters",
+      "prenom_trop_long": "First name cannot exceed 50 characters"
     },
     "connexion": {
       "continuer_avec_google": "Continue with Google",

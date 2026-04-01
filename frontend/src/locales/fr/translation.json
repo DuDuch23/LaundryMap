@@ -87,7 +87,9 @@
       "continuer_avec_google": "Continuer avec Google",
       "confirmation_mot_de_passe_requise": "La confirmation du mot de passe est requise",
       "mots_de_passe_differents": "Les mots de passe ne correspondent pas",
-      "confirmer_mot_de_passe": "Confirmer le mot de passe"
+      "confirmer_mot_de_passe": "Confirmer le mot de passe",
+      "nom_trop_long": "Le nom ne peut pas dépasser 50 caractères",
+      "prenom_trop_long": "Le prénom ne peut pas dépasser 50 caractères"
     },
     "connexion": {
       "continuer_avec_google": "Continuer avec Google",

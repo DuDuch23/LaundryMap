@@ -48,12 +48,18 @@ export default function RegisterUser() {
         "main.inscription_utilisateur.prenom_trop_court",
       );
     }
+    else if (firstName.trim().length > 50) {
+      newsErrors.firstName = t("main.inscription_utilisateur.prenom_trop_long");
+    }
 
     if (!lastName.trim()) {
       newsErrors.lastName = t("main.inscription_utilisateur.nom_requis");
     } else if (lastName.trim().length < 2) {
       newsErrors.lastName = t("main.inscription_utilisateur.nom_trop_court");
+    } else if (lastName.trim().length > 50) {
+      newsErrors.lastName = t("main.inscription_utilisateur.nom_trop_long");
     }
+    
 
     if (!password.trim()) {
       newsErrors.password = t(
@@ -165,6 +171,7 @@ export default function RegisterUser() {
           onChange={handleChangeFirstName}
           placeholder={t("main.inscription_utilisateur.placeholder_prenom")}
           error={errors.firstName}
+          maxLength={50}
         />
 
         <AccessibleInput
@@ -176,6 +183,7 @@ export default function RegisterUser() {
           onChange={handleChangeLastName}
           placeholder={t("main.inscription_utilisateur.placeholder_nom")}
           error={errors.lastName}
+          maxLength={50}
         />
 
         <AccessibleInput
