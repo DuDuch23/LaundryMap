@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Votre compte a été validé</title>
+</head>
+<body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; margin: 0; padding: 15px; -webkit-text-size-adjust: 100%; background-color: #f9f9f9;">
+    <div style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px; background-color: #ffffff; box-sizing: border-box;">
+        <h2 style="color: #34A853;">Votre compte LaundryMap a été validé !</h2>
+
+        <p>Bonjour {{ user.prenom }} {{ user.nom }},</p>
+
+        <p>Nous avons le plaisir de vous informer que votre compte sur <strong>LaundryMap</strong> a été <strong>validé</strong> par notre équipe d'administration.</p>
+
+        <div style="background-color: #f0faf3; padding: 15px; border-left: 4px solid #34A853; margin: 20px 0;">
+            <strong style="color: #34A853;">Votre compte est maintenant actif.</strong><br><br>
+            Vous pouvez dès à présent vous connecter et profiter de tous les services LaundryMap.
+        </div>
+
+        {% if motif %}
+        <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid #22ACE2; margin: 20px 0;">
+            <strong style="color: #22ACE2;">Commentaire de l'administration :</strong><br><br>
+            <i>{{ motif|nl2br }}</i>
+        </div>
+        {% endif %}
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{ loginUrl }}" style="display: inline-block; background-color: #22ACE2; color: #ffffff; padding: 15px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; box-sizing: border-box; max-width: 100%; word-wrap: break-word;">Se connecter</a>
+        </div>
+
+        <p>Cordialement,<br>L'équipe LaundryMap</p>
+    </div>
+</body>
+</html>
