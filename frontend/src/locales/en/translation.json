@@ -105,7 +105,9 @@
       "mot_de_passe_oublie": "Forgot your password?",
       "pas_encore_de_compte": "Don't have an account yet?",
       "sinscrire": "Sign Up",
-      "ou": "or"
+      "ou": "or",
+      "erreur_reseau": "A network error occurred. Please check your connection and try again.",
+      "erreur_generique": "An error occurred. Please try again."
     },
     "profil": {
       "chargement": "Loading profile...",

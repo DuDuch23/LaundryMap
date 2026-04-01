@@ -103,7 +103,9 @@
       "mot_de_passe_oublie": "Mot de passe oublié ?",
       "pas_encore_de_compte": "Pas encore de compte ?",
       "sinscrire": "S'inscrire",
-      "ou": "ou"
+      "ou": "ou",
+      "erreur_reseau": "Une erreur réseau est survenue. Veuillez vérifier votre connexion et réessayer.",
+      "erreur_generique": "Une erreur est survenue. Veuillez réessayer."
     },
     "profil": {
       "chargement": "Chargement du profil...",
