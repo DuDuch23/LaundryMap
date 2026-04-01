@@ -113,18 +113,40 @@ export default function RegisterUser() {
       setCguAccepted(false);
     } catch (error: any) {
       console.error("Erreur lors de l'inscription :", error);
-      
+
       if (error.response?.data?.erreurs) {
-        setErrors(error.response.data.erreurs);
-      } 
+        const backendErrors = error.response.data.erreurs;
+
+        // Mapping clés backend -> clés frontend
+        const keyMap: Record<string, string> = {
+          nom: 'lastName',
+          prenom: 'firstName',
+          email: 'email',
+          motDePasse: 'password',
+        };
+
+        // Mapping codes erreur backend -> clés i18n
+        const messageMap: Record<string, string> = {
+          ERROR_LASTNAME_TOO_LONG: t("main.inscription_utilisateur.nom_trop_long"),
+          ERROR_FIRSTNAME_TOO_LONG: t("main.inscription_utilisateur.prenom_trop_long"),
+        };
+
+        const mappedErrors: Record<string, string> = {};
+        for (const [backendKey, message] of Object.entries(backendErrors)) {
+          const frontKey = keyMap[backendKey] || backendKey;
+          mappedErrors[frontKey] = messageMap[message as string] || (message as string);
+        }
+
+        setErrors(mappedErrors);
+      }
       else if (error.response?.data?.message) {
         setErrors({ global: error.response.data.message });
-      } 
+      }
       else if (!error.response) {
-        setErrors({ 
-          global: t("main.connexion.erreur_reseau") 
+        setErrors({
+          global: t("main.connexion.erreur_reseau")
         });
-      } 
+      }
       else {
         setErrors({
           global: t("main.connexion.erreur_generique"),

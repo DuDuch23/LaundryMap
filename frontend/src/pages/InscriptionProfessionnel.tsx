@@ -129,9 +129,22 @@ export default function InscriptionProfessionnel() {
             setErrors({});
         }catch(error: any){
             if (error.response?.data?.erreurs) {
-                setErrors(error.response.data.erreurs);
+                const backendErrors = error.response.data.erreurs;
+
+                // Mapping codes erreur backend -> clés i18n
+                const messageMap: Record<string, string> = {
+                    ERROR_LASTNAME_TOO_LONG: t('main.inscription_professionnel.nom_trop_long'),
+                    ERROR_FIRSTNAME_TOO_LONG: t('main.inscription_professionnel.prenom_trop_long'),
+                };
+
+                const mappedErrors: Record<string, string> = {};
+                for (const [key, message] of Object.entries(backendErrors)) {
+                    mappedErrors[key] = messageMap[message as string] || (message as string);
+                }
+
+                setErrors(mappedErrors);
             } else {
-                setErrors({ global: 'Une erreur est survenue, veuillez réessayer' });
+                setErrors({ global: t('main.connexion.erreur_generique') });
             }
         } finally{
             setIsLoading(false);
