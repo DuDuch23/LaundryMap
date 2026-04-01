@@ -17,7 +17,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 #[ORM\HasLifecycleCallbacks]
 #[UniqueEntity(
     fields: ['email'],
-    message: 'Cet email a déjà été utilisé.'
+    message: 'ERROR_EMAIL_IS_USING'
 )]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
 

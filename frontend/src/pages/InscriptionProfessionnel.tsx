@@ -135,6 +135,7 @@ export default function InscriptionProfessionnel() {
                 const messageMap: Record<string, string> = {
                     ERROR_LASTNAME_TOO_LONG: t('main.inscription_professionnel.nom_trop_long'),
                     ERROR_FIRSTNAME_TOO_LONG: t('main.inscription_professionnel.prenom_trop_long'),
+                    ERROR_EMAIL_IS_USING: t('main.inscription_professionnel.email_deja_utilise'),
                 };
 
                 const mappedErrors: Record<string, string> = {};
