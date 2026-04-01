@@ -100,7 +100,7 @@ export default function DetailUtilisateur() {
     };
 
     return (
-        <div className="max-w-md mx-auto bg-gray-50 min-h-screen font-sans relative pb-10">
+        <div className="w-full mx-auto bg-gray-50 min-h-screen font-sans relative pb-10">
 
             {/* HEADER BACKGROUND (Placeholder pour l'image de fond) */}
             <div className="relative h-56 bg-slate-800 w-full overflow-hidden">
