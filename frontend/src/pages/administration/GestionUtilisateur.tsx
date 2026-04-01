@@ -43,7 +43,7 @@ const FILTER_SECTIONS: FilterSection[] = [
         key: 'statut',
         options: [
             { label: 'Tous', value: '' },
-            { label: 'Validée', value: 'Validé' },
+            { label: 'Validé', value: 'Validé' },
             { label: 'Refusé', value: 'Refusé' },
             { label: 'En attente', value: 'En attente' },
         ],

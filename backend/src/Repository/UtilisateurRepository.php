@@ -30,8 +30,8 @@ class UtilisateurRepository extends ServiceEntityRepository
         // Filtre par statut
         if ($statut) {
             $statutEnum = match($statut) {
-                'Validé', 'Validée' => StatutUtilisateurEnum::STATUT_VALIDE,
-                'Refusé', 'Refusée' => StatutUtilisateurEnum::STATUT_REFUSE,
+                'Validé' => StatutUtilisateurEnum::STATUT_VALIDE,
+                'Refusé' => StatutUtilisateurEnum::STATUT_REFUSE,
                 'En attente' => StatutUtilisateurEnum::STATUT_EN_ATTENTE,
                 'Banni' => StatutUtilisateurEnum::STATUT_BANNI,
                 'Supprimé' => StatutUtilisateurEnum::STATUT_SUPPRIME,
