@@ -106,16 +106,22 @@ export default function RegisterUser() {
       setConfirmPassword("");
       setCguAccepted(false);
     } catch (error: any) {
-      console.error("Erreur :", error);
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.erreurs
-      ) {
+      console.error("Erreur lors de l'inscription :", error);
+      
+      if (error.response?.data?.erreurs) {
         setErrors(error.response.data.erreurs);
-      } else {
+      } 
+      else if (error.response?.data?.message) {
+        setErrors({ global: error.response.data.message });
+      } 
+      else if (!error.response) {
+        setErrors({ 
+          global: t("main.connexion.erreur_reseau") 
+        });
+      } 
+      else {
         setErrors({
-          global: "Une erreur est survenue lors de la connexion au serveur.",
+          global: t("main.connexion.erreur_generique"),
         });
       }
     }

@@ -105,7 +105,10 @@
       "sinscrire": "S'inscrire",
       "ou": "ou",
       "erreur_reseau": "Une erreur réseau est survenue. Veuillez vérifier votre connexion et réessayer.",
-      "erreur_generique": "Une erreur est survenue. Veuillez réessayer."
+      "erreur_generique": "Une erreur est survenue. Veuillez réessayer.",
+      "erreur_compte_en_attente": "Votre compte est en attente de validation. Veuillez vérifier votre e-mail pour valider votre compte avant de vous connecter.",
+      "erreur_compte_banni": "Votre compte a été banni. Veuillez contacter l'administrateur pour plus d'informations.",
+      "erreur_compte_refuse": "Votre compte a été refusé par l'administration. Veuillez contacter l'administrateur pour plus d'informations."
     },
     "profil": {
       "chargement": "Chargement du profil...",
