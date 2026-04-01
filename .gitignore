@@ -1,0 +1,16 @@
+# ── Variables d'environnement (NE JAMAIS COMMITTER) ──
+.env
+.env.local
+backend/.env.local
+
+# ── Docker volumes ────────────────────────────────────
+docker/db_data/
+
+# ── OS ───────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDE ──────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp

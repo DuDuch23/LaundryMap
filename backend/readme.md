@@ -1,0 +1,1 @@
+docker exec -it laundrymap_php composer install

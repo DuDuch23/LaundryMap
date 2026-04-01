@@ -1,0 +1,121 @@
+services:
+
+  # ─────────────────────────────────────────
+  # BASE DE DONNÉES — MariaDB
+  # ─────────────────────────────────────────
+  db:
+    image: mariadb:11
+    container_name: laundrymap_db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    # Port DB non exposé à l'extérieur — accessible uniquement via phpMyAdmin ou depuis les containers
+    expose:
+      - "3306"
+    networks:
+      - laundrymap
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────
+  # BACKEND — Symfony (PHP 8.3-FPM)
+  # ─────────────────────────────────────────
+  php:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: laundrymap_php
+    restart: unless-stopped
+    volumes:
+      - ./backend:/var/www/html
+      - ./backend/.env.local:/var/www/html/.env.local:ro
+    environment:
+      APP_ENV: dev
+      APP_SECRET: ${APP_SECRET}
+      DATABASE_URL: mysql://${DB_USER}:${DB_PASSWORD}@db:3306/${DB_NAME}?serverVersion=mariadb-11.0.0&charset=utf8mb4
+      MAILER_DSN: smtp://${MAILTRAP_USER}:${MAILTRAP_PASSWORD}@sandbox.smtp.mailtrap.io:2525
+    depends_on:
+      db:
+        condition: service_healthy
+    # PHP-FPM non exposé directement — uniquement accessible par Nginx
+    expose:
+      - "9000"
+    networks:
+      - laundrymap
+
+  # ─────────────────────────────────────────
+  # REVERSE PROXY — Nginx
+  # ─────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: laundrymap_nginx
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:80"    # Symfony API — localhost seulement
+    volumes:
+      - ./backend:/var/www/html:ro
+      - ./conf/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - php
+    networks:
+      - laundrymap
+
+  # ─────────────────────────────────────────
+  # FRONTEND — React + Vite (HMR dev)
+  # ─────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: laundrymap_frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5173:5173"  # Vite dev server — localhost seulement
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules        # préserve node_modules du container
+    environment:
+      VITE_API_URL: http://localhost:8000
+    networks:
+      - laundrymap
+
+  # ─────────────────────────────────────────
+  # PHPMYADMIN
+  # ─────────────────────────────────────────
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: laundrymap_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8081:80"    # phpMyAdmin — localhost seulement
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: ${DB_USER}
+      PMA_PASSWORD: ${DB_PASSWORD}
+      # Désactive la création de compte "contrôleur" inutile en dev
+      PMA_ARBITRARY: 0
+      UPLOAD_LIMIT: 64M
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - laundrymap
+
+# ─────────────────────────────────────────
+# VOLUMES & NETWORKS
+# ─────────────────────────────────────────
+volumes:
+  db_data:
+
+networks:
+  laundrymap:
+    driver: bridge

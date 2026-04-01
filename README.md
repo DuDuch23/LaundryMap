@@ -126,3 +126,13 @@ laundrymap/
 - Adrien Leclere - https://github.com/ENFANTSDUPAYS
 - Noah Bonnaventure - https://github.com/TechnicienDeSurface
 - Alexandre Duchemin - https://github.com/DuDuch23
+
+## Installation avec docker :
+
+- ajouter les variables nécéssaires
+- docker compose up -d 
+- docker compose up -d --build --force-recreate frontend
+- docker compose up -d --force-recreate nginx
+- Url front disponible sur 127.0.0.1:5173
+- Url backend disponible sur 127.0.0.1:8000
+- Url phpmyadmin disponible sur 127.0.0.1:8081
