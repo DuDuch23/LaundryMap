@@ -265,7 +265,7 @@ class ApiUtilisateurController extends AbstractController
             //ENVOIE DU MAIL EN CAS DE VALIDATION
             $frontendBaseUrl = $this->getParameter('app.frontend_url');
             $email = (new TemplatedEmail())
-                ->from('noreply@laundrymap.fr')
+                ->from($this->getParameter('mailer_from'))
                 ->to($user->getEmail())
                 ->subject('Votre compte LaundryMap a été validé !')
                 ->htmlTemplate('emails/validation_utilisateur.html.twig')
@@ -286,7 +286,7 @@ class ApiUtilisateurController extends AbstractController
             
             //ENVOIE DU MAIL EN CAS DE REFUS
             $email = (new TemplatedEmail())
-                ->from('noreply@laundrymap.fr')
+                ->from($this->getParameter('mailer_from'))
                 ->to($user->getEmail())
                 ->subject('Information concernant votre compte LaundryMap')
                 ->htmlTemplate('emails/refus_utilisateur.html.twig')
@@ -372,7 +372,7 @@ class ApiUtilisateurController extends AbstractController
         $verificationUrl = $this->generateUrl('api_verify_email', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
 
         $emailMessage = (new TemplatedEmail())
-            ->from('noreply@laundrymap.fr')
+            ->from($this->getParameter('mailer_from'))
             ->to($user->getEmail())
             ->subject('Nouveau lien de confirmation pour LaundryMap')
             ->htmlTemplate('emails/confirmation_email.html.twig')

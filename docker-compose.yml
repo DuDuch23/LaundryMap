@@ -41,7 +41,9 @@ services:
       APP_ENV: dev
       APP_SECRET: ${APP_SECRET}
       DATABASE_URL: mysql://${DB_USER}:${DB_PASSWORD}@db:3306/${DB_NAME}?serverVersion=mariadb-11.0.0&charset=utf8mb4
-      MAILER_DSN: smtp://${MAILTRAP_USER}:${MAILTRAP_PASSWORD}@sandbox.smtp.mailtrap.io:2525
+      MAILER_DSN: smtp://${BREVO_CONNEXION}:${BREVO_KEY_SMTP}@${BREVO_HOST}:${BREVO_PORT}
+      JWT_PASSPHRASE: ""
+      MAILER_FROM: ${BREVO_FROM}
     depends_on:
       db:
         condition: service_healthy
