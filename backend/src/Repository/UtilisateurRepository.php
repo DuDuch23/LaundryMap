@@ -30,8 +30,8 @@ class UtilisateurRepository extends ServiceEntityRepository
         // Filtre par statut
         if ($statut) {
             $statutEnum = match($statut) {
-                'Validé', 'Validée' => StatutUtilisateurEnum::STATUT_VALIDE,
-                'Refusé', 'Refusée' => StatutUtilisateurEnum::STATUT_REFUSE,
+                'Validé' => StatutUtilisateurEnum::STATUT_VALIDE,
+                'Refusé' => StatutUtilisateurEnum::STATUT_REFUSE,
                 'En attente' => StatutUtilisateurEnum::STATUT_EN_ATTENTE,
                 'Banni' => StatutUtilisateurEnum::STATUT_BANNI,
                 'Supprimé' => StatutUtilisateurEnum::STATUT_SUPPRIME,
@@ -65,9 +65,9 @@ class UtilisateurRepository extends ServiceEntityRepository
 
         // Ordre
         if ($ordre === 'croissant') {
-            $qb->orderBy('u.nom', 'ASC');
+            $qb->orderBy('u.id', 'ASC');
         } elseif ($ordre === 'decroissant') {
-            $qb->orderBy('u.nom', 'DESC');
+            $qb->orderBy('u.id', 'DESC');
         } else {
             $qb->orderBy('u.id', 'ASC');
         }
