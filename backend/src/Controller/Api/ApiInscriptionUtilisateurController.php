@@ -69,7 +69,7 @@ class ApiInscriptionUtilisateurController extends AbstractController
         $verificationUrl = $this->generateUrl('api_verify_email', ['token' => $tokenString], UrlGeneratorInterface::ABSOLUTE_URL);
 
         $emailMessage = (new TemplatedEmail())
-            ->from('noreply@laundrymap.fr')
+            ->from($this->getParameter('mailer_from'))
             ->to($utilisateur->getEmail())
             ->subject('Confirmez votre inscription sur LaundryMap')
             ->htmlTemplate('emails/confirmation_email.html.twig')
