@@ -61,6 +61,7 @@ export interface ProfilUtilisateurData {
     dateDerniereConnexion: string | null;
     utilisateurSupprimeLe?: string | null;
     preference?: ProfilPreferenceData | null;
+    isProfessionnel: boolean;
 }
 
 export interface ProfilPreferenceData {

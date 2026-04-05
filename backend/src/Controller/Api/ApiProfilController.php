@@ -181,6 +181,7 @@ class ApiProfilController extends AbstractController
                     'theme' => $preference->getTheme()->value,
                     'notifications' => $preference->isNotifications(),
                 ] : null,
+                'isProfessionnel' => $utilisateur->isProfessionnel(),
             ],
         ]);
     }

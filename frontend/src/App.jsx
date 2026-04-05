@@ -15,6 +15,7 @@ const GestionUtilisateur = React.lazy(() => import('./pages/administration/Gesti
 const TableauDeBord = React.lazy(() => import('./pages/administration/TableauDeBord'));
 const DetailUtilisateur = React.lazy(() => import('./pages/administration/DetailUtilisateur'));
 const EmailVerification = React.lazy(() => import('./pages/EmailVerification'));
+const AjoutLaverie = React.lazy(() => import('./pages/AjoutLaverie/AjoutLaverie'));
 const token = localStorage.getItem('token');
 
 function AuthRoute({ children }) {
@@ -84,6 +85,7 @@ function App() {
               <Route path="/inscription-pro" element={<InscriptionPro />} />
               <Route path="/connexion" element={<Connexion />} />
               <Route path="/email-verifie" element={<EmailVerification />} />
+              <Route path="/nouvelle-laverie" element={<AjoutLaverie />} />
             </Route>
 
             <Route element={<RequireAdmin><HeaderAdmin /></RequireAdmin>}>

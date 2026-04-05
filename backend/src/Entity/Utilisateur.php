@@ -261,6 +261,11 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->motDePasse;
     }
 
+    public function isProfessionnel(): bool
+    {
+        return $this->professionnel !== null;
+    }
+
     public function eraseCredentials(): void
     {
         // Vide intentionnellement
