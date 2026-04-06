@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, NavLink, Outlet, useNavigate } from 'react-router';
+import { Link, Outlet, useNavigate, useLocation } from 'react-router';
 
 function getEmailFromToken(): string | null {
     try {
@@ -20,6 +20,7 @@ function getEmailFromToken(): string | null {
 export default function HeaderAdmin() {
     const [isOpen, setIsOpen] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
 
     const adminEmail = getEmailFromToken();
     const initiales = adminEmail ? adminEmail.charAt(0).toUpperCase() : 'A';
@@ -34,18 +35,24 @@ export default function HeaderAdmin() {
         {
             to: '/admin/tableau-de-bord',
             label: 'Tableau de bord',
+            matchPaths: ['/admin/tableau-de-bord'],
         },
         {
             to: '/admin/gestion-utilisateurs',
             label: 'Gestion des utilisateurs',
             labelShort: 'Utilisateurs',
+            matchPaths: ['/admin/gestion-utilisateurs', '/admin/utilisateurs/'],
         },
         {
             to: '/admin/gestion-laveries',
             label: 'Gestion des laveries',
             labelShort: 'Laveries',
+            matchPaths: ['/admin/gestion-laveries', '/admin/laveries/'],
         },
     ];
+
+    const isLinkActive = (matchPaths: string[]) =>
+        matchPaths.some(path => location.pathname === path || location.pathname.startsWith(path));
 
     return (
         <>
@@ -64,21 +71,19 @@ export default function HeaderAdmin() {
 
                     {/* Navigation desktop */}
                     <ul className='hidden md:flex items-center gap-1'>
-                        {navLinks.map(({ to, label, labelShort }) => (
+                        {navLinks.map(({ to, label, labelShort, matchPaths }) => (
                             <li key={to}>
-                                <NavLink
+                                <Link
                                     to={to}
-                                    className={({ isActive }) =>
-                                        `block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                                            isActive
-                                                ? 'bg-white/20 text-white font-bold'
-                                                : 'text-white/90 hover:bg-white/10 hover:text-white'
-                                        }`
-                                    }
+                                    className={`block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                        isLinkActive(matchPaths)
+                                            ? 'bg-white/20 text-white font-bold'
+                                            : 'text-white/90 hover:bg-white/10 hover:text-white'
+                                    }`}
                                 >
                                     <span className='md:block xl:hidden'>{labelShort || label}</span>
                                     <span className='hidden xl:block'>{label}</span>
-                                </NavLink>
+                                </Link>
                             </li>
                         ))}
                         <li>
@@ -121,19 +126,17 @@ export default function HeaderAdmin() {
                             className='absolute top-full left-0 w-full bg-white shadow-2xl border-b border-gray-200 md:hidden z-50'
                         >
                             <ul role="list">
-                                {navLinks.map(({ to, label }) => (
+                                {navLinks.map(({ to, label, matchPaths }) => (
                                     <li key={to} className="border-b border-gray-100">
-                                        <NavLink
+                                        <Link
                                             to={to}
-                                            className={({ isActive }) =>
-                                                `block px-6 py-4 transition-all duration-200 ${
-                                                    isActive ? 'bg-blue-50 text-[#14A8DE] font-bold' : 'text-gray-700 hover:bg-gray-50 hover:text-[#14A8DE]'
-                                                }`
-                                            }
+                                            className={`block px-6 py-4 transition-all duration-200 ${
+                                                isLinkActive(matchPaths) ? 'bg-blue-50 text-[#14A8DE] font-bold' : 'text-gray-700 hover:bg-gray-50 hover:text-[#14A8DE]'
+                                            }`}
                                             onClick={() => setIsOpen(false)}
                                         >
                                             {label}
-                                        </NavLink>
+                                        </Link>
                                     </li>
                                 ))}
                             </ul>

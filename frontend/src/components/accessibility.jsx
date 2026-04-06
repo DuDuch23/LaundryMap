@@ -89,15 +89,18 @@ export function AccessibleInput({
   onChange,
   placeholder,
   required = false,
+  disabled = false,
   error,
   maxLength,
   children = null,
 }) {
+  const isCheckbox = type === 'checkbox';
+
   return (
     <div role="group" className={className}>
       {label && (
         <label htmlFor={id}
-          className={`w-auto max-w-fit px-4 bg-white text-black rounded-lg relative ${type !== 'checkbox' ? 'top-2 -right-3' : ''}`}
+          className={`w-auto max-w-fit px-4 bg-white text-black rounded-lg relative ${!isCheckbox ? 'top-2 -right-3' : ''}`}
         >
           {label}
           {required && (
@@ -112,14 +115,19 @@ export function AccessibleInput({
         id={id}
         name={name || id}
         type={type}
-        value={value}
+        {...(isCheckbox ? { checked: !!value } : { value: value ?? '' })}
         className={`
-          ${type !== 'submit' ? 'border border-solid rounded-lg bg-white p-4' : 'text-white font-bold py-3 px-4 rounded-lg transition-colors cursor-pointer'}
+          ${type === 'checkbox' ? 'w-4 h-4 accent-[#22ACE2]' : ''}
+          ${type !== 'submit' && type !== 'checkbox' ? 'border border-solid rounded-lg bg-white p-4 w-full' : ''}
+          ${type === 'submit' ? 'text-white font-bold py-3 px-4 rounded-lg transition-colors cursor-pointer' : ''}
           ${error ? 'bg-[#FADED7]! border-[#E3634C]' : ''}
+          ${disabled && !isCheckbox ? 'opacity-60 cursor-not-allowed' : ''}
         `}
         onChange={onChange || undefined}
         placeholder={placeholder || undefined}
         required={required || undefined}
+        disabled={disabled}
+        readOnly={!onChange && !isCheckbox}
         aria-required={required}
         aria-describedby={error ? `${id}-error` : undefined}
         aria-invalid={error ? 'true' : 'false'}
