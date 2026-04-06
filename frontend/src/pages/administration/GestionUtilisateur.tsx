@@ -44,8 +44,8 @@ const FILTER_SECTIONS: FilterSection[] = [
         key: 'statut',
         options: [
             { label: 'Tous', value: '' },
-            { label: 'Validé', value: 'Validé' },
-            { label: 'Refusé', value: 'Refusé' },
+            { label: 'Validée', value: 'Validée' },
+            { label: 'Refusée', value: 'Refusée' },
             { label: 'En attente', value: 'En attente' },
         ],
     },
@@ -148,14 +148,14 @@ export default function GestionUtilisateurs() {
 
     const getBadgeStyle = (statut: string) => {
         switch (statut) {
-            case 'Refusé':
+            case 'Refusée':
                 return 'bg-red-100 text-red-500 border-red-300';
             case 'En attente':
                 return 'bg-orange-100 text-orange-500 border-orange-300';
-            case 'Validé':
+            case 'Validée':
                 return 'bg-green-100 text-green-500 border-green-300';
             case 'Banni':
-            case 'Supprimé':
+            case 'Supprimée':
                 return 'bg-gray-800 text-white border-gray-900';
             default:
                 return 'bg-gray-100 text-gray-500 border-gray-300';

@@ -54,13 +54,14 @@ export default function DetailUtilisateur() {
 
     const getBadgeStyle = (statut: string) => {
         switch (statut) {
-            case 'Refusé':
+            case 'Refusée':
                 return 'bg-red-100 text-red-500 border border-red-300';
             case 'En attente':
                 return 'bg-orange-100 text-orange-500 border border-orange-300';
-            case 'Validé':
+            case 'Validée':
                 return 'bg-green-100 text-green-500 border border-green-300';
             case 'Banni':
+            case 'Supprimée':
                 return 'bg-gray-800 text-white border border-gray-900';
             default:
                 return 'bg-gray-100 text-gray-500 border border-gray-300';

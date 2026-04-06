@@ -49,10 +49,10 @@ class ApiUtilisateurController extends AbstractController
 
             $statutUserValeur = $user->getStatut()->value;
             $statutUserReact = match($statutUserValeur) {
-                'Validé'   => 'Validé',
-                'Refusé'   => 'Refusé',
+                'Validé'   => 'Validée',
+                'Refusé'   => 'Refusée',
                 'Banni'    => 'Banni',
-                'Supprimé' => 'Supprimé',
+                'Supprimé' => 'Supprimée',
                 default    => 'En attente'
             };
 
@@ -67,8 +67,8 @@ class ApiUtilisateurController extends AbstractController
             if ($pro) {
                 $statutProValeur = $pro->getStatut()->value;
                 $statutProReact = match($statutProValeur) {
-                    'Validé' => 'Validé',
-                    'Refusé' => 'Refusé',
+                    'Validé' => 'Validée',
+                    'Refusé' => 'Refusée',
                     'Banni'  => 'Banni',
                     default  => 'En attente'
                 };
@@ -134,8 +134,8 @@ class ApiUtilisateurController extends AbstractController
 
         $statutUserNom = $user->getStatut()->name;
         $statutUserReact = match($statutUserNom) {
-            'STATUT_VALIDE' => 'Validé',
-            'STATUT_REFUSE' => 'Refusé',
+            'STATUT_VALIDE' => 'Validée',
+            'STATUT_REFUSE' => 'Refusée',
             'STATUT_BANNI'  => 'Banni',
             default         => 'En attente'
         };
@@ -151,8 +151,8 @@ class ApiUtilisateurController extends AbstractController
         if ($pro) {
             $statutProNom = $pro->getStatut()->name;
             $statutProReact = match($statutProNom) {
-                'STATUT_VALIDE' => 'Validé',
-                'STATUT_REFUSE' => 'Refusé',
+                'STATUT_VALIDE' => 'Validée',
+                'STATUT_REFUSE' => 'Refusée',
                 'STATUT_BANNI'  => 'Banni',
                 default         => 'En attente'
             };

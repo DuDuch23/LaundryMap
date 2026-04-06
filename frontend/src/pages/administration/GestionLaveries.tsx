@@ -121,6 +121,9 @@ export default function GestionLaveries() {
                 return 'bg-orange-100 text-orange-500 border-orange-300';
             case 'Validée':
                 return 'bg-green-100 text-green-500 border-green-300';
+            case 'Banni':
+            case 'Supprimée':
+                return 'bg-gray-800 text-white border-gray-900';
             default:
                 return 'bg-gray-100 text-gray-500 border-gray-300';
         }
@@ -240,7 +243,7 @@ export default function GestionLaveries() {
                                 )}
 
                                 <div className="absolute top-3 left-3 right-3 flex justify-between items-center">
-                                    <span className={`px-3 py-1 text-xs rounded-full border font-medium bg-white/90 backdrop-blur-sm ${getBadgeStyle(laverie.statut)}`}>
+                                    <span className={`px-3 py-1 text-xs rounded-full border font-medium shadow-sm ${getBadgeStyle(laverie.statut)}`}>
                                         {laverie.statut}
                                     </span>
                                     <Link to={`/admin/laveries/${laverie.id}`} className="bg-[#22ACE2] hover:bg-blue-500 p-1.5 rounded-xl text-white transition-colors cursor-pointer flex items-center justify-center shadow-md" aria-label="Voir les détails">
