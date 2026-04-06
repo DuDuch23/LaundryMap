@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 import { ArrowLeft, UserRound, MoreHorizontal } from 'lucide-react';
 import { fetchUtilisateurDetail, updateUtilisateurStatut } from '../../services/request';
 
@@ -178,9 +178,9 @@ export default function DetailUtilisateur() {
                                     </div>
 
                                     {/* Bouton "..." */}
-                                    <button className="bg-[#22ACE2] text-white p-2 rounded-xl hover:bg-blue-500 transition shadow-sm cursor-pointer shrink-0">
+                                    <Link to="/admin/gestion-laveries" className="bg-[#22ACE2] text-white p-2 rounded-xl hover:bg-blue-500 transition shadow-sm cursor-pointer shrink-0" aria-label="Voir les laveries">
                                         <MoreHorizontal size={16} />
-                                    </button>
+                                    </Link>
                                 </div>
                             ))}
                         </div>

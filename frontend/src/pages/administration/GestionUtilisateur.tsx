@@ -291,7 +291,7 @@ export default function GestionUtilisateurs() {
                                             {user.statut}
                                         </span>
                                     )}
-                                    <Link to={`/admin/utilisateurs/${user.id}`} className="bg-[#22ACE2] hover:bg-blue-500 p-1.5 rounded-md text-white transition-colors cursor-pointer flex items-center justify-center" aria-label="Voir les détails">
+                                    <Link to={`/admin/utilisateurs/${user.id}`} className="bg-[#22ACE2] hover:bg-blue-500 p-1.5 rounded-xl text-white transition-colors cursor-pointer flex items-center justify-center" aria-label="Voir les détails">
                                         <MoreHorizontal size={20} />
                                     </Link>
                                 </div>
@@ -334,9 +334,9 @@ export default function GestionUtilisateurs() {
                                             ))}
                                         </ul>
                                         {user.professionnel.laveries.length > 3 && (
-                                            <p className="text-xs font-semibold text-[#22ACE2] mt-2 text-right">
+                                            <Link to={`/admin/utilisateurs/${user.id}`} className="block text-xs font-semibold text-[#22ACE2] mt-2 text-right hover:underline cursor-pointer">
                                                 +{user.professionnel.laveries.length - 3}
-                                            </p>
+                                            </Link>
                                         )}
                                     </div>
                                 )}

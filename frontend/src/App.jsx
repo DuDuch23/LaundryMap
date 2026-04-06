@@ -14,6 +14,7 @@ const Connexion = React.lazy(() => import('./pages/Connexion'));
 const GestionUtilisateur = React.lazy(() => import('./pages/administration/GestionUtilisateur'));
 const TableauDeBord = React.lazy(() => import('./pages/administration/TableauDeBord'));
 const DetailUtilisateur = React.lazy(() => import('./pages/administration/DetailUtilisateur'));
+const GestionLaveries = React.lazy(() => import('./pages/administration/GestionLaveries'));
 const EmailVerification = React.lazy(() => import('./pages/EmailVerification'));
 const token = localStorage.getItem('token');
 
@@ -90,6 +91,7 @@ function App() {
               <Route path="/admin/tableau-de-bord" element={<TableauDeBord />} />
               <Route path="/admin/gestion-utilisateurs" element={<GestionUtilisateur />} />
               <Route path="/admin/utilisateurs/:id" element={<DetailUtilisateur />} />
+              <Route path="/admin/gestion-laveries" element={<GestionLaveries />} />
             </Route>
           </Routes>
         </Suspense>

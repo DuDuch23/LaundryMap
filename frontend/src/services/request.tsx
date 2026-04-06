@@ -229,6 +229,11 @@ export interface FiltresUtilisateurs {
     ordre?: string;
 }
 
+export interface FiltresLaveries {
+    statut?: string;
+    ordre?: string;
+}
+
 export async function fetchAdminUtilisateurs(page: number = 1, filtres?: FiltresUtilisateurs) {
     try {
         const params: Record<string, string | number> = { page };
@@ -252,6 +257,21 @@ export async function fetchUtilisateurDetail(id: string) {
         return response.data;
     } catch (error) {
         console.error(`Erreur lors de la récupération des détails de l'utilisateur ${id}:`, error);
+        throw error;
+    }
+}
+
+export async function fetchAdminLaveries(page: number = 1, filtres?: FiltresLaveries) {
+    try {
+        const params: Record<string, string | number> = { page };
+
+        if (filtres?.statut) params.statut = filtres.statut;
+        if (filtres?.ordre) params.ordre = filtres.ordre;
+
+        const response = await axios.get(`${API_BASE_URL}/api/admin/laveries`, { params });
+        return response.data;
+    } catch (error) {
+        console.error("Erreur lors de la récupération des laveries:", error);
         throw error;
     }
 }

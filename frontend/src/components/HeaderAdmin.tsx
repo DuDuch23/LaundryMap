@@ -40,6 +40,11 @@ export default function HeaderAdmin() {
             label: 'Gestion des utilisateurs',
             labelShort: 'Utilisateurs',
         },
+        {
+            to: '/admin/gestion-laveries',
+            label: 'Gestion des laveries',
+            labelShort: 'Laveries',
+        },
     ];
 
     return (
