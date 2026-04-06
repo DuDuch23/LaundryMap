@@ -276,6 +276,35 @@ export async function fetchAdminLaveries(page: number = 1, filtres?: FiltresLave
     }
 }
 
+export async function fetchLaverieDetail(id: string) {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/api/admin/laveries/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error(`Erreur lors de la récupération des détails de la laverie ${id}:`, error);
+        throw error;
+    }
+}
+
+export async function updateLaverieStatut(id: number, action: 'accepter' | 'refuser', commentaire?: string) {
+    try {
+        const payload: any = { action };
+        if (commentaire) {
+            payload.commentaire = commentaire;
+        }
+        const response = await axios.post(`${API_BASE_URL}/api/admin/laveries/${id}/statut`, payload, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error(`Erreur lors de la mise à jour du statut de la laverie (action: ${action}):`, error);
+        throw error;
+    }
+}
+
 export async function updateUtilisateurStatut(id: number, action: 'accepter' | 'refuser', commentaire?: string) {
     try {
         const payload: any = { action };

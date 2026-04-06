@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router';
-import { ChevronLeft, ListX, SlidersHorizontal } from 'lucide-react';
+import { ChevronLeft, ListX, SlidersHorizontal, MoreHorizontal } from 'lucide-react';
 import { fetchAdminLaveries, type FiltresLaveries } from '../../services/request';
 import FilterModal, { type FilterSection, type FilterValues } from '../../components/FilterModal';
 
@@ -232,35 +232,39 @@ export default function GestionLaveries() {
                     {laveries.map((laverie) => (
                         <div key={laverie.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm relative">
 
-                            {/* Badge statut */}
-                            <div className="absolute top-3 left-3 z-10">
-                                <span className={`px-3 py-1 text-xs rounded-full border font-medium ${getBadgeStyle(laverie.statut)}`}>
-                                    {laverie.statut}
-                                </span>
-                            </div>
-
-                            {/* Image */}
-                            <div className="w-full h-40 bg-gray-200">
+                            <div className="w-full h-40 bg-gray-200 relative">
                                 {laverie.image ? (
                                     <img src={laverie.image} alt={laverie.nom} className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">Aucune image</div>
                                 )}
+
+                                <div className="absolute top-3 left-3 right-3 flex justify-between items-center">
+                                    <span className={`px-3 py-1 text-xs rounded-full border font-medium bg-white/90 backdrop-blur-sm ${getBadgeStyle(laverie.statut)}`}>
+                                        {laverie.statut}
+                                    </span>
+                                    <Link to={`/admin/laveries/${laverie.id}`} className="bg-[#22ACE2] hover:bg-blue-500 p-1.5 rounded-xl text-white transition-colors cursor-pointer flex items-center justify-center shadow-md" aria-label="Voir les détails">
+                                        <MoreHorizontal size={20} />
+                                    </Link>
+                                </div>
                             </div>
 
-                            {/* Contenu */}
+                            {/* Contenu (en dessous de l'image) */}
                             <div className="p-4">
                                 <h3 className="font-bold text-sm underline decoration-1 underline-offset-2 mb-1">{laverie.nom}</h3>
                                 <p className="text-xs font-bold text-gray-800">{laverie.adresse}</p>
-                                <p className="text-xs italic text-gray-500 mb-3">{laverie.distance || 'à X km de votre position'}</p>
+                                <p className="text-xs italic text-gray-500 mt-1">{laverie.distance || 'à X km de votre position'}</p>
 
-                                <div className="flex justify-end">
-                                    <button
-                                        className="bg-[#22ACE2] hover:bg-blue-500 cursor-pointer text-white font-medium py-2 px-6 rounded-full text-sm transition-colors shadow-sm"
-                                    >
-                                        Modifier
-                                    </button>
-                                </div>
+                                {laverie.statut === 'En attente' && (
+                                    <div className="flex justify-end mt-3">
+                                        <Link
+                                            to={`/admin/laveries/${laverie.id}`}
+                                            className="bg-[#22ACE2] hover:bg-blue-500 cursor-pointer text-white font-medium py-2 px-6 rounded-full text-sm transition-colors shadow-sm inline-block"
+                                        >
+                                            Répondre
+                                        </Link>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ))}
