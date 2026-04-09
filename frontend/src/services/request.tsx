@@ -26,6 +26,21 @@ axios.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
+// Intercepteur de réponse : redirige vers /connexion si le token a expiré (401)
+axios.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('token');
+            const currentPath = window.location.pathname;
+            if (currentPath !== '/connexion') {
+                window.location.href = '/connexion';
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
 interface InscriptionProfessionnelData {
     email: string;
     prenom: string;
