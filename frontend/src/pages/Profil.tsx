@@ -305,18 +305,6 @@ export default function Profil() {
                 onSelectLangueId={setLangueId}
               />
             </div>
-            <ToggleRow
-              label={t('main.profil.theme_sombre')}
-              subLabel={t('main.profil.theme_sombre_description')}
-              enabled={darkMode}
-              onChange={setDarkMode}
-            />
-            <ToggleRow
-              label={t('main.profil.notifications_push')}
-              subLabel={t('main.profil.notifications_push_description')}
-              enabled={notifications}
-              onChange={setNotifications}
-            />
           </Section>
 
           <Section title={t('main.profil.compte')}>
