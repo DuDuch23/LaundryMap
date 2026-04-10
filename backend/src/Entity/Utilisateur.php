@@ -6,6 +6,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use App\Enum\StatutUtilisateurEnum;
+use App\Enum\StatutProfessionnelEnum;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Serializer\Attribute\Groups;
@@ -253,7 +254,14 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-        return ['ROLE_USER'];
+        $roles = ['ROLE_USER'];
+
+        // Ajouter le rôle PROFESSIONNEL si l'utilisateur est un professionnel validé
+        if ($this->professionnel && $this->professionnel->getStatut()->value === StatutProfessionnelEnum::STATUT_VALIDE->value) {
+            $roles[] = 'ROLE_PROFESSIONNEL';
+        }
+
+        return $roles;
     }
 
     public function getPassword(): ?string

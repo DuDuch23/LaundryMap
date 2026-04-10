@@ -5,6 +5,7 @@ namespace App\Controller\Api;
 use App\Entity\Adresse;
 use App\Entity\Professionnel;
 use App\Entity\Utilisateur;
+use App\Entity\Laverie;
 use App\Enum\StatutProfessionnelEnum;
 use App\Enum\StatutUtilisateurEnum;
 use App\Service\ApiSirenSiretService;
@@ -16,9 +17,94 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class ApiProfessionnelController extends AbstractController
 {
+    #[Route('/api/professionnel/tableau-bord', name: 'api_tableau_bord_pro', methods: ['GET'])]
+    #[IsGranted('ROLE_PROFESSIONNEL')]
+    public function tableauBordProfessionnel(
+        EntityManagerInterface $entityManager,
+        SerializerInterface $serializer
+    ): JsonResponse {
+        try {
+            $user = $this->getUser();
+            
+            if (!$user) {
+                return $this->json(['erreur' => 'Utilisateur non authentifié'], 401);
+            }
+
+            $professionnel = $entityManager->getRepository(Professionnel::class)
+                ->findOneBy(['utilisateur' => $user]);
+
+            if (!$professionnel) {
+                return $this->json(['erreur' => 'Professionnel non trouvé'], 404);
+            }
+
+            // Vérifier que le professionnel est validé
+            if ($professionnel->getStatut()->value !== StatutProfessionnelEnum::STATUT_VALIDE->value) {
+                return $this->json(['erreur' => 'Compte professionnel non validé'], 403);
+            }
+
+            // Récupérer les laveries du professionnel non supprimées
+            $laveries = $entityManager->getRepository(Laverie::class)
+                ->findBy(
+                    ['professionnel' => $professionnel, 'supprimee_le' => null],
+                    ['dateModification' => 'DESC']
+                );
+
+            // Compter les laveries par statut
+            $stats = [
+                'total' => count($laveries),
+                'validees' => 0,
+                'en_attente' => 0,
+                'refusees' => 0,
+            ];
+
+            foreach ($laveries as $laverie) {
+                $statut = $laverie->getStatut()->value;
+                if ($statut === 'VALIDE') {
+                    $stats['validees']++;
+                } elseif ($statut === 'EN_ATTENTE') {
+                    $stats['en_attente']++;
+                } elseif ($statut === 'REFUSEE') {
+                    $stats['refusees']++;
+                }
+            }
+
+            return $this->json([
+                'professionnel' => [
+                    'id' => $professionnel->getId(),
+                    'prenom' => $professionnel->getUtilisateur()->getPrenom(),
+                    'nom' => $professionnel->getUtilisateur()->getNom(),
+                    'email' => $professionnel->getUtilisateur()->getEmail(),
+                    'siren' => $professionnel->getSiren(),
+                ],
+                'stats' => $stats,
+                'laveries' => array_map(function ($laverie) {
+                    return [
+                        'id' => $laverie->getId(),
+                        'nom' => $laverie->getNomEtablissement(),
+                        'adresse' => $laverie->getAdresse()->getAdresse(),
+                        'codePostal' => $laverie->getAdresse()->getCodePostal(),
+                        'ville' => $laverie->getAdresse()->getVille(),
+                        'statut' => $laverie->getStatut()->value,
+                        'dateAjout' => $laverie->getDateAjout()->format('d/m/Y'),
+                        'dateModification' => $laverie->getDateModification()->format('d/m/Y'),
+                        'logo' => $laverie->getLogo() ? ['id' => $laverie->getLogo()->getId()] : null,
+                    ];
+                }, $laveries),
+            ], 200);
+
+        } catch (\Exception $e) {
+            return $this->json([
+                'erreur' => $e->getMessage(),
+                'fichier' => $e->getFile(),
+                'ligne' => $e->getLine(),
+            ], 500);
+        }
+    }
+
     #[Route('/api/inscription-professionnel', name: 'api_inscription-professionnel', methods: ['POST'])]
     public function inscription(
         Request $request,
@@ -126,6 +212,76 @@ class ApiProfessionnelController extends AbstractController
                 'fichier' => $e->getFile(),
                 'ligne' => $e->getLine(),
             ], 500);
+        }
+    }
+
+    #[Route('/api/professionnel/laveries/{id}', name: 'api_get_laverie', methods: ['GET'])]
+    #[IsGranted('ROLE_PROFESSIONNEL')]
+    public function getLaverie(
+        int $id,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        try {
+            $user = $this->getUser();
+            $professionnel = $entityManager->getRepository(Professionnel::class)
+                ->findOneBy(['utilisateur' => $user]);
+
+            if (!$professionnel) {
+                return $this->json(['erreur' => 'Professionnel non trouvé'], 404);
+            }
+
+            $laverie = $entityManager->getRepository(Laverie::class)->find($id);
+
+            if (!$laverie || $laverie->getProfessionnel()->getId() !== $professionnel->getId()) {
+                return $this->json(['erreur' => 'Laverie non trouvée ou accès refusé'], 404);
+            }
+
+            return $this->json([
+                'id' => $laverie->getId(),
+                'nom' => $laverie->getNomEtablissement(),
+                'adresse' => $laverie->getAdresse()->getAdresse(),
+                'codePostal' => $laverie->getAdresse()->getCodePostal(),
+                'ville' => $laverie->getAdresse()->getVille(),
+                'pays' => $laverie->getAdresse()->getPays(),
+                'statut' => $laverie->getStatut()->value,
+                'dateAjout' => $laverie->getDateAjout()->format('d/m/Y'),
+                'dateModification' => $laverie->getDateModification()->format('d/m/Y'),
+            ], 200);
+
+        } catch (\Exception $e) {
+            return $this->json(['erreur' => $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/api/professionnel/laveries/{id}', name: 'api_delete_laverie', methods: ['DELETE'])]
+    #[IsGranted('ROLE_PROFESSIONNEL')]
+    public function deleteLaverie(
+        int $id,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        try {
+            $user = $this->getUser();
+            $professionnel = $entityManager->getRepository(Professionnel::class)
+                ->findOneBy(['utilisateur' => $user]);
+
+            if (!$professionnel) {
+                return $this->json(['erreur' => 'Professionnel non trouvé'], 404);
+            }
+
+            $laverie = $entityManager->getRepository(Laverie::class)->find($id);
+
+            if (!$laverie || $laverie->getProfessionnel()->getId() !== $professionnel->getId()) {
+                return $this->json(['erreur' => 'Laverie non trouvée ou accès refusé'], 404);
+            }
+
+            // Marquer comme supprimée au lieu de la supprimer vraiment
+            $laverie->setSupprimee_le(new \DateTime());
+            $entityManager->flush();
+
+            return $this->json(['message' => 'Laverie supprimée avec succès'], 200);
+
+        } catch (\Exception $e) {
+            return $this->json(['erreur' => $e->getMessage()], 500);
         }
     }
 }

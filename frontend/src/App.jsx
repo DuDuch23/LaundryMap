@@ -15,6 +15,8 @@ const GestionUtilisateur = React.lazy(() => import('./pages/administration/Gesti
 const TableauDeBord = React.lazy(() => import('./pages/administration/TableauDeBord'));
 const DetailUtilisateur = React.lazy(() => import('./pages/administration/DetailUtilisateur'));
 const EmailVerification = React.lazy(() => import('./pages/EmailVerification'));
+const TableauDeBordPro = React.lazy(() => import('./pages/professionnel/TableauDeBordPro'));
+const ProRoute = React.lazy(() => import('./routes/ProRoute'));
 const token = localStorage.getItem('token');
 
 function AuthRoute({ children }) {
@@ -90,6 +92,10 @@ function App() {
               <Route path="/admin/tableau-de-bord" element={<TableauDeBord />} />
               <Route path="/admin/gestion-utilisateurs" element={<GestionUtilisateur />} />
               <Route path="/admin/utilisateurs/:id" element={<DetailUtilisateur />} />
+            </Route>
+
+            <Route element={<ProRoute />}>
+              <Route path="/professionnel/tableau-de-bord" element={<TableauDeBordPro />} />
             </Route>
           </Routes>
         </Suspense>

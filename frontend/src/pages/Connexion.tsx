@@ -46,6 +46,8 @@ export default function PageConnexion() {
       const roles = getRolesFromToken(token);
       if (roles.some((role) => role.includes("ADMIN"))) {
         navigate("/admin/tableau-de-bord", { replace: true });
+      } else if (roles.some((role) => role.includes("PROFESSIONNEL"))) {
+        navigate("/professionnel/tableau-de-bord", { replace: true });
       } else {
         navigate("/profil", { replace: true });
       }
@@ -91,6 +93,8 @@ export default function PageConnexion() {
         const roles = getRolesFromToken(resultat.token);
         if (roles.some((role) => role.includes("ADMIN"))) {
           navigate("/admin/gestion-utilisateurs", { replace: true });
+        } else if (roles.some((role) => role.includes("PROFESSIONNEL"))) {
+          navigate("/professionnel/tableau-de-bord", { replace: true });
         } else {
           navigate("/profil", { replace: true });
         }
