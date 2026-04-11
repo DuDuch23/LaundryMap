@@ -1,25 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router';
-import Header from '../../components/Header';
-import Footer from '../../components/Footer/footer';
 import API_BASE_URL from '../../services/api';
 
 const statusStyles = {
-  VALIDE: 'bg-emerald-500 text-white',
-  EN_ATTENTE: 'bg-amber-500 text-white',
-  REFUSEE: 'bg-rose-500 text-white',
+  'Validée': 'bg-emerald-500 text-white',
+  'En attente': 'bg-amber-500 text-white',
+  'Refusée': 'bg-rose-500 text-white',
 };
 
 const statusLabels = {
-  VALIDE: 'Validée',
-  EN_ATTENTE: 'En attente',
-  REFUSEE: 'Refusée',
+  'Validée': 'Validée',
+  'En attente': 'En attente',
+  'Refusée': 'Refusée',
 };
 
 export default function TableauDeBordPro() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notification, setNotification] = useState(null);
+  const [deleting, setDeleting] = useState(null);
 
   useEffect(() => {
     const fetchTableauBord = async () => {
@@ -60,6 +60,7 @@ export default function TableauDeBordPro() {
       return;
     }
 
+    setDeleting(laverieId);
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/api/professionnel/laveries/${laverieId}`, {
@@ -71,72 +72,110 @@ export default function TableauDeBordPro() {
       });
 
       if (response.ok) {
-        // Actualiser les données
-        setLoading(true);
+        setNotification({
+          type: 'success',
+          message: 'Laverie supprimée avec succès',
+        });
+        
+        // Rafraîchir les données
+        const token = localStorage.getItem('token');
         const fetchResponse = await fetch(`${API_BASE_URL}/api/professionnel/tableau-bord`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         });
-        const result = await fetchResponse.json();
-        setData(result);
-        setLoading(false);
+        
+        if (fetchResponse.ok) {
+          const result = await fetchResponse.json();
+          setData(result);
+        }
+
+        // Masquer la notification après 3 secondes
+        setTimeout(() => setNotification(null), 3000);
       } else {
-        alert('Erreur lors de la suppression');
+        const errorData = await response.json().catch(() => ({}));
+        setNotification({
+          type: 'error',
+          message: errorData.message || 'Erreur lors de la suppression de la laverie',
+        });
       }
     } catch (err) {
       console.error('Erreur:', err);
-      alert('Une erreur est survenue');
+      setNotification({
+        type: 'error',
+        message: err.message || 'Une erreur est survenue',
+      });
+    } finally {
+      setDeleting(null);
     }
   };
 
   if (loading) {
     return (
-      <div className="flex min-h-screen flex-col bg-slate-50">
-        <Header />
+      <div className="flex min-h-screen flex-col bg-slate-50 pt-24">
         <main className="flex-1" />
-        <Footer />
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="flex min-h-screen flex-col bg-slate-50">
-        <Header />
+      <div className="flex min-h-screen flex-col bg-slate-50 pt-24">
         <main className="flex-1 flex items-center justify-center">
           <div className="text-red-600">{error || 'Erreur lors du chargement'}</div>
         </main>
-        <Footer />
       </div>
     );
   }
 
   const { professionnel, stats, laveries } = data;
+  const prenom = (professionnel?.prenom || '').trim();
+  const nom = (professionnel?.nom || '').trim();
+  const initiales = `${prenom.charAt(0)}${nom.charAt(0)}`.toUpperCase() || 'U';
+  const photoProfilUrl = professionnel?.photoProfil || null;
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
-      <Header />
+    <div className="flex min-h-screen flex-col bg-slate-50 pt-24">
+      {/* Toast Notification */}
+      {notification && (
+        <div
+          className={`fixed top-4 right-4 z-50 rounded-lg shadow-lg px-6 py-4 text-white font-semibold flex items-center gap-3 ${
+            notification.type === 'success'
+              ? 'bg-emerald-500'
+              : 'bg-rose-500'
+          }`}
+        >
+          {notification.type === 'success' ? (
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+          )}
+          <span>{notification.message}</span>
+        </div>
+      )}
 
       <main className="flex-1">
-        <div className="mx-auto w-full max-w-md px-3 py-4 sm:max-w-2xl">
+        <div className="mx-auto w-full max-w-md px-2 py-4 sm:px-3 sm:max-w-2xl">
           {/* Section profil */}
           <section className="overflow-hidden rounded-[28px] bg-gradient-to-b from-cyan-500 to-cyan-600 text-white shadow-md">
             <div className="flex flex-col items-center gap-3 px-6 py-8 text-center">
-              <button
-                type="button"
-                className="self-start text-sm font-medium opacity-90 transition hover:opacity-100"
-              >
-                Modifier le compte
-              </button>
-
               <div className="relative">
-                <img
-                  src="https://via.placeholder.com/120"
-                  alt={`${professionnel.prenom} ${professionnel.nom}`}
-                  className="h-24 w-24 rounded-full border-4 border-white object-cover shadow-lg"
-                />
+                {photoProfilUrl ? (
+                  <img
+                    src={photoProfilUrl}
+                    alt={`${professionnel.prenom} ${professionnel.nom}`}
+                    className="h-24 w-24 rounded-full border-4 border-white object-cover shadow-lg"
+                  />
+                ) : (
+                  <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-cyan-700 text-3xl font-bold text-white shadow-lg">
+                    {initiales}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-1">
@@ -178,14 +217,14 @@ export default function TableauDeBordPro() {
           </section>
 
           {/* Section laveries */}
-          <section className="mt-8">
+          <section className="mt-8 text-center">
             <h2 className="mb-4 text-lg font-bold text-slate-900 sm:text-xl">Vos laveries</h2>
 
-            <div className="space-y-4">
+            <div className="mx-auto flex w-full max-w-4xl flex-col items-center gap-4">
               {laveries && laveries.map((laundry) => (
                 <article
                   key={laundry.id}
-                  className="overflow-hidden rounded-2xl bg-white shadow-sm transition hover:shadow-md"
+                  className="w-full overflow-hidden rounded-2xl bg-white text-left shadow-sm transition hover:shadow-md"
                 >
                   <div className="relative h-40 w-full bg-slate-200">
                     <img
@@ -194,9 +233,9 @@ export default function TableauDeBordPro() {
                       className="h-full w-full object-cover"
                     />
                     <span
-                      className={`absolute right-3 top-3 rounded-full px-3 py-1.5 text-xs font-semibold ${statusStyles[laundry.statut]} shadow-md`}
+                      className={`absolute right-4 top-4 z-10 rounded-lg px-4 py-2 text-sm font-bold shadow-lg ${statusStyles[laundry.statut] || 'bg-slate-500 text-white'}`}
                     >
-                      {statusLabels[laundry.statut]}
+                      {statusLabels[laundry.statut] || 'Inconnu'}
                     </span>
                   </div>
 
@@ -216,16 +255,17 @@ export default function TableauDeBordPro() {
                     <div className="mt-4 flex gap-2">
                       <Link
                         to={`/professionnel/laveries/${laundry.id}/modifier`}
-                        className="flex-1 rounded-xl bg-cyan-500 px-3 py-2.5 text-center text-xs font-semibold text-white transition hover:bg-cyan-600 sm:text-sm"
+                        className="flex-1 rounded-xl bg-cyan-500 px-3 py-2.5 text-center text-xs font-semibold text-white transition hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed sm:text-sm"
                       >
                         Modifier
                       </Link>
                       <button
                         type="button"
                         onClick={() => handleDeleteLaverie(laundry.id)}
-                        className="flex-1 rounded-xl bg-rose-50 px-3 py-2.5 text-xs font-semibold text-rose-600 transition hover:bg-rose-100 sm:text-sm"
+                        disabled={deleting === laundry.id}
+                        className="flex-1 rounded-xl bg-rose-50 px-3 py-2.5 text-xs font-semibold text-rose-600 transition hover:bg-rose-100 disabled:opacity-50 disabled:cursor-not-allowed sm:text-sm"
                       >
-                        Supprimer
+                        {deleting === laundry.id ? 'Suppression...' : 'Supprimer'}
                       </button>
                     </div>
                   </div>
@@ -239,16 +279,16 @@ export default function TableauDeBordPro() {
               </div>
             )}
 
-            <div className="mt-6 space-y-3">
+            <div className="mt-6 flex flex-col items-center gap-3">
               <Link
                 to="/professionnel/laveries"
-                className="block rounded-xl bg-cyan-500 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-cyan-600"
+                className="block w-full max-w-xl rounded-xl bg-cyan-500 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-cyan-600"
               >
                 Voir toutes les laveries
               </Link>
               <Link
                 to="/professionnel/laveries/ajouter"
-                className="block rounded-xl border-2 border-cyan-500 px-4 py-3 text-center text-sm font-semibold text-cyan-600 transition hover:bg-cyan-50"
+                className="block w-full max-w-xl rounded-xl border-2 border-cyan-500 px-4 py-3 text-center text-sm font-semibold text-cyan-600 transition hover:bg-cyan-50"
               >
                 Ajouter une laverie
               </Link>

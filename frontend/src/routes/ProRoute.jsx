@@ -1,5 +1,6 @@
 import React from 'react';
-import { Navigate, Outlet } from 'react-router';
+import { Navigate } from 'react-router';
+import Header from '../components/Header';
 
 export default function ProRoute() {
   const token = localStorage.getItem('token');
@@ -29,5 +30,5 @@ export default function ProRoute() {
     return <Navigate to="/" replace />;
   }
 
-  return <Outlet />;
+  return <Header />;
 }

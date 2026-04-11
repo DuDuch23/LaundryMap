@@ -46,12 +46,19 @@ class ApiProfessionnelController extends AbstractController
                 return $this->json(['erreur' => 'Compte professionnel non validé'], 403);
             }
 
-            // Récupérer les laveries du professionnel non supprimées
+            // Récupérer uniquement les laveries du compte connecté
             $laveries = $entityManager->getRepository(Laverie::class)
-                ->findBy(
-                    ['professionnel' => $professionnel, 'supprimee_le' => null],
-                    ['dateModification' => 'DESC']
-                );
+                ->createQueryBuilder('l')
+                ->innerJoin('l.professionnel', 'p')
+                ->innerJoin('p.utilisateur', 'u')
+                ->where('p = :professionnel')
+                ->andWhere('u = :utilisateur')
+                ->andWhere('l.supprimee_le IS NULL')
+                ->setParameter('professionnel', $professionnel)
+                ->setParameter('utilisateur', $user)
+                ->orderBy('l.dateModification', 'DESC')
+                ->getQuery()
+                ->getResult();
 
             // Compter les laveries par statut
             $stats = [
@@ -63,11 +70,11 @@ class ApiProfessionnelController extends AbstractController
 
             foreach ($laveries as $laverie) {
                 $statut = $laverie->getStatut()->value;
-                if ($statut === 'VALIDE') {
+                if ($statut === 'Validée') {
                     $stats['validees']++;
-                } elseif ($statut === 'EN_ATTENTE') {
+                } elseif ($statut === 'En attente') {
                     $stats['en_attente']++;
-                } elseif ($statut === 'REFUSEE') {
+                } elseif ($statut === 'Refusée') {
                     $stats['refusees']++;
                 }
             }
