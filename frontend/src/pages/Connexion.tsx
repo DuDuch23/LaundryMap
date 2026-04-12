@@ -136,7 +136,7 @@ export default function PageConnexion() {
   };
 
   return (
-    <div className="w-full pt-24 px-4 pb-16">
+    <div className="w-full pt-24 px-4 pb-16 max-w-[stretch]">
       <h1 className="text-2xl font-bold text-[#22ACE2] mb-2 text-center w-full">
         {t("main.connexion.connexion")}
       </h1>

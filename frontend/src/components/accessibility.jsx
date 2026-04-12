@@ -122,7 +122,7 @@ export function AccessibleInput({
           ${type === 'submit' ? 'text-white font-bold py-3 px-4 rounded-lg transition-colors cursor-pointer' : ''}
           ${error ? 'bg-[#FADED7]! border-[#E3634C]' : ''}
           ${disabled && !isCheckbox ? 'opacity-60 cursor-not-allowed' : ''}
-        `}
+        max-w-[stretch]`}
         onChange={onChange || undefined}
         placeholder={placeholder || undefined}
         required={required || undefined}

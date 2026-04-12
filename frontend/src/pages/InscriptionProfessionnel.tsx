@@ -157,7 +157,7 @@ export default function InscriptionProfessionnel() {
 
     }
     return (
-        <div className='w-full pt-24 px-4 pb-16'>
+        <div className='w-full pt-24 px-4 pb-16 max-w-[stretch]'>
             <h1 className='text-2xl font-bold text-[#22ACE2] mb-2 text-center w-full'>
                 {t('main.inscription_professionnel.titre')}
             </h1>
@@ -168,7 +168,7 @@ export default function InscriptionProfessionnel() {
                     <AccessibleInput
                         id="nom"
                         name="nom"
-                        className='flex flex-col'
+                        className='flex flex-col max-w-[stretch]'
                         label={t('main.inscription_professionnel.nom')}
                         type='text'
                         value={nom}

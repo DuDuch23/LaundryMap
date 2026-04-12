@@ -147,17 +147,6 @@ export default function Header() {
                                         </NavLink>
                                     </li>
                                 )}
-
-                                {!isAuthenticated && (
-                                    <>
-                                        <li className="border-b border-gray-100">
-                                            <NavLink to="/inscription-pro" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>Inscription Professionnel</NavLink>
-                                        </li>
-                                        <li className="border-b border-gray-100">
-                                            <NavLink to="/inscription-utilisateur" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>Inscription Utilisateur</NavLink>
-                                        </li>
-                                    </>
-                                )}
                             </ul>
 
                             {isAuthenticated ? (

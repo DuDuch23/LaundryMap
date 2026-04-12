@@ -171,7 +171,7 @@ export default function GestionLaveries() {
     }
 
     return (
-        <div className="w-full pt-24 px-4 pb-16 font-sans">
+        <div className="w-full pt-24 px-4 pb-16 font-sans max-w-[stretch]">
 
             {/* HEADER */}
             <div className="bg-white flex items-center justify-between p-4 shadow-sm mb-6">
