@@ -14,6 +14,8 @@ const statusLabels = {
   'Refusée': 'Refusée',
 };
 
+const fallbackLaverieImage = 'https://picsum.photos/seed/laundry-fallback/1600/900';
+
 export default function TableauDeBordPro() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -135,6 +137,9 @@ export default function TableauDeBordPro() {
   const initiales = `${prenom.charAt(0)}${nom.charAt(0)}`.toUpperCase() || 'U';
   const photoProfilUrl = professionnel?.photoProfil || null;
 
+  const getLaverieImage = (laverie) => laverie?.image || laverie?.logo?.image || fallbackLaverieImage;
+  const getLaverieImageAlt = (laverie) => laverie?.imageAlt || laverie?.logo?.alt || laverie?.nom || 'Laverie';
+
   return (
     <div className="flex w-full flex-col bg-slate-50 pt-24">
       {/* Toast Notification */}
@@ -228,8 +233,10 @@ export default function TableauDeBordPro() {
                 >
                   <div className="relative h-40 w-full bg-slate-200">
                     <img
-                      src="https://images.unsplash.com/photo-1545173168-9f1947e6b5de?auto=format&fit=crop&w=900&q=80"
-                      alt={laundry.nom}
+                      src={getLaverieImage(laundry)}
+                      alt={getLaverieImageAlt(laundry)}
+                      loading="lazy"
+                      decoding="async"
                       className="h-full w-full object-cover"
                     />
                     <span
