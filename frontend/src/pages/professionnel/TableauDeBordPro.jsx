@@ -16,6 +16,23 @@ const statusLabels = {
 
 const fallbackLaverieImage = 'https://picsum.photos/seed/laundry-fallback/1600/900';
 
+function MessageCircleIcon({ className = '' }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className={className}>
+      <path d="M21 11.5C21 16.1944 16.9706 20 12 20C10.8235 20 9.6984 19.7896 8.66667 19.4028L4 21L5.59722 16.3333C5.2104 15.3016 5 14.1765 5 13C5 8.02944 8.80558 4 13.5 4C17.6421 4 21 7.35786 21 11.5Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M8.5 11.5H15.5M8.5 14.5H12.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function StarIcon({ className = '' }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
+      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+    </svg>
+  );
+}
+
 export default function TableauDeBordPro() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -139,6 +156,11 @@ export default function TableauDeBordPro() {
 
   const getLaverieImage = (laverie) => laverie?.image || laverie?.logo?.image || fallbackLaverieImage;
   const getLaverieImageAlt = (laverie) => laverie?.imageAlt || laverie?.logo?.alt || laverie?.nom || 'Laverie';
+  const getCommentairesCount = (laverie) => Number(laverie?.commentairesCount ?? 0);
+  const getNoteMoyenne = (laverie) => {
+    const value = Number(laverie?.noteMoyenne ?? 0);
+    return Number.isFinite(value) ? value.toFixed(1) : '0.0';
+  };
 
   return (
     <div className="flex w-full flex-col bg-slate-50 pt-24">
@@ -237,12 +259,20 @@ export default function TableauDeBordPro() {
                       alt={getLaverieImageAlt(laundry)}
                       loading="lazy"
                       decoding="async"
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover transition duration-300 hover:scale-[1.02]"
                     />
                     <span
                       className={`absolute right-4 top-4 z-10 rounded-lg px-4 py-2 text-sm font-bold shadow-lg ${statusStyles[laundry.statut] || 'bg-slate-500 text-white'}`}
                     >
                       {statusLabels[laundry.statut] || 'Inconnu'}
+                    </span>
+                    <span className="absolute left-4 top-4 z-10 inline-flex items-center gap-1 rounded-full bg-slate-900/80 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm">
+                      <MessageCircleIcon className="h-3.5 w-3.5" />
+                      {getCommentairesCount(laundry)} commentaire{getCommentairesCount(laundry) > 1 ? 's' : ''}
+                    </span>
+                    <span className="absolute left-4 bottom-4 z-10 inline-flex items-center gap-1 rounded-full bg-amber-400/95 px-3 py-1.5 text-xs font-semibold text-slate-900 shadow-lg backdrop-blur-sm">
+                      <StarIcon className="h-3.5 w-3.5" />
+                      {getNoteMoyenne(laundry)} / 5
                     </span>
                   </div>
 

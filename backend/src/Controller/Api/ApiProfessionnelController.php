@@ -4,6 +4,8 @@ namespace App\Controller\Api;
 
 use App\Entity\Adresse;
 use App\Entity\LaverieFermeture;
+use App\Entity\LaverieMedia;
+use App\Entity\LaverieNote;
 use App\Entity\Media;
 use App\Entity\Professionnel;
 use App\Entity\Utilisateur;
@@ -45,6 +47,10 @@ class ApiProfessionnelController extends AbstractController
 
             if (!$professionnel) {
                 return $this->json(['erreur' => 'Professionnel non trouvé'], 404);
+            }
+
+            if ($professionnel->getStatut()->value !== StatutProfessionnelEnum::STATUT_VALIDE->value) {
+                return $this->json(['erreur' => 'Compte professionnel non validé'], 403);
             }
 
             // Vérifier que le professionnel est validé
@@ -94,9 +100,13 @@ class ApiProfessionnelController extends AbstractController
                     'siren' => $professionnel->getSiren(),
                 ],
                 'stats' => $stats,
-                'laveries' => array_map(function ($laverie) use ($request) {
+                'laveries' => array_map(function ($laverie) use ($request, $entityManager) {
                     $logo = $laverie->getLogo();
-                    $logoEmplacement = $logo ? $this->toPublicMediaUrl($logo->getEmplacement(), $request) : null;
+                    $logoEmplacement = ($logo && $this->isProjectManagedMediaPath($logo->getEmplacement()))
+                        ? $this->toPublicMediaUrl($logo->getEmplacement(), $request)
+                        : null;
+                    $gallery = $this->buildGalleryResponse($laverie, $request);
+                    $primaryImage = $gallery[0]['image'] ?? $logoEmplacement;
 
                     return [
                         'id' => $laverie->getId(),
@@ -107,9 +117,12 @@ class ApiProfessionnelController extends AbstractController
                         'statut' => $laverie->getStatut()->value,
                         'dateAjout' => $laverie->getDateAjout()->format('d/m/Y'),
                         'dateModification' => $laverie->getDateModification()->format('d/m/Y'),
-                        'image' => $logoEmplacement,
-                        'imageAlt' => $logo ? $laverie->getNomEtablissement() : null,
-                        'logo' => $logo ? [
+                        'image' => $primaryImage,
+                        'imageAlt' => $primaryImage ? $laverie->getNomEtablissement() : null,
+                        'images' => $gallery,
+                        'commentairesCount' => $this->countLaverieCommentaires($laverie, $entityManager),
+                        'noteMoyenne' => $this->getLaverieNoteMoyenne($laverie, $entityManager),
+                        'logo' => $logoEmplacement ? [
                             'id' => $logo->getId(),
                             'image' => $logoEmplacement,
                             'alt' => $laverie->getNomEtablissement(),
@@ -253,6 +266,10 @@ class ApiProfessionnelController extends AbstractController
                 return $this->json(['erreur' => 'Professionnel non trouvé'], 404);
             }
 
+            if ($professionnel->getStatut()->value !== StatutProfessionnelEnum::STATUT_VALIDE->value) {
+                return $this->json(['erreur' => 'Compte professionnel non validé'], 403);
+            }
+
             $laverie = $entityManager->getRepository(Laverie::class)->find($id);
 
             if (!$laverie || $laverie->getProfessionnel()->getId() !== $professionnel->getId()) {
@@ -261,6 +278,10 @@ class ApiProfessionnelController extends AbstractController
 
             $logo = $laverie->getLogo();
             $horaires = $this->buildHorairesResponse($laverie);
+            $gallery = $this->buildGalleryResponse($laverie, $request);
+            $primaryImage = $gallery[0]['image'] ?? (($logo && $this->isProjectManagedMediaPath($logo->getEmplacement()))
+                ? $this->toPublicMediaUrl($logo->getEmplacement(), $request)
+                : null);
 
             return $this->json([
                 'id' => $laverie->getId(),
@@ -271,11 +292,15 @@ class ApiProfessionnelController extends AbstractController
                 'pays' => $laverie->getAdresse()->getPays(),
                 'email' => $laverie->getContactEmail(),
                 'description' => $laverie->getDescription(),
+                'wiLineReference' => $laverie->getWiLineReference(),
                 'statut' => $laverie->getStatut()->value,
                 'dateAjout' => $laverie->getDateAjout()->format('d/m/Y'),
                 'dateModification' => $laverie->getDateModification()->format('d/m/Y'),
-                'image' => $logo ? $this->toPublicMediaUrl($logo->getEmplacement(), $request) : null,
+                'image' => $primaryImage,
+                'images' => $gallery,
                 'horaires' => $horaires,
+                'commentairesCount' => $this->countLaverieCommentaires($laverie, $entityManager),
+                'noteMoyenne' => $this->getLaverieNoteMoyenne($laverie, $entityManager),
             ], 200);
 
         } catch (\Exception $e) {
@@ -283,7 +308,7 @@ class ApiProfessionnelController extends AbstractController
         }
     }
 
-    #[Route('/api/professionnel/laveries/{id}', name: 'api_update_laverie', methods: ['PUT'])]
+    #[Route('/api/professionnel/laveries/{id}', name: 'api_update_laverie', methods: ['PUT', 'POST'])]
     #[IsGranted('ROLE_PROFESSIONNEL')]
     public function updateLaverie(
         int $id,
@@ -300,26 +325,36 @@ class ApiProfessionnelController extends AbstractController
                 return $this->json(['erreur' => 'Professionnel non trouvé'], 404);
             }
 
+            if ($professionnel->getStatut()->value !== StatutProfessionnelEnum::STATUT_VALIDE->value) {
+                return $this->json(['erreur' => 'Compte professionnel non validé'], 403);
+            }
+
             $laverie = $entityManager->getRepository(Laverie::class)->find($id);
 
             if (!$laverie || $laverie->getProfessionnel()->getId() !== $professionnel->getId()) {
                 return $this->json(['erreur' => 'Laverie non trouvée ou accès refusé'], 404);
             }
 
-            $nom = trim((string) $request->request->get('nom', ''));
-            $adresse = trim((string) $request->request->get('adresse', ''));
-            $codePostal = trim((string) $request->request->get('codePostal', ''));
-            $ville = trim((string) $request->request->get('ville', ''));
-            $pays = trim((string) $request->request->get('pays', 'France'));
-            $email = trim((string) $request->request->get('email', ''));
-            $description = trim((string) $request->request->get('description', ''));
+            $adresseEntity = $laverie->getAdresse();
+
+            $nom = trim((string) $request->request->get('nom', $laverie->getNomEtablissement()));
+            $adresse = trim((string) $request->request->get('adresse', $adresseEntity->getAdresse()));
+            $codePostal = trim((string) $request->request->get('codePostal', (string) $adresseEntity->getCodePostal()));
+            $ville = trim((string) $request->request->get('ville', $adresseEntity->getVille()));
+            $pays = trim((string) $request->request->get('pays', $adresseEntity->getPays() ?: 'France'));
+            $email = trim((string) $request->request->get('email', $laverie->getContactEmail() ?? ''));
+            $description = trim((string) $request->request->get('description', $laverie->getDescription() ?? ''));
+            $wiLineReferenceRaw = trim((string) $request->request->get('wiLineReference', ''));
             $horairesJson = (string) $request->request->get('horaires', '[]');
+            $removeImageIdsJson = (string) $request->request->get('removeImageIds', '[]');
+
+            $codePostal = preg_replace('/\D+/', '', $codePostal) ?? '';
 
             if ($nom === '' || $adresse === '' || $codePostal === '' || $ville === '') {
                 return $this->json(['erreur' => 'Les champs nom, adresse, code postal et ville sont requis'], 400);
             }
 
-            if (!preg_match('/^\d{5}$/', $codePostal)) {
+            if (strlen($codePostal) !== 5) {
                 return $this->json(['erreur' => 'Le code postal doit contenir 5 chiffres'], 400);
             }
 
@@ -327,12 +362,20 @@ class ApiProfessionnelController extends AbstractController
                 return $this->json(['erreur' => 'Le format de l\'email est invalide'], 400);
             }
 
+            if ($wiLineReferenceRaw !== '' && (!ctype_digit($wiLineReferenceRaw) || (int) $wiLineReferenceRaw <= 0)) {
+                return $this->json(['erreur' => 'La référence API WI-LINE doit être un entier positif'], 400);
+            }
+
             $horaires = json_decode($horairesJson, true);
             if (!is_array($horaires)) {
                 return $this->json(['erreur' => 'Format des horaires invalide'], 400);
             }
 
-            $adresseEntity = $laverie->getAdresse();
+            $removeImageIds = json_decode($removeImageIdsJson, true);
+            if (!is_array($removeImageIds)) {
+                return $this->json(['erreur' => 'Format des images à supprimer invalide'], 400);
+            }
+
             $adresseEntity->setAdresse($adresse);
             $adresseEntity->setRue($adresse);
             $adresseEntity->setCodePostal((int) $codePostal);
@@ -342,6 +385,7 @@ class ApiProfessionnelController extends AbstractController
             $laverie->setNomEtablissement($nom);
             $laverie->setContactEmail($email === '' ? null : $email);
             $laverie->setDescription($description === '' ? null : $description);
+            $laverie->setWiLineReference($wiLineReferenceRaw === '' ? null : (int) $wiLineReferenceRaw);
             $laverie->setDateModification(new \DateTime());
 
             foreach ($entityManager->getRepository(LaverieFermeture::class)->findBy(['laverie' => $laverie]) as $existingFermeture) {
@@ -388,15 +432,54 @@ class ApiProfessionnelController extends AbstractController
                 $entityManager->persist($fermeture);
             }
 
-            $uploadedLogo = $request->files->get('logo');
-            if ($uploadedLogo instanceof UploadedFile) {
-                if ($uploadedLogo->getSize() > 5 * 1024 * 1024) {
-                    return $this->json(['erreur' => 'La taille maximale du logo est de 5 Mo'], 400);
+            foreach ($removeImageIds as $removeImageId) {
+                if (!is_numeric($removeImageId)) {
+                    continue;
                 }
 
-                $mimeType = (string) $uploadedLogo->getMimeType();
+                $media = $entityManager->getRepository(Media::class)->find((int) $removeImageId);
+                if (!$media) {
+                    continue;
+                }
+
+                $laverieMedia = $entityManager->getRepository(LaverieMedia::class)
+                    ->findOneBy([
+                        'laverie' => $laverie,
+                        'media' => $media,
+                    ]);
+
+                if (!$laverieMedia) {
+                    continue;
+                }
+
+                if ($laverie->getLogo()?->getId() === $media->getId()) {
+                    $laverie->setLogo(null);
+                }
+
+                $laverie->getMedias()->removeElement($laverieMedia);
+                $entityManager->remove($laverieMedia);
+
+                $absolutePath = $this->getParameter('kernel.project_dir') . '/public' . $media->getEmplacement();
+                if (is_string($absolutePath) && file_exists($absolutePath)) {
+                    @unlink($absolutePath);
+                }
+
+                $entityManager->remove($media);
+            }
+
+            $uploadedImages = $this->extractUploadedImages($request);
+            $firstUploadedMedia = null;
+
+            foreach ($uploadedImages as $uploadedImage) {
+                $uploadedImageSize = (int) $uploadedImage->getSize();
+
+                if ($uploadedImageSize > 5 * 1024 * 1024) {
+                    return $this->json(['erreur' => 'Chaque image doit faire au maximum 5 Mo'], 400);
+                }
+
+                $mimeType = (string) $uploadedImage->getMimeType();
                 if (!str_starts_with($mimeType, 'image/')) {
-                    return $this->json(['erreur' => 'Le fichier doit être une image'], 400);
+                    return $this->json(['erreur' => 'Tous les fichiers doivent être des images'], 400);
                 }
 
                 $uploadsDirectory = $this->getParameter('kernel.project_dir') . '/public/uploads/laveries';
@@ -404,31 +487,61 @@ class ApiProfessionnelController extends AbstractController
                     mkdir($uploadsDirectory, 0775, true);
                 }
 
-                $originalFileName = pathinfo($uploadedLogo->getClientOriginalName(), PATHINFO_FILENAME);
+                $originalFileName = pathinfo($uploadedImage->getClientOriginalName(), PATHINFO_FILENAME);
                 $safeFileName = strtolower((string) $slugger->slug($originalFileName));
-                $extension = $uploadedLogo->guessExtension() ?: 'bin';
+                $extension = $uploadedImage->guessExtension() ?: 'bin';
                 $storedFileName = $safeFileName . '-' . uniqid('', true) . '.' . $extension;
 
-                $uploadedLogo->move($uploadsDirectory, $storedFileName);
+                $uploadedImage->move($uploadsDirectory, $storedFileName);
 
                 $media = new Media();
                 $media->setEmplacement('/uploads/laveries/' . $storedFileName);
-                $media->setNomOriginel($uploadedLogo->getClientOriginalName());
-                $media->setPoids((int) $uploadedLogo->getSize());
+                $media->setNomOriginel($uploadedImage->getClientOriginalName());
+                $media->setPoids($uploadedImageSize);
                 $media->setMimeType($mimeType);
                 $entityManager->persist($media);
 
-                $laverie->setLogo($media);
+                $laverieMedia = new LaverieMedia();
+                $laverieMedia->setLaverie($laverie);
+                $laverieMedia->setMedia($media);
+                $laverieMedia->setDescription('Image galerie laverie');
+                $entityManager->persist($laverieMedia);
+                $laverie->getMedias()->add($laverieMedia);
+
+                if ($firstUploadedMedia === null) {
+                    $firstUploadedMedia = $media;
+                }
+            }
+
+            if ($firstUploadedMedia !== null) {
+                $laverie->setLogo($firstUploadedMedia);
+            } else {
+                $remainingGalleryMedia = null;
+                foreach ($laverie->getMedias() as $galleryItem) {
+                    if ($galleryItem->getMedia()) {
+                        $remainingGalleryMedia = $galleryItem->getMedia();
+                        break;
+                    }
+                }
+                $laverie->setLogo($remainingGalleryMedia);
             }
 
             $entityManager->flush();
+
+            $gallery = $this->buildGalleryResponse($laverie, $request);
+            $logo = $laverie->getLogo();
+            $primaryImage = $gallery[0]['image'] ?? (($logo && $this->isProjectManagedMediaPath($logo->getEmplacement()))
+                ? $this->toPublicMediaUrl($logo->getEmplacement(), $request)
+                : null);
 
             return $this->json([
                 'message' => 'Laverie mise à jour avec succès',
                 'laverie' => [
                     'id' => $laverie->getId(),
                     'nom' => $laverie->getNomEtablissement(),
-                    'image' => $laverie->getLogo() ? $this->toPublicMediaUrl($laverie->getLogo()->getEmplacement(), $request) : null,
+                    'wiLineReference' => $laverie->getWiLineReference(),
+                    'image' => $primaryImage,
+                    'images' => $gallery,
                 ],
             ], 200);
         } catch (\Exception $e) {
@@ -516,8 +629,107 @@ class ApiProfessionnelController extends AbstractController
         return $horaires;
     }
 
+    private function buildGalleryResponse(Laverie $laverie, Request $request): array
+    {
+        $gallery = [];
+
+        foreach ($laverie->getMedias() as $laverieMedia) {
+            $media = $laverieMedia->getMedia();
+
+            if (!$media) {
+                continue;
+            }
+
+            if (!$this->isProjectManagedMediaPath($media->getEmplacement())) {
+                continue;
+            }
+
+            $gallery[] = [
+                'id' => $media->getId(),
+                'image' => $this->toPublicMediaUrl($media->getEmplacement(), $request),
+                'alt' => $laverie->getNomEtablissement(),
+            ];
+        }
+
+        return $gallery;
+    }
+
+    private function isProjectManagedMediaPath(string $emplacement): bool
+    {
+        return str_starts_with($emplacement, '/uploads/');
+    }
+
+    /**
+     * @return UploadedFile[]
+     */
+    private function extractUploadedImages(Request $request): array
+    {
+        $uploaded = [];
+        $seen = [];
+
+        $addFiles = function (mixed $candidate) use (&$uploaded, &$seen, &$addFiles): void {
+            if ($candidate instanceof UploadedFile) {
+                $id = spl_object_id($candidate);
+                if (!isset($seen[$id])) {
+                    $seen[$id] = true;
+                    $uploaded[] = $candidate;
+                }
+                return;
+            }
+
+            if (is_array($candidate)) {
+                foreach ($candidate as $nested) {
+                    $addFiles($nested);
+                }
+            }
+        };
+
+        $allFiles = $request->files->all();
+        $addFiles($allFiles['images'] ?? null);
+        $addFiles($allFiles['images[]'] ?? null);
+        $addFiles($allFiles['gallery'] ?? null);
+        $addFiles($allFiles['gallery[]'] ?? null);
+        $addFiles($allFiles['logo'] ?? null);
+
+        return $uploaded;
+    }
+
     private function isValidHourFormat(string $value): bool
     {
         return preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $value) === 1;
+    }
+
+    private function countLaverieCommentaires(Laverie $laverie, EntityManagerInterface $entityManager): int
+    {
+        $result = $entityManager->createQueryBuilder()
+            ->select('COUNT(n.id)')
+            ->from(LaverieNote::class, 'n')
+            ->where('n.laverie = :laverie')
+            ->andWhere('n.commentaire IS NOT NULL')
+            ->andWhere('n.commentaire <> :empty')
+            ->setParameter('laverie', $laverie)
+            ->setParameter('empty', '')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (int) $result;
+    }
+
+    private function getLaverieNoteMoyenne(Laverie $laverie, EntityManagerInterface $entityManager): ?float
+    {
+        $result = $entityManager->createQueryBuilder()
+            ->select('AVG(n.note)')
+            ->from(LaverieNote::class, 'n')
+            ->where('n.laverie = :laverie')
+            ->andWhere('n.note IS NOT NULL')
+            ->setParameter('laverie', $laverie)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        if ($result === null) {
+            return null;
+        }
+
+        return round((float) $result, 1);
     }
 }

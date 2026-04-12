@@ -28,12 +28,15 @@ export default function ModifierLaveriePro() {
     pays: 'France',
     email: '',
     description: '',
-    statutOuverture: 'online',
+    isWiLine: false,
+    wiLineReference: '',
     horaires: defaultHoraires,
   });
 
-  const [logoFile, setLogoFile] = useState(null);
-  const [logoPreview, setLogoPreview] = useState(null);
+  const [galleryFiles, setGalleryFiles] = useState([]);
+  const [galleryPreviews, setGalleryPreviews] = useState([]);
+  const [existingGallery, setExistingGallery] = useState([]);
+  const [removedExistingImageIds, setRemovedExistingImageIds] = useState([]);
 
   useEffect(() => {
     const fetchLaverie = async () => {
@@ -66,7 +69,8 @@ export default function ModifierLaveriePro() {
           pays: data.pays || 'France',
           email: data.email || '',
           description: data.description || '',
-          statutOuverture: 'online',
+          isWiLine: Boolean(data.wiLineReference),
+          wiLineReference: data.wiLineReference ? String(data.wiLineReference) : '',
           horaires: Array.isArray(data.horaires) && data.horaires.length > 0
             ? data.horaires.map((horaire) => ({
                 jour: horaire.jour,
@@ -77,7 +81,8 @@ export default function ModifierLaveriePro() {
             : defaultHoraires,
         });
 
-        setLogoPreview(data.image || null);
+        setExistingGallery(Array.isArray(data.images) ? data.images : []);
+        setRemovedExistingImageIds([]);
       } catch (err) {
         console.error(err);
         setError(err.message || 'Une erreur est survenue.');
@@ -94,6 +99,8 @@ export default function ModifierLaveriePro() {
     return joursOrdre.map((jour) => byJour.get(jour) || { jour, debut: '10:00', fin: '22:00', ferme: false });
   }, [form.horaires]);
 
+  const wiLineReferenceMissing = form.isWiLine && form.wiLineReference.trim() === '';
+
   const updateField = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -107,14 +114,24 @@ export default function ModifierLaveriePro() {
     }));
   };
 
-  const handleLogoChange = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) {
+  const handleGalleryChange = (event) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) {
       return;
     }
 
-    setLogoFile(file);
-    setLogoPreview(URL.createObjectURL(file));
+    setGalleryFiles(files);
+    setGalleryPreviews(files.map((file) => URL.createObjectURL(file)));
+  };
+
+  const handleRemovePendingImage = (indexToRemove) => {
+    setGalleryFiles((prev) => prev.filter((_, index) => index !== indexToRemove));
+    setGalleryPreviews((prev) => prev.filter((_, index) => index !== indexToRemove));
+  };
+
+  const handleRemoveExistingImage = (imageId) => {
+    setExistingGallery((prev) => prev.filter((image) => image.id !== imageId));
+    setRemovedExistingImageIds((prev) => (prev.includes(imageId) ? prev : [...prev, imageId]));
   };
 
   const handleSubmit = async (event) => {
@@ -122,6 +139,12 @@ export default function ModifierLaveriePro() {
     setSaving(true);
     setNotification(null);
     setError(null);
+
+    if (wiLineReferenceMissing) {
+      setSaving(false);
+      setError('La référence API WI-LINE est obligatoire si la laverie est connectée.');
+      return;
+    }
 
     try {
       const token = localStorage.getItem('token');
@@ -137,14 +160,16 @@ export default function ModifierLaveriePro() {
       payload.append('pays', form.pays || 'France');
       payload.append('email', form.email);
       payload.append('description', form.description);
+      payload.append('wiLineReference', form.isWiLine ? form.wiLineReference : '');
       payload.append('horaires', JSON.stringify(joursTries));
+      payload.append('removeImageIds', JSON.stringify(removedExistingImageIds));
 
-      if (logoFile) {
-        payload.append('logo', logoFile);
-      }
+      galleryFiles.forEach((file) => {
+        payload.append('images[]', file);
+      });
 
       const response = await fetch(`${API_BASE_URL}/api/professionnel/laveries/${id}`, {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -199,7 +224,57 @@ export default function ModifierLaveriePro() {
             </Link>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl bg-white p-4 shadow-sm">
+          <form onSubmit={handleSubmit} className="!box-border space-y-4 rounded-2xl bg-white p-4 shadow-sm">
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-slate-800">Laverie connectée à WI-LINE ?</p>
+              <div className="flex gap-4 text-sm text-slate-700">
+                <label className="inline-flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="isWiLine"
+                    checked={form.isWiLine === true}
+                    onChange={() => updateField('isWiLine', true)}
+                  />
+                  Oui
+                </label>
+                <label className="inline-flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="isWiLine"
+                    checked={form.isWiLine === false}
+                    onChange={() => {
+                      updateField('isWiLine', false);
+                      updateField('wiLineReference', '');
+                    }}
+                  />
+                  Non
+                </label>
+              </div>
+
+              {form.isWiLine && (
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-slate-800">Référence API WI-LINE</label>
+                  <input
+                    type="text"
+                    required
+                    inputMode="numeric"
+                    value={form.wiLineReference}
+                    onChange={(e) => updateField('wiLineReference', e.target.value.replace(/\D/g, ''))}
+                    placeholder="Ex: 123456"
+                    className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none ${
+                      wiLineReferenceMissing
+                        ? 'border-rose-400 focus:border-rose-500'
+                        : 'border-slate-300 focus:border-cyan-500'
+                    }`}
+                  />
+                  <p className="text-xs text-slate-500">Renseigne l'identifiant technique fourni par l’API WI-LINE.</p>
+                  {wiLineReferenceMissing && (
+                    <p className="text-xs font-medium text-rose-600">Champ requis lorsque WI-LINE est activé.</p>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="space-y-1">
               <label className="text-sm font-semibold text-slate-800">Nom d&apos;établissement</label>
               <input
@@ -223,7 +298,7 @@ export default function ModifierLaveriePro() {
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
+              <div className="min-w-0 space-y-1">
                 <label className="text-sm font-semibold text-slate-800">Code postal</label>
                 <input
                   type="text"
@@ -231,17 +306,17 @@ export default function ModifierLaveriePro() {
                   maxLength={5}
                   value={form.codePostal}
                   onChange={(e) => updateField('codePostal', e.target.value.replace(/\D/g, ''))}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none"
+                  className="w-full min-w-0 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none"
                 />
               </div>
-              <div className="space-y-1">
+              <div className="min-w-0 space-y-1">
                 <label className="text-sm font-semibold text-slate-800">Ville</label>
                 <input
                   type="text"
                   required
                   value={form.ville}
                   onChange={(e) => updateField('ville', e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none"
+                  className="w-full min-w-0 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -254,30 +329,6 @@ export default function ModifierLaveriePro() {
                 onChange={(e) => updateField('email', e.target.value)}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none"
               />
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-slate-800">Statut online/outline</p>
-              <div className="flex gap-4 text-sm text-slate-700">
-                <label className="inline-flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="statutOuverture"
-                    checked={form.statutOuverture === 'online'}
-                    onChange={() => updateField('statutOuverture', 'online')}
-                  />
-                  Oui
-                </label>
-                <label className="inline-flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="statutOuverture"
-                    checked={form.statutOuverture === 'outline'}
-                    onChange={() => updateField('statutOuverture', 'outline')}
-                  />
-                  Non
-                </label>
-              </div>
             </div>
 
             <div className="space-y-2">
@@ -314,21 +365,63 @@ export default function ModifierLaveriePro() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-800">Logo</label>
+              <label className="text-sm font-semibold text-slate-800">Galerie d&apos;images</label>
               <div className="rounded-xl border border-dashed border-slate-300 p-3">
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={handleLogoChange}
+                  multiple
+                  onChange={handleGalleryChange}
                   className="block w-full text-xs text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-cyan-50 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-cyan-700 hover:file:bg-cyan-100"
                 />
-                <p className="mt-2 text-xs text-slate-500">Formats image acceptés, taille max 5 Mo.</p>
-                {logoPreview && (
-                  <img
-                    src={logoPreview}
-                    alt="Aperçu du logo"
-                    className="mt-3 h-28 w-full rounded-lg object-cover"
-                  />
+                <p className="mt-2 text-xs text-slate-500">Formats image acceptés, taille max 5 Mo par image.</p>
+
+                {existingGallery.length > 0 && (
+                  <div className="mt-3">
+                    <p className="mb-2 text-xs font-semibold text-slate-700">Images actuelles</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {existingGallery.map((image) => (
+                        <div key={image.id || image.image} className="relative">
+                          <img
+                            src={image.image}
+                            alt={image.alt || 'Image laverie'}
+                            className="h-20 w-full rounded-lg object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveExistingImage(image.id)}
+                            className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-lg font-bold leading-none text-white"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {galleryPreviews.length > 0 && (
+                  <div className="mt-3">
+                    <p className="mb-2 text-xs font-semibold text-slate-700">Nouvelles images à ajouter</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {galleryPreviews.map((preview, index) => (
+                        <div key={`${preview}-${index}`} className="relative">
+                          <img
+                            src={preview}
+                            alt="Nouvelle image"
+                            className="h-20 w-full rounded-lg object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemovePendingImage(index)}
+                            className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-lg font-bold leading-none text-white"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -347,7 +440,7 @@ export default function ModifierLaveriePro() {
 
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || wiLineReferenceMissing}
               className="w-full rounded-xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {saving ? 'Enregistrement...' : 'Modifier la laverie'}

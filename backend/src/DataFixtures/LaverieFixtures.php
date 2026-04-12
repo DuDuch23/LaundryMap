@@ -137,7 +137,7 @@ class LaverieFixtures extends Fixture implements DependentFixtureInterface
             $adresse = $this->getReference(AdresseFixtures::ADRESSE_REFERENCE_PREFIX . $data['adresse_idx'], Adresse::class);
             $logo = null;
             if ($data['media_idx'] !== null) {
-                $logo = $this->getReference(MediaFixtures::MEDIA_REFERENCE_PREFIX . ($data['media_idx'] % 10), Media::class);
+                $logo = $this->getReference(MediaFixtures::MEDIA_REFERENCE_PREFIX . $i, Media::class);
             }
 
             $laverie = new Laverie();
