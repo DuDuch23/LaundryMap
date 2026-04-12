@@ -136,7 +136,7 @@ export default function TableauDeBordPro() {
   const photoProfilUrl = professionnel?.photoProfil || null;
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 pt-24">
+    <div className="flex w-full flex-col bg-slate-50 pt-24">
       {/* Toast Notification */}
       {notification && (
         <div
@@ -160,7 +160,7 @@ export default function TableauDeBordPro() {
       )}
 
       <main className="flex-1">
-        <div className="mx-auto w-full max-w-md px-2 py-4 sm:px-3 sm:max-w-2xl">
+        <div className="mx-auto w-full max-w-md">
           {/* Section profil */}
           <section className="overflow-hidden rounded-[28px] bg-gradient-to-b from-cyan-500 to-cyan-600 text-white shadow-md">
             <div className="flex flex-col items-center gap-3 px-6 py-8 text-center">
