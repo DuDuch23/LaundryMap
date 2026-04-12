@@ -30,7 +30,7 @@ class LaverieFixtures extends Fixture implements DependentFixtureInterface
         ['nom' => 'Laverie Guillotière',      'email' => 'guillotiere@laundrymaps.fr',   'desc' => 'Laverie rapide rue de la Guillotière.',                 'statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 0, 'adresse_idx' => 16, 'media_idx' => 1],
         ['nom' => 'Laverie Croix-Rousse',     'email' => 'croix-rousse@laundrymaps.fr',  'desc' => 'Laverie conviviale avenue Foch à Lyon.',                'statut' => StatutLaverieEnum::STATUT_EN_ATTENTE, 'pro_idx' => 1, 'adresse_idx' => 17, 'media_idx' => 2],
         ['nom' => 'Laverie Paradis',          'email' => 'paradis-mrs@laundrymaps.fr',   'desc' => 'Laverie automatique rue Paradis, Marseille.',           'statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 2, 'adresse_idx' => 18, 'media_idx' => 3],
-        ['nom' => 'Laverie Michelet',         'email' => 'michelet@laundrymaps.fr',      'desc' => 'Laverie sur le boulevard Michelet.',                    'statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 0, 'adresse_idx' => 19, 'media_idx' => 4],
+        ['nom' => 'Laverie Michelet',         'email' => 'michelet@laundrymaps.fr',      'desc' => 'Laverie sur le boulevard Michelet.',                    'statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 0, 'adresse_idx' => 19, 'media_idx' => null],
         ['nom' => 'Laverie Rome',             'email' => 'rome-mrs@laundrymaps.fr',      'desc' => 'Laverie rue de Rome, proche du centre.',                'statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 1, 'adresse_idx' => 20, 'media_idx' => 0],
         ['nom' => 'Laverie Prado',            'email' => 'prado@laundrymaps.fr',         'desc' => 'Laverie avenue du Prado, ouverte 7j/7.',                'statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 2, 'adresse_idx' => 21, 'media_idx' => 1],
         ['nom' => 'Laverie Alsace-Lorraine',  'email' => 'alsace-lorraine@laundrymaps.fr','desc' => 'Laverie centrale rue Alsace-Lorraine, Toulouse.',       'statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 0, 'adresse_idx' => 22, 'media_idx' => 2],
@@ -135,7 +135,10 @@ class LaverieFixtures extends Fixture implements DependentFixtureInterface
         foreach ($this->laveries as $i => $data) {
             $pro = $this->getReference(ProfessionnelFixtures::PROFESSIONNEL_REFERENCE_PREFIX . $data['pro_idx'], Professionnel::class);
             $adresse = $this->getReference(AdresseFixtures::ADRESSE_REFERENCE_PREFIX . $data['adresse_idx'], Adresse::class);
-            $logo = $this->getReference(MediaFixtures::MEDIA_REFERENCE_PREFIX . $data['media_idx'], Media::class);
+            $logo = null;
+            if ($data['media_idx'] !== null) {
+                $logo = $this->getReference(MediaFixtures::MEDIA_REFERENCE_PREFIX . ($data['media_idx'] % 10), Media::class);
+            }
 
             $laverie = new Laverie();
             $laverie->setProfessionnel($pro);
@@ -144,7 +147,9 @@ class LaverieFixtures extends Fixture implements DependentFixtureInterface
             $laverie->setDescription($data['desc']);
             $laverie->setStatut($data['statut']);
             $laverie->setAdresse($adresse);
-            $laverie->setLogo($logo);
+            if ($logo) {
+                $laverie->setLogo($logo);
+            }
             $laverie->setDateAjout($now);
             $laverie->setDateModification($now);
             $manager->persist($laverie);

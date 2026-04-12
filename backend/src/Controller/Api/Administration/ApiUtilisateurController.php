@@ -188,7 +188,7 @@ class ApiUtilisateurController extends AbstractController
                 $image = null;
                 $premierMediaAssoc = $laverie->getMedias()->first();
                 if ($premierMediaAssoc && $premierMediaAssoc->getMedia()) {
-                    $image = '/uploads/medias/' . $premierMediaAssoc->getMedia()->getEmplacement();
+                    $image = $premierMediaAssoc->getMedia()->getEmplacement();
                 }
 
                 $laveriesData[] = [
@@ -198,6 +198,7 @@ class ApiUtilisateurController extends AbstractController
                     'adresse' => $adresseComplete,
                     'distance' => null,
                     'image' => $image,
+                    'imageAlt' => $image ? $laverie->getNomEtablissement() : null,
                 ];
             }
 

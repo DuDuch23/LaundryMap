@@ -3,6 +3,7 @@
 namespace App\Controller\Api;
 
 use App\Entity\Adresse;
+use App\Entity\Media;
 use App\Entity\Professionnel;
 use App\Entity\Utilisateur;
 use App\Entity\Laverie;
@@ -89,6 +90,8 @@ class ApiProfessionnelController extends AbstractController
                 ],
                 'stats' => $stats,
                 'laveries' => array_map(function ($laverie) {
+                    $logo = $laverie->getLogo();
+
                     return [
                         'id' => $laverie->getId(),
                         'nom' => $laverie->getNomEtablissement(),
@@ -98,7 +101,13 @@ class ApiProfessionnelController extends AbstractController
                         'statut' => $laverie->getStatut()->value,
                         'dateAjout' => $laverie->getDateAjout()->format('d/m/Y'),
                         'dateModification' => $laverie->getDateModification()->format('d/m/Y'),
-                        'logo' => $laverie->getLogo() ? ['id' => $laverie->getLogo()->getId()] : null,
+                        'image' => $logo ? $logo->getEmplacement() : null,
+                        'imageAlt' => $logo ? $laverie->getNomEtablissement() : null,
+                        'logo' => $logo ? [
+                            'id' => $logo->getId(),
+                            'image' => $logo->getEmplacement(),
+                            'alt' => $laverie->getNomEtablissement(),
+                        ] : null,
                     ];
                 }, $laveries),
             ], 200);
