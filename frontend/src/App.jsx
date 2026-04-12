@@ -14,6 +14,8 @@ const Connexion = React.lazy(() => import('./pages/Connexion'));
 const GestionUtilisateur = React.lazy(() => import('./pages/administration/GestionUtilisateur'));
 const TableauDeBord = React.lazy(() => import('./pages/administration/TableauDeBord'));
 const DetailUtilisateur = React.lazy(() => import('./pages/administration/DetailUtilisateur'));
+const GestionLaveries = React.lazy(() => import('./pages/administration/GestionLaveries'));
+const DetailLaverie = React.lazy(() => import('./pages/administration/DetailLaverie'));
 const EmailVerification = React.lazy(() => import('./pages/EmailVerification'));
 const AjoutLaverie = React.lazy(() => import('./pages/AjoutLaverie/AjoutLaverie'));
 const MesLaveries = React.lazy(() => import('./pages/MesLaveries/MesLaveries'));
@@ -96,6 +98,8 @@ function App() {
               <Route path="/admin/tableau-de-bord" element={<TableauDeBord />} />
               <Route path="/admin/gestion-utilisateurs" element={<GestionUtilisateur />} />
               <Route path="/admin/utilisateurs/:id" element={<DetailUtilisateur />} />
+              <Route path="/admin/gestion-laveries" element={<GestionLaveries />} />
+              <Route path="/admin/laveries/:id" element={<DetailLaverie />} />
             </Route>
           </Routes>
         </Suspense>

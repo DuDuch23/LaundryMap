@@ -26,6 +26,20 @@ axios.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
+// Intercepteur de réponse : redirige vers /connexion si le token a expiré (401)
+axios.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('token');
+            const currentPath = window.location.pathname;
+            if (currentPath !== '/connexion') {
+                window.location.href = '/connexion';
+            }
+        }
+        return Promise.reject(error);
+    }
+);
 
 interface InscriptionProfessionnelData {
     email: string;
@@ -231,6 +245,11 @@ export interface FiltresUtilisateurs {
     ordre?: string;
 }
 
+export interface FiltresLaveries {
+    statut?: string;
+    ordre?: string;
+}
+
 export async function fetchAdminUtilisateurs(page: number = 1, filtres?: FiltresUtilisateurs) {
     try {
         const params: Record<string, string | number> = { page };
@@ -254,6 +273,50 @@ export async function fetchUtilisateurDetail(id: string) {
         return response.data;
     } catch (error) {
         console.error(`Erreur lors de la récupération des détails de l'utilisateur ${id}:`, error);
+        throw error;
+    }
+}
+
+export async function fetchAdminLaveries(page: number = 1, filtres?: FiltresLaveries) {
+    try {
+        const params: Record<string, string | number> = { page };
+
+        if (filtres?.statut) params.statut = filtres.statut;
+        if (filtres?.ordre) params.ordre = filtres.ordre;
+
+        const response = await axios.get(`${API_BASE_URL}/api/admin/laveries`, { params });
+        return response.data;
+    } catch (error) {
+        console.error("Erreur lors de la récupération des laveries:", error);
+        throw error;
+    }
+}
+
+export async function fetchLaverieDetail(id: string) {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/api/admin/laveries/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error(`Erreur lors de la récupération des détails de la laverie ${id}:`, error);
+        throw error;
+    }
+}
+
+export async function updateLaverieStatut(id: number, action: 'accepter' | 'refuser', commentaire?: string) {
+    try {
+        const payload: any = { action };
+        if (commentaire) {
+            payload.commentaire = commentaire;
+        }
+        const response = await axios.post(`${API_BASE_URL}/api/admin/laveries/${id}/statut`, payload, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error(`Erreur lors de la mise à jour du statut de la laverie (action: ${action}):`, error);
         throw error;
     }
 }
