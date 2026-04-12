@@ -31,6 +31,7 @@ export default function ModifierLaveriePro() {
     isWiLine: false,
     wiLineReference: '',
     horaires: defaultHoraires,
+    equipements: [],
   });
 
   const [galleryFiles, setGalleryFiles] = useState([]);
@@ -79,6 +80,16 @@ export default function ModifierLaveriePro() {
                 ferme: Boolean(horaire.ferme),
               }))
             : defaultHoraires,
+          equipements: Array.isArray(data.equipements)
+            ? data.equipements.map((equipement) => ({
+                equipementReference: equipement.equipementReference ?? null,
+                nom: equipement.nom || '',
+                type: equipement.type || '',
+                capacite: equipement.capacite ? String(equipement.capacite) : '',
+                tarif: equipement.tarif !== undefined && equipement.tarif !== null ? String(equipement.tarif) : '',
+                duree: equipement.duree ? String(equipement.duree) : '',
+              }))
+            : [],
         });
 
         setExistingGallery(Array.isArray(data.images) ? data.images : []);
@@ -111,6 +122,39 @@ export default function ModifierLaveriePro() {
       horaires: prev.horaires.map((horaire) =>
         horaire.jour === jour ? { ...horaire, [field]: value } : horaire,
       ),
+    }));
+  };
+
+  const addEquipement = () => {
+    setForm((prev) => ({
+      ...prev,
+      equipements: [
+        ...prev.equipements,
+        {
+          equipementReference: null,
+          nom: '',
+          type: '',
+          capacite: '',
+          tarif: '',
+          duree: '',
+        },
+      ],
+    }));
+  };
+
+  const updateEquipement = (index, field, value) => {
+    setForm((prev) => ({
+      ...prev,
+      equipements: prev.equipements.map((equipement, equipementIndex) => (
+        equipementIndex === index ? { ...equipement, [field]: value } : equipement
+      )),
+    }));
+  };
+
+  const removeEquipement = (indexToRemove) => {
+    setForm((prev) => ({
+      ...prev,
+      equipements: prev.equipements.filter((_, index) => index !== indexToRemove),
     }));
   };
 
@@ -184,6 +228,14 @@ export default function ModifierLaveriePro() {
       payload.append('description', form.description);
       payload.append('wiLineReference', form.isWiLine ? form.wiLineReference : '');
       payload.append('horaires', JSON.stringify(joursTries));
+      payload.append('equipements', JSON.stringify(form.equipements.map((equipement) => ({
+        equipementReference: equipement.equipementReference,
+        nom: (equipement.nom || '').trim(),
+        type: (equipement.type || '').trim(),
+        capacite: Number.parseInt(equipement.capacite, 10) || 0,
+        tarif: Number.parseFloat(equipement.tarif) || 0,
+        duree: Number.parseInt(equipement.duree, 10) || 0,
+      }))));
       payload.append('removeImageIds', JSON.stringify(removedExistingImageIds));
 
       galleryFiles.forEach((file) => {
@@ -384,6 +436,84 @@ export default function ModifierLaveriePro() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-slate-800">Équipements</p>
+                <button
+                  type="button"
+                  onClick={addEquipement}
+                  className="rounded-lg bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 hover:bg-cyan-100"
+                >
+                  + Ajouter
+                </button>
+              </div>
+
+              {form.equipements.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-300 p-3 text-xs text-slate-500">
+                  Aucun équipement configuré.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {form.equipements.map((equipement, index) => (
+                    <div key={`equipement-${index}`} className="space-y-2 rounded-xl border border-slate-200 p-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold text-slate-700">Équipement {index + 1}</p>
+                        <button
+                          type="button"
+                          onClick={() => removeEquipement(index)}
+                          className="rounded-md bg-rose-50 px-2 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-100"
+                        >
+                          Supprimer
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={equipement.nom}
+                          onChange={(e) => updateEquipement(index, 'nom', e.target.value)}
+                          placeholder="Nom (ex: Lave-linge 8 kg)"
+                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs focus:border-cyan-500 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={equipement.type}
+                          onChange={(e) => updateEquipement(index, 'type', e.target.value)}
+                          placeholder="Type (Lave-linge...)"
+                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs focus:border-cyan-500 focus:outline-none"
+                        />
+                        <input
+                          type="number"
+                          min="1"
+                          value={equipement.capacite}
+                          onChange={(e) => updateEquipement(index, 'capacite', e.target.value.replace(/\D/g, ''))}
+                          placeholder="Capacité (kg)"
+                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs focus:border-cyan-500 focus:outline-none"
+                        />
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.1"
+                          value={equipement.tarif}
+                          onChange={(e) => updateEquipement(index, 'tarif', e.target.value)}
+                          placeholder="Tarif (€)"
+                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs focus:border-cyan-500 focus:outline-none"
+                        />
+                        <input
+                          type="number"
+                          min="1"
+                          value={equipement.duree}
+                          onChange={(e) => updateEquipement(index, 'duree', e.target.value.replace(/\D/g, ''))}
+                          placeholder="Durée (min)"
+                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs focus:border-cyan-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">

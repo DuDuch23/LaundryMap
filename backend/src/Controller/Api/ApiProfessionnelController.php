@@ -3,6 +3,7 @@
 namespace App\Controller\Api;
 
 use App\Entity\Adresse;
+use App\Entity\LaverieEquipement;
 use App\Entity\LaverieFermeture;
 use App\Entity\LaverieMedia;
 use App\Entity\LaverieNote;
@@ -430,6 +431,7 @@ class ApiProfessionnelController extends AbstractController
 
             $logo = $laverie->getLogo();
             $horaires = $this->buildHorairesResponse($laverie);
+            $equipements = $this->buildEquipementsResponse($laverie, $entityManager);
             $gallery = $this->buildGalleryResponse($laverie, $request);
             $primaryImage = $gallery[0]['image'] ?? (($logo && $this->isProjectManagedMediaPath($logo->getEmplacement()))
                 ? $this->toPublicMediaUrl($logo->getEmplacement(), $request)
@@ -451,6 +453,7 @@ class ApiProfessionnelController extends AbstractController
                 'image' => $primaryImage,
                 'images' => $gallery,
                 'horaires' => $horaires,
+                'equipements' => $equipements,
                 'commentairesCount' => $this->countLaverieCommentaires($laverie, $entityManager),
                 'noteMoyenne' => $this->getLaverieNoteMoyenne($laverie, $entityManager),
             ], 200);
@@ -498,6 +501,7 @@ class ApiProfessionnelController extends AbstractController
             $description = trim((string) $request->request->get('description', $laverie->getDescription() ?? ''));
             $wiLineReferenceRaw = trim((string) $request->request->get('wiLineReference', ''));
             $horairesJson = (string) $request->request->get('horaires', '[]');
+            $equipementsJson = (string) $request->request->get('equipements', '[]');
             $removeImageIdsJson = (string) $request->request->get('removeImageIds', '[]');
 
             $codePostal = preg_replace('/\D+/', '', $codePostal) ?? '';
@@ -521,6 +525,11 @@ class ApiProfessionnelController extends AbstractController
             $horaires = json_decode($horairesJson, true);
             if (!is_array($horaires)) {
                 return $this->json(['erreur' => 'Format des horaires invalide'], 400);
+            }
+
+            $equipements = json_decode($equipementsJson, true);
+            if (!is_array($equipements)) {
+                return $this->json(['erreur' => 'Format des équipements invalide'], 400);
             }
 
             $removeImageIds = json_decode($removeImageIdsJson, true);
@@ -573,6 +582,10 @@ class ApiProfessionnelController extends AbstractController
                 $entityManager->remove($existingFermeture);
             }
 
+            foreach ($entityManager->getRepository(LaverieEquipement::class)->findBy(['laverie' => $laverie]) as $existingEquipement) {
+                $entityManager->remove($existingEquipement);
+            }
+
             foreach ($horaires as $horaireData) {
                 if (!is_array($horaireData)) {
                     continue;
@@ -611,6 +624,37 @@ class ApiProfessionnelController extends AbstractController
                 }
 
                 $entityManager->persist($fermeture);
+            }
+
+            foreach ($equipements as $equipementData) {
+                if (!is_array($equipementData)) {
+                    continue;
+                }
+
+                $nomEquipement = trim((string) ($equipementData['nom'] ?? ''));
+                $typeEquipement = trim((string) ($equipementData['type'] ?? ''));
+                $capaciteEquipement = (int) ($equipementData['capacite'] ?? 0);
+                $tarifEquipement = (float) ($equipementData['tarif'] ?? 0);
+                $dureeEquipement = (int) ($equipementData['duree'] ?? 0);
+                $equipementReference = $equipementData['equipementReference'] ?? null;
+
+                if ($nomEquipement === '' || $typeEquipement === '') {
+                    continue;
+                }
+
+                if ($capaciteEquipement <= 0 || $tarifEquipement < 0 || $dureeEquipement <= 0) {
+                    continue;
+                }
+
+                $equipement = new LaverieEquipement();
+                $equipement->setLaverie($laverie);
+                $equipement->setNom($nomEquipement);
+                $equipement->setType($typeEquipement);
+                $equipement->setCapacite($capaciteEquipement);
+                $equipement->setTarif($tarifEquipement);
+                $equipement->setDuree($dureeEquipement);
+                $equipement->setEquipementReference(is_numeric($equipementReference) ? (int) $equipementReference : null);
+                $entityManager->persist($equipement);
             }
 
             foreach ($removeImageIds as $removeImageId) {
@@ -871,6 +915,30 @@ class ApiProfessionnelController extends AbstractController
         }
 
         return $gallery;
+    }
+
+    private function buildEquipementsResponse(Laverie $laverie, EntityManagerInterface $entityManager): array
+    {
+        $equipements = [];
+
+        $equipementsDb = $entityManager->getRepository(LaverieEquipement::class)->findBy(
+            ['laverie' => $laverie],
+            ['id' => 'ASC']
+        );
+
+        foreach ($equipementsDb as $equipement) {
+            $equipements[] = [
+                'id' => $equipement->getId(),
+                'equipementReference' => $equipement->getEquipementReference(),
+                'nom' => $equipement->getNom(),
+                'type' => $equipement->getType(),
+                'capacite' => $equipement->getCapacite(),
+                'tarif' => $equipement->getTarif(),
+                'duree' => $equipement->getDuree(),
+            ];
+        }
+
+        return $equipements;
     }
 
     private function isProjectManagedMediaPath(string $emplacement): bool
