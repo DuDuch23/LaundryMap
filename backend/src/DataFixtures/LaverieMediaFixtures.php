@@ -13,7 +13,7 @@ class LaverieMediaFixtures extends Fixture implements DependentFixtureInterface
 {
     public function load(ObjectManager $manager): void
     {
-        for ($i = 0; $i < 5; $i++) {
+        for ($i = 0; $i < 10; $i++) {
             $laverie = $this->getReference(LaverieFixtures::LAVERIE_REFERENCE_PREFIX . $i, Laverie::class);
             $media = $this->getReference(MediaFixtures::MEDIA_REFERENCE_PREFIX . $i, Media::class);
 

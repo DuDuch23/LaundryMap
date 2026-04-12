@@ -12,7 +12,6 @@ export default function Header() {
     const [profil, setProfil] = useState<ProfilUtilisateurData | null>(null);
     const isProfessionnel = profil?.isProfessionnel ?? false;
 
-
     useEffect(() => {
         if (isAuthenticated) {
             getProfilUtilisateur()
@@ -36,6 +35,23 @@ export default function Header() {
         ? `${profil.prenom ?? ''} ${profil.nom ?? ''}`.trim() || profil.email
         : '';
 
+    // Fonction pour récupérer les rôles du token JWT
+    const getRolesFromToken = (token: string): string[] => {
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(
+                window.atob(base64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
+            );
+            return JSON.parse(jsonPayload).roles || [];
+        } catch (e) {
+            return [];
+        }
+    };
+
+    const userRoles = isAuthenticated ? getRolesFromToken(localStorage.getItem('token') || '') : [];
+    const isPro = userRoles.some((role) => role.includes('PROFESSIONNEL'));
+
     return (
         <>
             <header className="fixed w-full z-50 bg-[#14A8DE]" role="banner" aria-label={t("main.header.aria_label")}>
@@ -55,6 +71,28 @@ export default function Header() {
                                 Accueil
                             </NavLink>
                         </li>
+                        {!isAuthenticated && (
+                            <>
+                                <li>
+                                    <NavLink to="/inscription-pro" className={({ isActive }) => `block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive ? 'bg-white/20 text-white font-bold' : 'text-white/90 hover:bg-white/10 hover:text-white'}`}>
+                                        <span className='md:block xl:hidden'>Inscription Pro</span>
+                                        <span className='hidden xl:block'>Inscription Professionnel</span>
+                                    </NavLink>
+                                </li>
+                                <li>
+                                    <NavLink to="/inscription-utilisateur" className={({ isActive }) => `block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive ? 'bg-white/20 text-white font-bold' : 'text-white/90 hover:bg-white/10 hover:text-white'}`}>
+                                        Inscription Utilisateur
+                                    </NavLink>
+                                </li>
+                            </>
+                        )}
+                        {isAuthenticated && isPro && (
+                            <li>
+                                <NavLink to="/professionnel/tableau-de-bord" className={({ isActive }) => `block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive ? 'bg-white/20 text-white font-bold' : 'text-white/90 hover:bg-white/10 hover:text-white'}`}>
+                                    Tableau de bord
+                                </NavLink>
+                            </li>
+                        )}
                         {isAuthenticated ? (
                             <>
                                 {isProfessionnel && (
@@ -148,6 +186,39 @@ export default function Header() {
                                         Accueil
                                     </NavLink>
                                 </li>
+                                {!isAuthenticated && (
+                                    <>
+                                        <li className="border-b border-gray-100">
+                                            <NavLink
+                                                to="/inscription-pro"
+                                                className={({ isActive }) => `block px-6 py-4 transition-all duration-200 ${isActive ? 'bg-blue-50 text-[#14A8DE] font-bold' : 'text-gray-700 hover:bg-gray-50 hover:text-[#14A8DE]'}`}
+                                                onClick={() => setIsOpen(false)}
+                                            >
+                                                Inscription Professionnel
+                                            </NavLink>
+                                        </li>
+                                        <li className="border-b border-gray-100">
+                                            <NavLink
+                                                to="/inscription-utilisateur"
+                                                className={({ isActive }) => `block px-6 py-4 transition-all duration-200 ${isActive ? 'bg-blue-50 text-[#14A8DE] font-bold' : 'text-gray-700 hover:bg-gray-50 hover:text-[#14A8DE]'}`}
+                                                onClick={() => setIsOpen(false)}
+                                            >
+                                                Inscription Utilisateur
+                                            </NavLink>
+                                        </li>
+                                    </>
+                                )}
+                                {isAuthenticated && isPro && (
+                                    <li className="border-b border-gray-100">
+                                        <NavLink
+                                            to="/professionnel/tableau-de-bord"
+                                            className={({ isActive }) => `block px-6 py-4 transition-all duration-200 ${isActive ? 'bg-blue-50 text-[#14A8DE] font-bold' : 'text-gray-700 hover:bg-gray-50 hover:text-[#14A8DE]'}`}
+                                            onClick={() => setIsOpen(false)}
+                                        >
+                                            Tableau de bord
+                                        </NavLink>
+                                    </li>
+                                )}
                             </ul>
 
                             {/* Trait séparateur + section profil */}
