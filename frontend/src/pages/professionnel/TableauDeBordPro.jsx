@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import API_BASE_URL from '../../services/api';
 
@@ -14,7 +14,7 @@ const statusLabels = {
   'Refusée': 'Refusée',
 };
 
-const fallbackLaverieImage = 'https://picsum.photos/seed/laundry-fallback/1600/900';
+const fallbackLaverieImage = `${API_BASE_URL}/uploads/laveries/01-lave-linge-blanc-1.jpg`;
 
 function MessageCircleIcon({ className = '' }) {
   return (
@@ -34,11 +34,14 @@ function StarIcon({ className = '' }) {
 }
 
 export default function TableauDeBordPro() {
+  const profilePhotoInputRef = useRef(null);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [notification, setNotification] = useState(null);
   const [deleting, setDeleting] = useState(null);
+  const [uploadingProfilePhoto, setUploadingProfilePhoto] = useState(false);
+  const [removingProfilePhoto, setRemovingProfilePhoto] = useState(false);
 
   useEffect(() => {
     const fetchTableauBord = async () => {
@@ -130,6 +133,122 @@ export default function TableauDeBordPro() {
     }
   };
 
+  const handleOpenProfilePhotoPicker = () => {
+    profilePhotoInputRef.current?.click();
+  };
+
+  const handleProfilePhotoChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    try {
+      setUploadingProfilePhoto(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Vous devez être connecté');
+      }
+
+      const payload = new FormData();
+      payload.append('photoProfil', file);
+
+      const response = await fetch(`${API_BASE_URL}/api/professionnel/photo-profil`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: payload,
+      });
+
+      const responseData = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(responseData.erreur || 'Impossible de mettre à jour la photo de profil');
+      }
+
+      setData((prev) => {
+        if (!prev) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          professionnel: {
+            ...prev.professionnel,
+            photoProfil: responseData.photoProfil || prev.professionnel?.photoProfil || null,
+          },
+        };
+      });
+
+      setNotification({
+        type: 'success',
+        message: 'Photo de profil mise à jour',
+      });
+      setTimeout(() => setNotification(null), 3000);
+    } catch (uploadError) {
+      setNotification({
+        type: 'error',
+        message: uploadError.message || 'Une erreur est survenue lors de la mise à jour de la photo',
+      });
+    } finally {
+      setUploadingProfilePhoto(false);
+      event.target.value = '';
+    }
+  };
+
+  const handleRemoveProfilePhoto = async () => {
+    if (!photoProfilUrl) {
+      return;
+    }
+
+    try {
+      setRemovingProfilePhoto(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Vous devez être connecté');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/professionnel/photo-profil`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const responseData = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(responseData.erreur || 'Impossible de supprimer la photo de profil');
+      }
+
+      setData((prev) => {
+        if (!prev) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          professionnel: {
+            ...prev.professionnel,
+            photoProfil: null,
+          },
+        };
+      });
+
+      setNotification({
+        type: 'success',
+        message: 'Photo de profil supprimée',
+      });
+      setTimeout(() => setNotification(null), 3000);
+    } catch (removeError) {
+      setNotification({
+        type: 'error',
+        message: removeError.message || 'Une erreur est survenue lors de la suppression de la photo',
+      });
+    } finally {
+      setRemovingProfilePhoto(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen flex-col bg-slate-50 pt-24">
@@ -162,6 +281,19 @@ export default function TableauDeBordPro() {
     return Number.isFinite(value) ? value.toFixed(1) : '0.0';
   };
 
+  const notesMoyennes = (Array.isArray(laveries) ? laveries : [])
+    .map((laverie) => Number(laverie?.noteMoyenne))
+    .filter((note) => Number.isFinite(note) && note > 0);
+  const moyenneCompte = notesMoyennes.length > 0
+    ? notesMoyennes.reduce((sum, note) => sum + note, 0) / notesMoyennes.length
+    : 0;
+  const moyenneCompteAffichee = moyenneCompte.toFixed(1);
+  const etoilesRemplies = Math.round(moyenneCompte);
+  const commentairesTotal = (Array.isArray(laveries) ? laveries : []).reduce(
+    (sum, laverie) => sum + Number(laverie?.commentairesCount ?? 0),
+    0,
+  );
+
   return (
     <div className="flex w-full flex-col bg-slate-50 pt-24">
       {/* Toast Notification */}
@@ -192,6 +324,13 @@ export default function TableauDeBordPro() {
           <section className="overflow-hidden rounded-[28px] bg-gradient-to-b from-cyan-500 to-cyan-600 text-white shadow-md">
             <div className="flex flex-col items-center gap-3 px-6 py-8 text-center">
               <div className="relative">
+                <input
+                  ref={profilePhotoInputRef}
+                  type="file"
+                  accept=".png,.jpg,.jpeg,.webp,.gif,image/*"
+                  className="hidden"
+                  onChange={handleProfilePhotoChange}
+                />
                 {photoProfilUrl ? (
                   <img
                     src={photoProfilUrl}
@@ -203,17 +342,45 @@ export default function TableauDeBordPro() {
                     {initiales}
                   </div>
                 )}
+                <button
+                  type="button"
+                  onClick={handleOpenProfilePhotoPicker}
+                  disabled={uploadingProfilePhoto || removingProfilePhoto}
+                  className="absolute -bottom-1 -right-1 inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-cyan-600 text-white shadow-md transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  aria-label="Modifier la photo de profil"
+                >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
+                    <path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25zm17.71-10.04a1.003 1.003 0 000-1.42l-2.5-2.5a1.003 1.003 0 00-1.42 0l-1.96 1.96 3.75 3.75 2.13-1.79z" />
+                  </svg>
+                </button>
+                {photoProfilUrl && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveProfilePhoto}
+                    disabled={uploadingProfilePhoto || removingProfilePhoto}
+                    className="absolute -bottom-1 -left-1 inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-rose-500 text-white shadow-md transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-60"
+                    aria-label="Supprimer la photo de profil"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
+                      <path d="M19 13H5v-2h14v2z" />
+                    </svg>
+                  </button>
+                )}
               </div>
 
               <div className="space-y-1">
                 <div className="flex justify-center gap-0.5">
                   {[...Array(5)].map((_, i) => (
-                    <span key={i} className="text-lg leading-none">
+                    <span
+                      key={i}
+                      className={`text-lg leading-none ${i < etoilesRemplies ? 'text-yellow-300' : 'text-white/40'}`}
+                    >
                       ★
                     </span>
                   ))}
                 </div>
-                <p className="text-xs opacity-90">0 commentaires</p>
+                <p className="text-xs font-medium text-white/95">{moyenneCompteAffichee} / 5</p>
+                <p className="text-xs opacity-90">{commentairesTotal} commentaires</p>
                 <h1 className="text-xl font-semibold sm:text-2xl">
                   {professionnel.prenom} {professionnel.nom}
                 </h1>

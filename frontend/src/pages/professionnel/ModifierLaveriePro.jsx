@@ -120,9 +120,31 @@ export default function ModifierLaveriePro() {
       return;
     }
 
-    setGalleryFiles(files);
-    setGalleryPreviews(files.map((file) => URL.createObjectURL(file)));
+    setGalleryFiles((prev) => {
+      const merged = [...prev, ...files];
+      const seen = new Set();
+
+      return merged.filter((file) => {
+        const key = `${file.name}-${file.size}-${file.lastModified}`;
+        if (seen.has(key)) {
+          return false;
+        }
+        seen.add(key);
+        return true;
+      });
+    });
+
+    event.target.value = '';
   };
+
+  useEffect(() => {
+    const previews = galleryFiles.map((file) => URL.createObjectURL(file));
+    setGalleryPreviews(previews);
+
+    return () => {
+      previews.forEach((preview) => URL.revokeObjectURL(preview));
+    };
+  }, [galleryFiles]);
 
   const handleRemovePendingImage = (indexToRemove) => {
     setGalleryFiles((prev) => prev.filter((_, index) => index !== indexToRemove));
@@ -369,12 +391,12 @@ export default function ModifierLaveriePro() {
               <div className="rounded-xl border border-dashed border-slate-300 p-3">
                 <input
                   type="file"
-                  accept="image/*"
+                  accept=".png,.jpg,.jpeg,.webp,.gif,image/*"
                   multiple
                   onChange={handleGalleryChange}
                   className="block w-full text-xs text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-cyan-50 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-cyan-700 hover:file:bg-cyan-100"
                 />
-                <p className="mt-2 text-xs text-slate-500">Formats image acceptés, taille max 5 Mo par image.</p>
+                <p className="mt-2 text-xs text-slate-500">Formats supportés: PNG, JPG, JPEG, WEBP, GIF. Taille max 5 Mo par image.</p>
 
                 {existingGallery.length > 0 && (
                   <div className="mt-3">
@@ -432,6 +454,7 @@ export default function ModifierLaveriePro() {
                 rows={4}
                 value={form.description}
                 onChange={(e) => updateField('description', e.target.value)}
+                placeholder="Décris votre laverie (services, ambiance, accès, points forts...)"
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none"
               />
             </div>

@@ -98,6 +98,9 @@ class ApiProfessionnelController extends AbstractController
                     'nom' => $professionnel->getUtilisateur()->getNom(),
                     'email' => $professionnel->getUtilisateur()->getEmail(),
                     'siren' => $professionnel->getSiren(),
+                    'photoProfil' => ($professionnel->getPhotoProfil() && $this->isProjectManagedMediaPath($professionnel->getPhotoProfil()->getEmplacement()))
+                        ? $this->toPublicMediaUrl($professionnel->getPhotoProfil()->getEmplacement(), $request)
+                        : null,
                 ],
                 'stats' => $stats,
                 'laveries' => array_map(function ($laverie) use ($request, $entityManager) {
@@ -137,6 +140,155 @@ class ApiProfessionnelController extends AbstractController
                 'fichier' => $e->getFile(),
                 'ligne' => $e->getLine(),
             ], 500);
+        }
+    }
+
+    #[Route('/api/professionnel/photo-profil', name: 'api_upload_photo_profil_pro', methods: ['POST'])]
+    #[IsGranted('ROLE_PROFESSIONNEL')]
+    public function uploadPhotoProfil(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        SluggerInterface $slugger
+    ): JsonResponse {
+        try {
+            $user = $this->getUser();
+            $professionnel = $entityManager->getRepository(Professionnel::class)
+                ->findOneBy(['utilisateur' => $user]);
+
+            if (!$professionnel) {
+                return $this->json(['erreur' => 'Professionnel non trouvé'], 404);
+            }
+
+            if ($professionnel->getStatut()->value !== StatutProfessionnelEnum::STATUT_VALIDE->value) {
+                return $this->json(['erreur' => 'Compte professionnel non validé'], 403);
+            }
+
+            $photo = $request->files->get('photoProfil');
+            if (!$photo instanceof UploadedFile) {
+                return $this->json(['erreur' => 'Aucun fichier fourni'], 400);
+            }
+
+            $photoSize = (int) $photo->getSize();
+            if ($photoSize > 5 * 1024 * 1024) {
+                return $this->json(['erreur' => 'La photo de profil doit faire au maximum 5 Mo'], 400);
+            }
+
+            $mimeType = strtolower((string) $photo->getMimeType());
+            $clientExtension = strtolower((string) $photo->getClientOriginalExtension());
+            $allowedMimeTypes = [
+                'image/png',
+                'image/x-png',
+                'image/jpeg',
+                'image/jpg',
+                'image/webp',
+                'image/gif',
+            ];
+            $allowedExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
+
+            $isAllowedByMime = in_array($mimeType, $allowedMimeTypes, true);
+            $isAllowedByGenericMimeWithExtension = $mimeType === 'application/octet-stream'
+                && in_array($clientExtension, $allowedExtensions, true);
+
+            if (!$isAllowedByMime && !$isAllowedByGenericMimeWithExtension) {
+                return $this->json(['erreur' => 'Format de photo non supporté'], 400);
+            }
+
+            $normalizedMimeByExtension = [
+                'png' => 'image/png',
+                'jpg' => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'webp' => 'image/webp',
+                'gif' => 'image/gif',
+            ];
+
+            $resolvedMimeType = $mimeType;
+            if ($isAllowedByGenericMimeWithExtension) {
+                $resolvedMimeType = $normalizedMimeByExtension[$clientExtension] ?? 'image/png';
+            }
+
+            $uploadsDirectory = $this->getParameter('kernel.project_dir') . '/public/uploads/professionnels';
+            if (!is_dir($uploadsDirectory)) {
+                mkdir($uploadsDirectory, 0775, true);
+            }
+
+            $originalFileName = pathinfo($photo->getClientOriginalName(), PATHINFO_FILENAME);
+            $safeFileName = strtolower((string) $slugger->slug($originalFileName));
+            $guessedExtension = strtolower((string) $photo->guessExtension());
+            $extension = $guessedExtension !== '' && $guessedExtension !== 'bin'
+                ? $guessedExtension
+                : ($clientExtension !== '' ? $clientExtension : 'bin');
+            $storedFileName = $safeFileName . '-' . uniqid('', true) . '.' . $extension;
+
+            $photo->move($uploadsDirectory, $storedFileName);
+
+            $media = new Media();
+            $media->setEmplacement('/uploads/professionnels/' . $storedFileName);
+            $media->setNomOriginel($photo->getClientOriginalName());
+            $media->setPoids($photoSize);
+            $media->setMimeType($resolvedMimeType);
+            $entityManager->persist($media);
+
+            $anciennePhoto = $professionnel->getPhotoProfil();
+            $professionnel->setPhotoProfil($media);
+            $entityManager->flush();
+
+            if ($anciennePhoto && $this->isProjectManagedMediaPath($anciennePhoto->getEmplacement())) {
+                $absoluteOldPath = $this->getParameter('kernel.project_dir') . '/public' . $anciennePhoto->getEmplacement();
+                if (is_string($absoluteOldPath) && file_exists($absoluteOldPath)) {
+                    @unlink($absoluteOldPath);
+                }
+                $entityManager->remove($anciennePhoto);
+                $entityManager->flush();
+            }
+
+            return $this->json([
+                'message' => 'Photo de profil mise à jour avec succès',
+                'photoProfil' => $this->toPublicMediaUrl($media->getEmplacement(), $request),
+            ], 200);
+        } catch (\Exception $e) {
+            return $this->json(['erreur' => $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/api/professionnel/photo-profil', name: 'api_delete_photo_profil_pro', methods: ['DELETE'])]
+    #[IsGranted('ROLE_PROFESSIONNEL')]
+    public function deletePhotoProfil(
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        try {
+            $user = $this->getUser();
+            $professionnel = $entityManager->getRepository(Professionnel::class)
+                ->findOneBy(['utilisateur' => $user]);
+
+            if (!$professionnel) {
+                return $this->json(['erreur' => 'Professionnel non trouvé'], 404);
+            }
+
+            if ($professionnel->getStatut()->value !== StatutProfessionnelEnum::STATUT_VALIDE->value) {
+                return $this->json(['erreur' => 'Compte professionnel non validé'], 403);
+            }
+
+            $photo = $professionnel->getPhotoProfil();
+            if (!$photo) {
+                return $this->json(['message' => 'Aucune photo de profil à supprimer'], 200);
+            }
+
+            $professionnel->setPhotoProfil(null);
+            $entityManager->flush();
+
+            if ($this->isProjectManagedMediaPath($photo->getEmplacement())) {
+                $absolutePath = $this->getParameter('kernel.project_dir') . '/public' . $photo->getEmplacement();
+                if (is_string($absolutePath) && file_exists($absolutePath)) {
+                    @unlink($absolutePath);
+                }
+            }
+
+            $entityManager->remove($photo);
+            $entityManager->flush();
+
+            return $this->json(['message' => 'Photo de profil supprimée avec succès'], 200);
+        } catch (\Exception $e) {
+            return $this->json(['erreur' => $e->getMessage()], 500);
         }
     }
 
@@ -376,6 +528,35 @@ class ApiProfessionnelController extends AbstractController
                 return $this->json(['erreur' => 'Format des images à supprimer invalide'], 400);
             }
 
+            $removeImageIds = array_values(array_unique(array_map(
+                static fn (mixed $value): int => (int) $value,
+                array_filter($removeImageIds, static fn (mixed $value): bool => is_numeric($value))
+            )));
+            $removeImageIdsLookup = array_fill_keys($removeImageIds, true);
+
+            $originalLogo = $laverie->getLogo();
+
+            if (
+                $originalLogo
+                && !isset($removeImageIdsLookup[$originalLogo->getId()])
+                && $this->isProjectManagedMediaPath($originalLogo->getEmplacement())
+            ) {
+                $logoLink = $entityManager->getRepository(LaverieMedia::class)
+                    ->findOneBy([
+                        'laverie' => $laverie,
+                        'media' => $originalLogo,
+                    ]);
+
+                if (!$logoLink) {
+                    $logoLink = new LaverieMedia();
+                    $logoLink->setLaverie($laverie);
+                    $logoLink->setMedia($originalLogo);
+                    $logoLink->setDescription('Image principale de la laverie');
+                    $entityManager->persist($logoLink);
+                    $laverie->getMedias()->add($logoLink);
+                }
+            }
+
             $adresseEntity->setAdresse($adresse);
             $adresseEntity->setRue($adresse);
             $adresseEntity->setCodePostal((int) $codePostal);
@@ -433,10 +614,6 @@ class ApiProfessionnelController extends AbstractController
             }
 
             foreach ($removeImageIds as $removeImageId) {
-                if (!is_numeric($removeImageId)) {
-                    continue;
-                }
-
                 $media = $entityManager->getRepository(Media::class)->find((int) $removeImageId);
                 if (!$media) {
                     continue;
@@ -477,9 +654,37 @@ class ApiProfessionnelController extends AbstractController
                     return $this->json(['erreur' => 'Chaque image doit faire au maximum 5 Mo'], 400);
                 }
 
-                $mimeType = (string) $uploadedImage->getMimeType();
-                if (!str_starts_with($mimeType, 'image/')) {
+                $mimeType = strtolower((string) $uploadedImage->getMimeType());
+                $clientExtension = strtolower((string) $uploadedImage->getClientOriginalExtension());
+                $allowedMimeTypes = [
+                    'image/png',
+                    'image/x-png',
+                    'image/jpeg',
+                    'image/jpg',
+                    'image/webp',
+                    'image/gif',
+                ];
+                $allowedExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
+
+                $isAllowedByMime = in_array($mimeType, $allowedMimeTypes, true);
+                $isAllowedByGenericMimeWithExtension = $mimeType === 'application/octet-stream'
+                    && in_array($clientExtension, $allowedExtensions, true);
+
+                if (!$isAllowedByMime && !$isAllowedByGenericMimeWithExtension) {
                     return $this->json(['erreur' => 'Tous les fichiers doivent être des images'], 400);
+                }
+
+                $normalizedMimeByExtension = [
+                    'png' => 'image/png',
+                    'jpg' => 'image/jpeg',
+                    'jpeg' => 'image/jpeg',
+                    'webp' => 'image/webp',
+                    'gif' => 'image/gif',
+                ];
+
+                $resolvedMimeType = $mimeType;
+                if ($isAllowedByGenericMimeWithExtension) {
+                    $resolvedMimeType = $normalizedMimeByExtension[$clientExtension] ?? 'image/png';
                 }
 
                 $uploadsDirectory = $this->getParameter('kernel.project_dir') . '/public/uploads/laveries';
@@ -489,7 +694,10 @@ class ApiProfessionnelController extends AbstractController
 
                 $originalFileName = pathinfo($uploadedImage->getClientOriginalName(), PATHINFO_FILENAME);
                 $safeFileName = strtolower((string) $slugger->slug($originalFileName));
-                $extension = $uploadedImage->guessExtension() ?: 'bin';
+                $guessedExtension = strtolower((string) $uploadedImage->guessExtension());
+                $extension = $guessedExtension !== '' && $guessedExtension !== 'bin'
+                    ? $guessedExtension
+                    : ($clientExtension !== '' ? $clientExtension : 'bin');
                 $storedFileName = $safeFileName . '-' . uniqid('', true) . '.' . $extension;
 
                 $uploadedImage->move($uploadsDirectory, $storedFileName);
@@ -498,7 +706,7 @@ class ApiProfessionnelController extends AbstractController
                 $media->setEmplacement('/uploads/laveries/' . $storedFileName);
                 $media->setNomOriginel($uploadedImage->getClientOriginalName());
                 $media->setPoids($uploadedImageSize);
-                $media->setMimeType($mimeType);
+                $media->setMimeType($resolvedMimeType);
                 $entityManager->persist($media);
 
                 $laverieMedia = new LaverieMedia();
@@ -523,7 +731,18 @@ class ApiProfessionnelController extends AbstractController
                         break;
                     }
                 }
-                $laverie->setLogo($remainingGalleryMedia);
+
+                if ($remainingGalleryMedia !== null) {
+                    $laverie->setLogo($remainingGalleryMedia);
+                } elseif (
+                    $originalLogo
+                    && !isset($removeImageIdsLookup[$originalLogo->getId()])
+                    && $this->isProjectManagedMediaPath($originalLogo->getEmplacement())
+                ) {
+                    $laverie->setLogo($originalLogo);
+                } else {
+                    $laverie->setLogo(null);
+                }
             }
 
             $entityManager->flush();
