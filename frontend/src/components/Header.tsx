@@ -55,25 +55,21 @@ export default function Header() {
                                 Accueil
                             </NavLink>
                         </li>
-                        <li>
-                            <NavLink to="/inscription-pro" className={({ isActive }) => `block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive ? 'bg-white/20 text-white font-bold' : 'text-white/90 hover:bg-white/10 hover:text-white'}`}>
-                                <span className='md:block xl:hidden'>Inscription Pro</span>
-                                <span className='hidden xl:block'>Inscription Professionnel</span>
-                            </NavLink>
-                        </li>
-                        <li>
-                            <NavLink to="/inscription-utilisateur" className={({ isActive }) => `block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive ? 'bg-white/20 text-white font-bold' : 'text-white/90 hover:bg-white/10 hover:text-white'}`}>
-                                Inscription Utilisateur
-                            </NavLink>
-                        </li>
                         {isAuthenticated ? (
                             <>
                                 {isProfessionnel && (
-                                    <li>
-                                        <NavLink to="/nouvelle-laverie" className={({ isActive }) => `block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive ? 'bg-white/20 text-white font-bold' : 'text-white/90 hover:bg-white/10 hover:text-white'}`}>
-                                            Nouvelle Laverie
-                                        </NavLink>
-                                    </li>
+                                    <>
+                                        <li>
+                                            <NavLink to="/nouvelle-laverie" className={({ isActive }) => `block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive ? 'bg-white/20 text-white font-bold' : 'text-white/90 hover:bg-white/10 hover:text-white'}`}>
+                                                Ajouter une laverie
+                                            </NavLink>
+                                        </li>
+                                        <li>
+                                            <NavLink to="/mes-laveries" className={({ isActive }) => `block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive ? 'bg-white/20 text-white font-bold' : 'text-white/90 hover:bg-white/10 hover:text-white'}`}>
+                                                Mes laveries
+                                            </NavLink>
+                                        </li>
+                                    </>
                                 )}
                                 <li>
                                     <NavLink to="/profil" className={({ isActive }) => `block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive ? 'bg-white/20 text-white font-bold' : 'text-white/90 hover:bg-white/10 hover:text-white'}`}>
@@ -91,11 +87,25 @@ export default function Header() {
                                 </li>
                             </>
                         ) : (
-                            <li>
-                                <NavLink to="/connexion" className={({ isActive }) => `block px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${isActive ? 'bg-white text-[#14A8DE]' : 'bg-white/15 text-white hover:bg-white/25'}`}>
-                                    Connexion
-                                </NavLink>
-                            </li>
+                            <>
+                                <li>
+                                    <NavLink to="/inscription-pro" className={({ isActive }) => `block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive ? 'bg-white/20 text-white font-bold' : 'text-white/90 hover:bg-white/10 hover:text-white'}`}>
+                                        <span className='md:block xl:hidden'>Inscription Pro</span>
+                                        <span className='hidden xl:block'>Inscription Professionnel</span>
+                                    </NavLink>
+                                </li>
+                                <li>
+                                    <NavLink to="/inscription-utilisateur" className={({ isActive }) => `block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive ? 'bg-white/20 text-white font-bold' : 'text-white/90 hover:bg-white/10 hover:text-white'}`}>
+                                        Inscription Utilisateur
+                                    </NavLink>
+                                </li>
+                                <li>
+                                    <NavLink to="/connexion" className={({ isActive }) => `block px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${isActive ? 'bg-white text-[#14A8DE]' : 'bg-white/15 text-white hover:bg-white/25'}`}>
+                                        Connexion
+                                    </NavLink>
+                                </li>
+                            
+                            </>
                         )}
                     </ul>
 
@@ -138,24 +148,6 @@ export default function Header() {
                                         Accueil
                                     </NavLink>
                                 </li>
-                                <li className="border-b border-gray-100">
-                                    <NavLink
-                                        to="/inscription-pro"
-                                        className={({ isActive }) => `block px-6 py-4 transition-all duration-200 ${isActive ? 'bg-blue-50 text-[#14A8DE] font-bold' : 'text-gray-700 hover:bg-gray-50 hover:text-[#14A8DE]'}`}
-                                        onClick={() => setIsOpen(false)}
-                                    >
-                                        Inscription Professionnel
-                                    </NavLink>
-                                </li>
-                                <li className="border-b border-gray-100">
-                                    <NavLink
-                                        to="/inscription-utilisateur"
-                                        className={({ isActive }) => `block px-6 py-4 transition-all duration-200 ${isActive ? 'bg-blue-50 text-[#14A8DE] font-bold' : 'text-gray-700 hover:bg-gray-50 hover:text-[#14A8DE]'}`}
-                                        onClick={() => setIsOpen(false)}
-                                    >
-                                        Inscription Utilisateur
-                                    </NavLink>
-                                </li>
                             </ul>
 
                             {/* Trait séparateur + section profil */}
@@ -170,6 +162,29 @@ export default function Header() {
                                             <p className="text-xs text-gray-500">{profil?.email ?? ''}</p>
                                         </div>
                                     </div>
+                                    {isProfessionnel && (
+                                        <>
+                                            <li className="border-b border-gray-100">
+                                                <NavLink
+                                                    to="/nouvelle-laverie"
+                                                    className={({ isActive }) => `block px-6 py-4 transition-all duration-200 ${isActive ? 'bg-blue-50 text-[#14A8DE] font-bold' : 'text-gray-700 hover:bg-gray-50 hover:text-[#14A8DE]'}`}
+                                                    onClick={() => setIsOpen(false)}
+                                                >
+                                                    Nouvelle laverie
+                                                </NavLink>
+                                            </li>
+                                            <li className="border-b border-gray-100">
+                                                <NavLink
+                                                    to="/nouvelle-laverie"
+                                                    className={({ isActive }) => `block px-6 py-4 transition-all duration-200 ${isActive ? 'bg-blue-50 text-[#14A8DE] font-bold' : 'text-gray-700 hover:bg-gray-50 hover:text-[#14A8DE]'}`}
+                                                    onClick={() => setIsOpen(false)}
+                                                >
+                                                    Mes laveries
+                                                </NavLink>
+                                            </li>
+                                        </>
+                                        
+                                    )}
                                     <NavLink
                                         to="/profil"
                                         className={({ isActive }) => `block px-6 py-4 border-t border-gray-100 transition-all duration-200 ${isActive ? 'bg-blue-50 text-[#14A8DE] font-bold' : 'text-gray-700 hover:bg-gray-50 hover:text-[#14A8DE]'}`}
@@ -187,6 +202,24 @@ export default function Header() {
                                 </div>
                             ) : (
                                 <div className="border-t-2 border-gray-200">
+                                    <li className="border-b border-gray-100">
+                                        <NavLink
+                                            to="/inscription-pro"
+                                            className={({ isActive }) => `block px-6 py-4 transition-all duration-200 ${isActive ? 'bg-blue-50 text-[#14A8DE] font-bold' : 'text-gray-700 hover:bg-gray-50 hover:text-[#14A8DE]'}`}
+                                            onClick={() => setIsOpen(false)}
+                                        >
+                                            Inscription Professionnel
+                                        </NavLink>
+                                    </li>
+                                    <li className="border-b border-gray-100">
+                                        <NavLink
+                                            to="/inscription-utilisateur"
+                                            className={({ isActive }) => `block px-6 py-4 transition-all duration-200 ${isActive ? 'bg-blue-50 text-[#14A8DE] font-bold' : 'text-gray-700 hover:bg-gray-50 hover:text-[#14A8DE]'}`}
+                                            onClick={() => setIsOpen(false)}
+                                        >
+                                            Inscription Utilisateur
+                                        </NavLink>
+                                    </li>
                                     <NavLink
                                         to="/connexion"
                                         className={({ isActive }) => `block px-6 py-4 font-semibold transition-colors ${isActive ? 'bg-blue-50 text-[#14A8DE]' : 'text-[#14A8DE] hover:bg-blue-50'}`}

@@ -26,6 +26,7 @@ axios.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
+
 interface InscriptionProfessionnelData {
     email: string;
     prenom: string;
@@ -274,4 +275,46 @@ export async function updateUtilisateurStatut(id: number, action: 'accepter' | '
         console.error(`Erreur lors de la mise à jour du statut (action: ${action}):`, error);
         throw error;
     }
+}
+
+export interface LaverieResume {
+    id: number;
+    nomEtablissement: string;
+    statut: string;
+    adresse: {
+        rue: string;
+        codePostal: string;
+        ville: string;
+    };
+    dateAjout: string;
+}
+
+interface MesLaveriesData {
+    laveries: LaverieResume[];
+}
+
+export async function getMesLaveries(): Promise<MesLaveriesData> {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+        throw new Error('Aucun token de connexion trouvé.');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/laveries`, {
+        method: 'GET',
+        headers: {
+            accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        const error: any = new Error('Impossible de récupérer les laveries.');
+        error.status = response.status;
+        throw error;
+    }
+
+    const data = await response.json();
+    console.log("Laveries récupérées:", data);
+    return data as MesLaveriesData;
 }

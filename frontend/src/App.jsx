@@ -16,6 +16,7 @@ const TableauDeBord = React.lazy(() => import('./pages/administration/TableauDeB
 const DetailUtilisateur = React.lazy(() => import('./pages/administration/DetailUtilisateur'));
 const EmailVerification = React.lazy(() => import('./pages/EmailVerification'));
 const AjoutLaverie = React.lazy(() => import('./pages/AjoutLaverie/AjoutLaverie'));
+const MesLaveries = React.lazy(() => import('./pages/MesLaveries/MesLaveries'));
 const token = localStorage.getItem('token');
 
 function AuthRoute({ children }) {
@@ -66,9 +67,10 @@ function RequireAdmin({ children }) {
 }
 
 function App() {
+  // todo : rediriger vers la page de connexion si le token est expiré ou invalide (gérer ça dans une route protégée ?)
   return (
     <>
-      <div className='bg-gray-50 max-w-[392px] w-full mx-auto flex flex-col items-center'>
+      <div className='bg-gray-50 w-full mx-auto flex flex-col items-center max-w-full lg:max-w-[1280px]'>
         <Suspense fallback={
           <div>
             <svg className='bg-white logo-laundrymap' xmlns="http://www.w3.org/2000/svg" width="24" height="30" viewBox="0 0 24 30" fill="none">
@@ -86,6 +88,8 @@ function App() {
               <Route path="/connexion" element={<Connexion />} />
               <Route path="/email-verifie" element={<EmailVerification />} />
               <Route path="/nouvelle-laverie" element={<AjoutLaverie />} />
+              <Route path="/mes-laveries" element={<MesLaveries />} />
+
             </Route>
 
             <Route element={<RequireAdmin><HeaderAdmin /></RequireAdmin>}>

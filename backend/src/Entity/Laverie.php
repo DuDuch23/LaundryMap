@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use App\Enum\StatutLaverieEnum;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: LaverieRepository::class)]
 #[ORM\Table(name: 'laverie')]
@@ -15,70 +16,91 @@ class Laverie
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
+    #[Groups(['laverie:public'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Professionnel::class, inversedBy: 'laveries')]
     #[ORM\JoinColumn(name: 'professionnel_id', referencedColumnName: 'id', nullable: false)]
+    #[Groups(['laverie:public', 'laverie:private'])]
     private Professionnel $professionnel;
 
     #[ORM\Column(enumType: StatutLaverieEnum::class)]
+    #[Groups(['laverie:public'])]
     private StatutLaverieEnum $statut = StatutLaverieEnum::STATUT_EN_ATTENTE;
 
     #[ORM\Column(name: 'wi_line_reference', type: 'integer', nullable: true)]
+    #[Groups(['laverie:private'])]
     private ?int $wiLineReference = null;
 
-    #[ORM\ManyToOne(targetEntity: Adresse::class)]
+    #[ORM\ManyToOne(targetEntity: Adresse::class, cascade: ['persist'])]
     #[ORM\JoinColumn(name: 'adresse_id', referencedColumnName: 'id', nullable: false)]
+    #[Groups(['laverie:public'])]
     private Adresse $adresse;
 
     #[ORM\ManyToOne(targetEntity: Media::class)]
     #[ORM\JoinColumn(name: 'logo_id', referencedColumnName: 'id', nullable: true)]
+    #[Groups(['laverie:public'])]
     private ?Media $logo = null;
 
     #[ORM\Column(name: 'nom_etablissement', type: 'string', length: 255)]
+    #[Groups(['laverie:public'])]
     private string $nomEtablissement;
 
     #[ORM\Column(name: 'contact_email', type: 'string', length: 255, nullable: true)]
+    #[Groups(['laverie:public'])]
     private ?string $contactEmail = null;
 
     #[ORM\Column(type: 'text', nullable: true)]
+    #[Groups(['laverie:public'])]
     private ?string $description = null;
 
     #[ORM\Column(name: 'date_ajout', type: 'datetime')]
+    #[Groups(['laverie:private'])]
     private \DateTimeInterface $dateAjout;
 
     #[ORM\Column(name: 'date_modification', type: 'datetime')]
+    #[Groups(['laverie:private'])]
     private \DateTimeInterface $dateModification;
 
     /** @comment Si remplie : la laverie est supprimée */
     #[ORM\Column(name: 'supprimee_le', type: 'datetime', nullable: true)]
+    #[Groups(['laverie:public', 'laverie:private'])]
     private ?\DateTimeInterface $supprimee_le = null;
 
     #[ORM\OneToMany(mappedBy: 'laverie', targetEntity: LaverieEquipement::class)]
+    #[Groups(['laverie:public'])]
     private Collection $equipements;
 
     #[ORM\OneToMany(mappedBy: 'laverie', targetEntity: LaverieFavori::class)]
+    #[Groups(['laverie:public', 'laverie:private'])]
     private Collection $favoris;
 
     #[ORM\OneToMany(mappedBy: 'laverie', targetEntity: LaverieNote::class)]
+    #[Groups(['laverie:public', 'laverie:private'])]
     private Collection $notes;
 
     #[ORM\OneToMany(mappedBy: 'laverie', targetEntity: LaverieMedia::class)]
+    #[Groups(['laverie:public', 'laverie:private'])]
     private Collection $medias;
 
     #[ORM\OneToMany(mappedBy: 'laverie', targetEntity: LaverieService::class)]
+    #[Groups(['laverie:public'])]
     private Collection $services;
 
     #[ORM\OneToMany(mappedBy: 'laverie', targetEntity: LaveriePaiement::class)]
+    #[Groups(['laverie:public', 'laverie:private'])]
     private Collection $paiements;
 
     #[ORM\OneToMany(mappedBy: 'laverie', targetEntity: LaverieFermeture::class)]
+    #[Groups(['laverie:public', 'laverie:private'])]
     private Collection $fermetures;
 
     #[ORM\OneToMany(mappedBy: 'laverie', targetEntity: LaverieFermetureExceptionnelle::class)]
+    #[Groups(['laverie:public', 'laverie:private'])]
     private Collection $fermeturesExceptionnelles;
 
     #[ORM\OneToMany(mappedBy: 'laverie', targetEntity: LaverieHistoriqueInteraction::class)]
+    #[Groups(['laverie:public', 'laverie:private'])]
     private Collection $historiqueInteractions;
 
     public function __construct()
