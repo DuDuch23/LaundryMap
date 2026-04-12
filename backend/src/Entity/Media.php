@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\MediaRepository;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: MediaRepository::class)]
@@ -12,18 +13,23 @@ class Media
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
+    #[Groups(['laverie:private'])]
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Groups(['laverie:private'])]
     private string $emplacement;
 
     #[ORM\Column(name: 'nom_originel', type: 'string', length: 255)]
+    #[Groups(['laverie:private'])]
     private string $nomOriginel;
 
     #[ORM\Column(type: 'integer')]
+    #[Groups(['laverie:private'])]
     private int $poids;
 
     #[ORM\Column(name: 'mime_type', type: 'string')]
+    #[Groups(['laverie:private'])]
     private string $mimeType;
 
     public function getId(): ?int

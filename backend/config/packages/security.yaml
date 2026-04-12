@@ -48,6 +48,7 @@ security:
         - { path: ^/api/langues, roles: PUBLIC_ACCESS }
         - { path: ^/api/verify-email, roles: PUBLIC_ACCESS }
         - { path: ^/api/resend-verification, roles: PUBLIC_ACCESS }
+        - { path: ^/api/professionnel, roles: ROLE_PROFESSIONNEL }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:

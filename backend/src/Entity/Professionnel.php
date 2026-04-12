@@ -47,6 +47,10 @@ class Professionnel
     #[Groups(['professionnel:read', 'professionnel:write'])]
     private Adresse $adresse;
 
+    #[ORM\ManyToOne(targetEntity: Media::class)]
+    #[ORM\JoinColumn(name: 'photo_profil_id', referencedColumnName: 'id', nullable: true)]
+    private ?Media $photoProfil = null;
+
     #[ORM\OneToMany(mappedBy: 'professionnel', targetEntity: Laverie::class)]
     #[Groups(['professionnel:read'])]
     private Collection $laveries;
@@ -122,6 +126,17 @@ class Professionnel
 
     public function getLaveries(): Collection {
         return $this->laveries;
+    }
+
+    public function getPhotoProfil(): ?Media
+    {
+        return $this->photoProfil;
+    }
+
+    public function setPhotoProfil(?Media $photoProfil): static
+    {
+        $this->photoProfil = $photoProfil;
+        return $this;
     }
 
     public function getHistoriqueInteractions(): Collection {

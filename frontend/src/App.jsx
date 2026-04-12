@@ -14,7 +14,14 @@ const Connexion = React.lazy(() => import('./pages/Connexion'));
 const GestionUtilisateur = React.lazy(() => import('./pages/administration/GestionUtilisateur'));
 const TableauDeBord = React.lazy(() => import('./pages/administration/TableauDeBord'));
 const DetailUtilisateur = React.lazy(() => import('./pages/administration/DetailUtilisateur'));
+const GestionLaveries = React.lazy(() => import('./pages/administration/GestionLaveries'));
+const DetailLaverie = React.lazy(() => import('./pages/administration/DetailLaverie'));
 const EmailVerification = React.lazy(() => import('./pages/EmailVerification'));
+const AjoutLaverie = React.lazy(() => import('./pages/AjoutLaverie/AjoutLaverie'));
+const MesLaveries = React.lazy(() => import('./pages/MesLaveries/MesLaveries'));
+const TableauDeBordPro = React.lazy(() => import('./pages/professionnel/TableauDeBordPro'));
+const ModifierLaveriePro = React.lazy(() => import('./pages/professionnel/ModifierLaveriePro'));
+const ProRoute = React.lazy(() => import('./routes/ProRoute'));
 const token = localStorage.getItem('token');
 
 function AuthRoute({ children }) {
@@ -65,9 +72,10 @@ function RequireAdmin({ children }) {
 }
 
 function App() {
+  // todo : rediriger vers la page de connexion si le token est expiré ou invalide (gérer ça dans une route protégée ?)
   return (
     <>
-      <div className='bg-gray-50 max-w-[392px] w-full mx-auto flex flex-col items-center'>
+      <div className='bg-gray-50 w-full mx-auto flex flex-col items-center max-w-full lg:max-w-[1280px]'>
         <Suspense fallback={
           <div>
             <svg className='bg-white logo-laundrymap' xmlns="http://www.w3.org/2000/svg" width="24" height="30" viewBox="0 0 24 30" fill="none">
@@ -84,12 +92,22 @@ function App() {
               <Route path="/inscription-pro" element={<InscriptionPro />} />
               <Route path="/connexion" element={<Connexion />} />
               <Route path="/email-verifie" element={<EmailVerification />} />
+              <Route path="/nouvelle-laverie" element={<AjoutLaverie />} />
+              <Route path="/mes-laveries" element={<MesLaveries />} />
+
             </Route>
 
             <Route element={<RequireAdmin><HeaderAdmin /></RequireAdmin>}>
               <Route path="/admin/tableau-de-bord" element={<TableauDeBord />} />
               <Route path="/admin/gestion-utilisateurs" element={<GestionUtilisateur />} />
               <Route path="/admin/utilisateurs/:id" element={<DetailUtilisateur />} />
+              <Route path="/admin/gestion-laveries" element={<GestionLaveries />} />
+              <Route path="/admin/laveries/:id" element={<DetailLaverie />} />
+            </Route>
+
+            <Route element={<ProRoute />}>
+              <Route path="/professionnel/tableau-de-bord" element={<TableauDeBordPro />} />
+              <Route path="/professionnel/laveries/:id/modifier" element={<ModifierLaveriePro />} />
             </Route>
           </Routes>
         </Suspense>
