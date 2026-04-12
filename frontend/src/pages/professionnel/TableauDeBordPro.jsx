@@ -319,7 +319,7 @@ export default function TableauDeBordPro() {
       )}
 
       <main className="flex-1">
-        <div className="mx-auto w-full max-w-md">
+        <div className="w-full max-w-[1280px] bg-gray-50 pb-16">
           {/* Section profil */}
           <section className="overflow-hidden rounded-[28px] bg-gradient-to-b from-cyan-500 to-cyan-600 text-white shadow-md">
             <div className="flex flex-col items-center gap-3 px-6 py-8 text-center">
@@ -414,7 +414,7 @@ export default function TableauDeBordPro() {
           <section className="mt-8 text-center">
             <h2 className="mb-4 text-lg font-bold text-slate-900 sm:text-xl">Vos laveries</h2>
 
-            <div className="mx-auto flex w-full max-w-4xl flex-col items-center gap-4">
+            <div className="grid w-full w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {laveries && laveries.map((laundry) => (
                 <article
                   key={laundry.id}

@@ -165,7 +165,7 @@ export default function RegisterUser() {
   };
 
   return (
-    <div className="pt-24 px-4 w-full pb-16 max-w-[stretch]">
+    <div className="pt-24 px-4 w-full pb-16 max-w-[500px]">
       <h1 className="text-2xl font-bold text-[#22ACE2] mb-2 text-center w-full">
         {t("main.inscription_utilisateur.titre")}
       </h1>
