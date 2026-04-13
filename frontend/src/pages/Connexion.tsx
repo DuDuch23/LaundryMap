@@ -136,7 +136,7 @@ export default function PageConnexion() {
   };
 
   return (
-    <div className="w-full pt-24 px-4 pb-16 max-w-[500px]">
+    <div className="w-full pt-24 sm:px-6 lg:px-8 !box-border px-4 pb-16 max-w-[500px]">
       <h1 className="text-2xl font-bold text-[#22ACE2] mb-2 text-center w-full">
         {t("main.connexion.connexion")}
       </h1>
@@ -152,7 +152,7 @@ export default function PageConnexion() {
 
       <form
         onSubmit={handleSubmit}
-        className="w-full flex flex-col items-center gap-5 box-border"
+        className="w-full flex flex-col items-center gap-5 !box-border"
       >
         <div className="w-full text-left">
           <AccessibleInput
