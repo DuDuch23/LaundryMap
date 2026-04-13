@@ -495,9 +495,6 @@ class ApiLaverieController extends ApiProfilController
         $uploadedImages = $formatter->extractUploadedImages($request);
         $firstUploadedMedia = null;
         $uploadsDirectory = $this->getParameter('kernel.project_dir') . '/public/uploads/laveries';
-        if (!is_dir($uploadsDirectory)) {
-            mkdir($uploadsDirectory, 0775, true);
-        }
 
         foreach ($uploadedImages as $uploadedImage) {
             $uploadedImageSize = (int) $uploadedImage->getSize();

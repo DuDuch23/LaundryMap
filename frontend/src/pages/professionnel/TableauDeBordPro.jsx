@@ -153,7 +153,7 @@ export default function TableauDeBordPro() {
       const payload = new FormData();
       payload.append('photoProfil', file);
 
-      const response = await fetch(`${API_BASE_URL}/api/professionnel/photo-profil`, {
+      const response = await fetch(`${API_BASE_URL}/api/profil/photo-profil`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -208,7 +208,7 @@ export default function TableauDeBordPro() {
         throw new Error('Vous devez être connecté');
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/professionnel/photo-profil`, {
+      const response = await fetch(`${API_BASE_URL}/api/profil/photo-profil`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
