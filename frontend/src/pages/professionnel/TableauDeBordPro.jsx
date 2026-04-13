@@ -14,7 +14,7 @@ const statusLabels = {
   'Refusée': 'Refusée',
 };
 
-const fallbackLaverieImage = `${API_BASE_URL}/uploads/laveries/01-lave-linge-blanc-1.jpg`;
+const fallbackLaverieImage = `${API_BASE_URL}/uploads/laveries/default-laundry.jpg`;
 
 function MessageCircleIcon({ className = '' }) {
   return (
@@ -318,7 +318,7 @@ export default function TableauDeBordPro() {
         </div>
       )}
 
-      <main className="flex-1">
+      <main className="flex-1 px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-[1280px] bg-gray-50 pb-16">
           {/* Section profil */}
           <section className="overflow-hidden rounded-[28px] bg-gradient-to-b from-cyan-500 to-cyan-600 text-white shadow-md">

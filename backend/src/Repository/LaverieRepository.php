@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Laverie;
+use App\Entity\Professionnel;
 use App\Enum\StatutLaverieEnum;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
@@ -59,5 +60,72 @@ class LaverieRepository extends ServiceEntityRepository
             ->setParameter('statut', StatutLaverieEnum::STATUT_EN_ATTENTE)
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+    /**
+     * @return Laverie[]
+     */
+    public function findByProfessionnel(Professionnel $professionnel): array
+    {
+        return $this->createQueryBuilder('l')
+            ->innerJoin('l.professionnel', 'p')
+            ->where('p = :professionnel')
+            ->andWhere('l.supprimee_le IS NULL')
+            ->setParameter('professionnel', $professionnel)
+            ->orderBy('l.dateModification', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findOneForProfessionnel(int $id, Professionnel $professionnel): ?Laverie
+    {
+        return $this->createQueryBuilder('l')
+            ->innerJoin('l.professionnel', 'p')
+            ->where('l.id = :id')
+            ->andWhere('p = :professionnel')
+            ->andWhere('l.supprimee_le IS NULL')
+            ->setParameter('id', $id)
+            ->setParameter('professionnel', $professionnel)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function countByProfessionnelAndStatut(Professionnel $professionnel): array
+    {
+        $rows = $this->createQueryBuilder('l')
+            ->select('l.statut AS statut, COUNT(l.id) AS total')
+            ->innerJoin('l.professionnel', 'p')
+            ->where('p = :professionnel')
+            ->andWhere('l.supprimee_le IS NULL')
+            ->groupBy('l.statut')
+            ->setParameter('professionnel', $professionnel)
+            ->getQuery()
+            ->getArrayResult();
+
+        $stats = [
+            'total' => 0,
+            'validees' => 0,
+            'en_attente' => 0,
+            'refusees' => 0,
+        ];
+
+        foreach ($rows as $row) {
+            $count = (int) ($row['total'] ?? 0);
+            $stats['total'] += $count;
+
+            $statut = $row['statut'] instanceof StatutLaverieEnum
+                ? $row['statut']->value
+                : (string) $row['statut'];
+
+            if ($statut === StatutLaverieEnum::STATUT_VALIDEE->value) {
+                $stats['validees'] += $count;
+            } elseif ($statut === StatutLaverieEnum::STATUT_EN_ATTENTE->value) {
+                $stats['en_attente'] += $count;
+            } elseif ($statut === StatutLaverieEnum::STATUT_REFUSEE->value) {
+                $stats['refusees'] += $count;
+            }
+        }
+
+        return $stats;
     }
 }

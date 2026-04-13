@@ -3,21 +3,192 @@
 namespace App\Controller\Api;
 
 use App\Entity\Langue;
+use App\Entity\Media;
 use App\Entity\Utilisateur;
 use App\Entity\UtilisateurPreference;
 use App\Enum\StatutUtilisateurEnum;
 use App\Enum\ThemePreferenceEnum;
 use App\Repository\LangueRepository;
+use App\Entity\Professionnel;
+use App\Enum\StatutProfessionnelEnum;
+use App\Repository\ProfessionnelRepository;
+use App\Service\Professionnel\ProfessionnelLaverieFormatterService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 class ApiProfilController extends AbstractController
 {
+    protected function getValidatedProfessionnel(ProfessionnelRepository $professionnelRepository): Professionnel|JsonResponse
+    {
+        $user = $this->getUser();
+
+        if (!$user instanceof Utilisateur) {
+            return $this->json(['erreur' => 'Utilisateur non authentifié'], 401);
+        }
+
+        $professionnel = $professionnelRepository->findOneByUtilisateur($user);
+
+        if (!$professionnel) {
+            return $this->json(['erreur' => 'Professionnel non trouvé'], 404);
+        }
+
+        if ($professionnel->getStatut()->value !== StatutProfessionnelEnum::STATUT_VALIDE->value) {
+            return $this->json(['erreur' => 'Compte professionnel non validé'], 403);
+        }
+
+        return $professionnel;
+    }
+
+    #[Route('/api/profil/photo-profil', name: 'api_profil_photo_upload', methods: ['POST'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function uploadPhotoProfil(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        SluggerInterface $slugger,
+        ProfessionnelRepository $professionnelRepository,
+        ProfessionnelLaverieFormatterService $formatter,
+    ): JsonResponse {
+        $utilisateur = $this->getUser();
+
+        if (!$utilisateur instanceof Utilisateur) {
+            return $this->json(['erreur' => 'Utilisateur non authentifié'], 401);
+        }
+
+        $professionnel = $professionnelRepository->findOneByUtilisateur($utilisateur);
+        if (!$professionnel) {
+            return $this->json(['erreur' => 'Aucun profil professionnel lié à ce compte'], 403);
+        }
+
+        $photo = $request->files->get('photoProfil');
+        if (!$photo instanceof UploadedFile) {
+            return $this->json(['erreur' => 'Aucun fichier fourni'], 400);
+        }
+
+        $photoSize = (int) $photo->getSize();
+        if ($photoSize > 5 * 1024 * 1024) {
+            return $this->json(['erreur' => 'La photo de profil doit faire au maximum 5 Mo'], 400);
+        }
+
+        $mimeType = strtolower((string) $photo->getMimeType());
+        $clientExtension = strtolower((string) $photo->getClientOriginalExtension());
+        $allowedMimeTypes = [
+            'image/png',
+            'image/x-png',
+            'image/jpeg',
+            'image/jpg',
+            'image/webp',
+            'image/gif',
+        ];
+        $allowedExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
+
+        $isAllowedByMime = in_array($mimeType, $allowedMimeTypes, true);
+        $isAllowedByGenericMimeWithExtension = $mimeType === 'application/octet-stream'
+            && in_array($clientExtension, $allowedExtensions, true);
+
+        if (!$isAllowedByMime && !$isAllowedByGenericMimeWithExtension) {
+            return $this->json(['erreur' => 'Format de photo non supporté'], 400);
+        }
+
+        $normalizedMimeByExtension = [
+            'png' => 'image/png',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'webp' => 'image/webp',
+            'gif' => 'image/gif',
+        ];
+
+        $resolvedMimeType = $mimeType;
+        if ($isAllowedByGenericMimeWithExtension) {
+            $resolvedMimeType = $normalizedMimeByExtension[$clientExtension] ?? 'image/png';
+        }
+
+        $uploadsDirectory = $this->getParameter('kernel.project_dir') . '/public/uploads/professionnels';
+        if (!is_dir($uploadsDirectory)) {
+            mkdir($uploadsDirectory, 0775, true);
+        }
+
+        $originalFileName = pathinfo($photo->getClientOriginalName(), PATHINFO_FILENAME);
+        $safeFileName = strtolower((string) $slugger->slug($originalFileName));
+        $guessedExtension = strtolower((string) $photo->guessExtension());
+        $extension = $guessedExtension !== '' && $guessedExtension !== 'bin'
+            ? $guessedExtension
+            : ($clientExtension !== '' ? $clientExtension : 'bin');
+        $storedFileName = $safeFileName . '-' . uniqid('', true) . '.' . $extension;
+
+        $photo->move($uploadsDirectory, $storedFileName);
+
+        $media = new Media();
+        $media->setEmplacement('/uploads/professionnels/' . $storedFileName);
+        $media->setNomOriginel($photo->getClientOriginalName());
+        $media->setPoids($photoSize);
+        $media->setMimeType($resolvedMimeType);
+        $entityManager->persist($media);
+
+        $anciennePhoto = $professionnel->getPhotoProfil();
+        $professionnel->setPhotoProfil($media);
+        $entityManager->flush();
+
+        if ($anciennePhoto && $formatter->isProjectManagedMediaPath($anciennePhoto->getEmplacement())) {
+            $absoluteOldPath = $this->getParameter('kernel.project_dir') . '/public' . $anciennePhoto->getEmplacement();
+            if (is_string($absoluteOldPath) && file_exists($absoluteOldPath)) {
+                @unlink($absoluteOldPath);
+            }
+            $entityManager->remove($anciennePhoto);
+            $entityManager->flush();
+        }
+
+        return $this->json([
+            'message' => 'Photo de profil mise à jour avec succès',
+            'photoProfil' => $formatter->toPublicMediaUrl($media->getEmplacement(), $request),
+        ], 200);
+    }
+
+    #[Route('/api/profil/photo-profil', name: 'api_profil_photo_delete', methods: ['DELETE'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function deletePhotoProfil(
+        EntityManagerInterface $entityManager,
+        ProfessionnelRepository $professionnelRepository,
+        ProfessionnelLaverieFormatterService $formatter,
+    ): JsonResponse {
+        $utilisateur = $this->getUser();
+
+        if (!$utilisateur instanceof Utilisateur) {
+            return $this->json(['erreur' => 'Utilisateur non authentifié'], 401);
+        }
+
+        $professionnel = $professionnelRepository->findOneByUtilisateur($utilisateur);
+        if (!$professionnel) {
+            return $this->json(['erreur' => 'Aucun profil professionnel lié à ce compte'], 403);
+        }
+
+        $photo = $professionnel->getPhotoProfil();
+        if (!$photo) {
+            return $this->json(['message' => 'Aucune photo de profil à supprimer'], 200);
+        }
+
+        $professionnel->setPhotoProfil(null);
+        $entityManager->flush();
+
+        if ($formatter->isProjectManagedMediaPath($photo->getEmplacement())) {
+            $absolutePath = $this->getParameter('kernel.project_dir') . '/public' . $photo->getEmplacement();
+            if (is_string($absolutePath) && file_exists($absolutePath)) {
+                @unlink($absolutePath);
+            }
+        }
+
+        $entityManager->remove($photo);
+        $entityManager->flush();
+
+        return $this->json(['message' => 'Photo de profil supprimée avec succès'], 200);
+    }
+
     #[Route('/api/profil', name: 'api_profil', methods: ['GET'])]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function getProfil(): JsonResponse
