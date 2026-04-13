@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Controller\Api;
+namespace App\Controller\Api\Professionnel;
 
+use App\Controller\Api\ApiProfilController;
 use App\Repository\LaverieRepository;
 use App\Repository\ProfessionnelRepository;
 use App\Service\Professionnel\ProfessionnelLaverieFormatterService;
