@@ -19,9 +19,11 @@ const DetailLaverie = React.lazy(() => import('./pages/administration/DetailLave
 const EmailVerification = React.lazy(() => import('./pages/EmailVerification'));
 const AjoutLaverie = React.lazy(() => import('./pages/AjoutLaverie/AjoutLaverie'));
 const MesLaveries = React.lazy(() => import('./pages/MesLaveries/MesLaveries'));
+const MesFavoris = React.lazy(() => import('./pages/MesFavoris'));
 const TableauDeBordPro = React.lazy(() => import('./pages/professionnel/TableauDeBordPro'));
 const ModifierLaveriePro = React.lazy(() => import('./pages/professionnel/ModifierLaveriePro'));
 const ProRoute = React.lazy(() => import('./routes/ProRoute'));
+const UserRoute = React.lazy(() => import('./routes/UserRoute'));
 const token = localStorage.getItem('token');
 
 function AuthRoute({ children }) {
@@ -94,6 +96,9 @@ function App() {
               <Route path="/email-verifie" element={<EmailVerification />} />
               <Route path="/nouvelle-laverie" element={<AjoutLaverie />} />
               <Route path="/mes-laveries" element={<MesLaveries />} />
+              <Route element={<UserRoute />}>
+                <Route path="/mes-favoris" element={<MesFavoris />} />
+              </Route>
 
             </Route>
 
