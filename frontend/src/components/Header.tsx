@@ -44,6 +44,10 @@ export default function Header() {
     const isPro = isAuthenticated
         ? getRolesFromToken(localStorage.getItem('token') || '').some((r) => r.includes('PROFESSIONNEL'))
         : false;
+    const isAdmin = isAuthenticated
+        ? getRolesFromToken(localStorage.getItem('token') || '').some((r) => r.includes('ADMIN'))
+        : false;
+    const isStandardUser = isAuthenticated && !isPro && !isAdmin;
 
     const initiales = profil
         ? `${(profil.prenom ?? '').charAt(0)}${(profil.nom ?? '').charAt(0)}`.trim().toUpperCase() || 'U'
@@ -88,6 +92,7 @@ export default function Header() {
                                         <li><NavLink to="/mes-laveries" className={navLinkClass}>Mes laveries</NavLink></li>
                                     </>
                                 )}
+                                {isStandardUser && <li><NavLink to="/mes-favoris" className={navLinkClass}>Mes favoris</NavLink></li>}
                                 <li><NavLink to="/profil" className={navLinkClass}>Profil</NavLink></li>
                                 <li>
                                     <button type="button" onClick={handleLogout} className="px-4 py-2 rounded-lg text-sm font-semibold text-red-500 bg-white cursor-pointer">
@@ -172,6 +177,11 @@ export default function Header() {
                                                     <NavLink to="/mes-laveries" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>Mes laveries</NavLink>
                                                 </li>
                                             </>
+                                        )}
+                                        {isStandardUser && (
+                                            <li className="border-b border-gray-100">
+                                                <NavLink to="/mes-favoris" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>Mes favoris</NavLink>
+                                            </li>
                                         )}
                                         <li className="border-b border-gray-100">
                                             <NavLink to="/profil" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>Profil</NavLink>

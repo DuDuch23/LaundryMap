@@ -4,6 +4,8 @@ namespace App\Controller\Api;
 
 use App\Entity\Langue;
 use App\Entity\Media;
+use App\Entity\Laverie;
+use App\Entity\LaverieFavori;
 use App\Entity\Utilisateur;
 use App\Entity\UtilisateurPreference;
 use App\Enum\StatutUtilisateurEnum;
@@ -187,6 +189,87 @@ class ApiProfilController extends AbstractController
         $entityManager->flush();
 
         return $this->json(['message' => 'Photo de profil supprimée avec succès'], 200);
+    }
+    
+    #[Route('/api/profil/favoris', name: 'api_profil_favoris', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
+    public function getFavoris(Request $request): JsonResponse
+    {
+        $utilisateur = $this->getUser();
+
+        if (!$utilisateur instanceof Utilisateur) {
+            return $this->json(['message' => 'Utilisateur non authentifié.'], 401);
+        }
+
+        if ($utilisateur->isProfessionnel()) {
+            return $this->json(['message' => 'Accès réservé aux utilisateurs non professionnels.'], 403);
+        }
+
+        $favoris = $utilisateur
+            ->getFavoris()
+            ->filter(fn (LaverieFavori $favori) => $favori->getLaverie()->getSupprimee_le() === null)
+            ->map(function (LaverieFavori $favori) use ($request): array {
+                $laverie = $favori->getLaverie();
+                $logo = $laverie->getLogo();
+                $logoEmplacement = $logo?->getEmplacement();
+                $image = is_string($logoEmplacement) && str_starts_with($logoEmplacement, '/uploads/')
+                    ? $request->getSchemeAndHttpHost() . $logoEmplacement
+                    : null;
+
+                return [
+                    'id' => $laverie->getId(),
+                    'nom' => $laverie->getNomEtablissement(),
+                    'adresse' => $laverie->getAdresse()->getAdresse(),
+                    'codePostal' => $laverie->getAdresse()->getCodePostal(),
+                    'ville' => $laverie->getAdresse()->getVille(),
+                    'statut' => $laverie->getStatut()->value,
+                    'description' => $laverie->getDescription(),
+                    'dateAjout' => $laverie->getDateAjout()?->format('d/m/Y'),
+                    'dateModification' => $laverie->getDateModification()?->format('d/m/Y'),
+                    'image' => $image,
+                    'imageAlt' => $laverie->getNomEtablissement(),
+                ];
+            })
+            ->toArray();
+
+        return $this->json([
+            'favoris' => $favoris,
+            'total' => count($favoris),
+        ]);
+    }
+
+    #[Route('/api/profil/favoris/{laverieId}', name: 'api_profil_favoris_delete', methods: ['DELETE'])]
+    #[IsGranted('ROLE_USER')]
+    public function deleteFavori(int $laverieId, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $utilisateur = $this->getUser();
+
+        if (!$utilisateur instanceof Utilisateur) {
+            return $this->json(['message' => 'Utilisateur non authentifié.'], 401);
+        }
+
+        if ($utilisateur->isProfessionnel()) {
+            return $this->json(['message' => 'Accès réservé aux utilisateurs non professionnels.'], 403);
+        }
+
+        $laverie = $entityManager->getRepository(Laverie::class)->find($laverieId);
+        if (!$laverie instanceof Laverie) {
+            return $this->json(['message' => 'Laverie introuvable.'], 404);
+        }
+
+        $favori = $entityManager->getRepository(LaverieFavori::class)->findOneBy([
+            'utilisateur' => $utilisateur,
+            'laverie' => $laverie,
+        ]);
+
+        if (!$favori instanceof LaverieFavori) {
+            return $this->json(['message' => 'Ce favori est introuvable.'], 404);
+        }
+
+        $entityManager->remove($favori);
+        $entityManager->flush();
+
+        return $this->json(['message' => 'Favori supprimé avec succès.'], 200);
     }
 
     #[Route('/api/profil', name: 'api_profil', methods: ['GET'])]
