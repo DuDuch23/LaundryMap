@@ -18,6 +18,11 @@ class UtilisateurRepository extends ServiceEntityRepository
         parent::__construct($registry, Utilisateur::class);
     }
 
+    public function findOneByEmail(string $email): ?Utilisateur
+    {
+        return $this->findOneBy(['email' => $email]);
+    }
+
     public function createFilteredQueryBuilder(
         ?string $statut = null,
         ?string $type = null,

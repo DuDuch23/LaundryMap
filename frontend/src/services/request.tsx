@@ -356,6 +356,25 @@ interface MesLaveriesData {
     laveries: LaverieResume[];
 }
 
+export interface FavoriLaverie {
+    id: number;
+    nom: string;
+    adresse: string;
+    codePostal: number;
+    ville: string;
+    statut: string;
+    description: string | null;
+    dateAjout: string | null;
+    dateModification: string | null;
+    image: string | null;
+    imageAlt: string | null;
+}
+
+interface MesFavorisData {
+    favoris: FavoriLaverie[];
+    total: number;
+}
+
 export async function getMesLaveries(): Promise<MesLaveriesData> {
     const token = localStorage.getItem('token');
 
@@ -380,4 +399,51 @@ export async function getMesLaveries(): Promise<MesLaveriesData> {
     const data = await response.json();
     console.log("Laveries récupérées:", data);
     return data as MesLaveriesData;
+}
+
+export async function getMesFavoris(): Promise<MesFavorisData> {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+        throw new Error('Aucun token de connexion trouvé.');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/profil/favoris`, {
+        method: 'GET',
+        headers: {
+            accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        const error: any = new Error('Impossible de récupérer vos favoris.');
+        error.status = response.status;
+        throw error;
+    }
+
+    const data = await response.json();
+    return data as MesFavorisData;
+}
+
+export async function supprimerFavori(laverieId: number): Promise<void> {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+        throw new Error('Aucun token de connexion trouvé.');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/profil/favoris/${laverieId}`, {
+        method: 'DELETE',
+        headers: {
+            accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        const error: any = new Error('Impossible de supprimer ce favori.');
+        error.status = response.status;
+        throw error;
+    }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Repository;
 
+use App\Entity\Laverie;
+use App\Entity\Media;
 use App\Entity\LaverieMedia;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -14,6 +16,22 @@ class LaverieMediaRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, LaverieMedia::class);
+    }
+
+    public function findOneByLaverieAndMedia(Laverie $laverie, Media $media): ?LaverieMedia
+    {
+        return $this->findOneBy([
+            'laverie' => $laverie,
+            'media' => $media,
+        ]);
+    }
+
+    /**
+     * @return LaverieMedia[]
+     */
+    public function findByLaverie(Laverie $laverie): array
+    {
+        return $this->findBy(['laverie' => $laverie]);
     }
 
     //    /**

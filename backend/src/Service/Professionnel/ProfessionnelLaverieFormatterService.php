@@ -1,0 +1,168 @@
+<?php
+
+namespace App\Service\Professionnel;
+
+use App\Entity\Laverie;
+use App\Enum\JourEnum;
+use App\Repository\LaverieEquipementRepository;
+use App\Repository\LaverieNoteRepository;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\Request;
+
+class ProfessionnelLaverieFormatterService
+{
+    public function __construct(
+        private readonly LaverieNoteRepository $laverieNoteRepository,
+        private readonly LaverieEquipementRepository $laverieEquipementRepository,
+    ) {
+    }
+
+    public function toPublicMediaUrl(string $emplacement, Request $request): string
+    {
+        if (str_starts_with($emplacement, 'http://') || str_starts_with($emplacement, 'https://')) {
+            return $emplacement;
+        }
+
+        if (str_starts_with($emplacement, '/')) {
+            return $request->getSchemeAndHttpHost() . $emplacement;
+        }
+
+        return $request->getSchemeAndHttpHost() . '/' . ltrim($emplacement, '/');
+    }
+
+    public function isProjectManagedMediaPath(string $emplacement): bool
+    {
+        return str_starts_with($emplacement, '/uploads/');
+    }
+
+    public function buildHorairesResponse(Laverie $laverie): array
+    {
+        $orderedDays = [
+            JourEnum::LUNDI,
+            JourEnum::MARDI,
+            JourEnum::MERCREDI,
+            JourEnum::JEUDI,
+            JourEnum::VENDREDI,
+            JourEnum::SAMEDI,
+            JourEnum::DIMANCHE,
+        ];
+
+        $fermeturesByDay = [];
+        foreach ($laverie->getFermetures() as $fermeture) {
+            $fermeturesByDay[$fermeture->getJour()->value] = $fermeture;
+        }
+
+        $horaires = [];
+        foreach ($orderedDays as $day) {
+            $fermeture = $fermeturesByDay[$day->value] ?? null;
+            $isClosedAllDay = $fermeture
+                && $fermeture->getHeureDebut()->format('H:i:s') === '00:00:00'
+                && $fermeture->getHeureFin()->format('H:i:s') === '23:59:59';
+
+            $horaires[] = [
+                'jour' => $day->value,
+                'debut' => $isClosedAllDay ? '10:00' : ($fermeture ? $fermeture->getHeureDebut()->format('H:i') : '10:00'),
+                'fin' => $isClosedAllDay ? '22:00' : ($fermeture ? $fermeture->getHeureFin()->format('H:i') : '22:00'),
+                'ferme' => $isClosedAllDay,
+            ];
+        }
+
+        return $horaires;
+    }
+
+    public function buildGalleryResponse(Laverie $laverie, Request $request): array
+    {
+        $gallery = [];
+
+        foreach ($laverie->getMedias() as $laverieMedia) {
+            $media = $laverieMedia->getMedia();
+
+            if (!$media) {
+                continue;
+            }
+
+            if (!$this->isProjectManagedMediaPath($media->getEmplacement())) {
+                continue;
+            }
+
+            $gallery[] = [
+                'id' => $media->getId(),
+                'image' => $this->toPublicMediaUrl($media->getEmplacement(), $request),
+                'alt' => $laverie->getNomEtablissement(),
+            ];
+        }
+
+        return $gallery;
+    }
+
+    public function buildEquipementsResponse(Laverie $laverie): array
+    {
+        $equipements = [];
+
+        $equipementsDb = $this->laverieEquipementRepository->findByLaverie($laverie);
+
+        foreach ($equipementsDb as $equipement) {
+            $equipements[] = [
+                'id' => $equipement->getId(),
+                'equipementReference' => $equipement->getEquipementReference(),
+                'nom' => $equipement->getNom(),
+                'type' => $equipement->getType(),
+                'capacite' => $equipement->getCapacite(),
+                'tarif' => $equipement->getTarif(),
+                'duree' => $equipement->getDuree(),
+            ];
+        }
+
+        return $equipements;
+    }
+
+    public function countLaverieCommentaires(Laverie $laverie): int
+    {
+        return $this->laverieNoteRepository->countCommentairesByLaverie($laverie);
+    }
+
+    public function getLaverieNoteMoyenne(Laverie $laverie): ?float
+    {
+        return $this->laverieNoteRepository->getMoyenneByLaverie($laverie);
+    }
+
+    /**
+     * @return UploadedFile[]
+     */
+    public function extractUploadedImages(Request $request): array
+    {
+        $uploaded = [];
+        $seen = [];
+
+        $addFiles = function (mixed $candidate) use (&$uploaded, &$seen, &$addFiles): void {
+            if ($candidate instanceof UploadedFile) {
+                $id = spl_object_id($candidate);
+                if (!isset($seen[$id])) {
+                    $seen[$id] = true;
+                    $uploaded[] = $candidate;
+                }
+                return;
+            }
+
+            if (is_array($candidate)) {
+                foreach ($candidate as $nested) {
+                    $addFiles($nested);
+                }
+            }
+        };
+
+        $allFiles = $request->files->all();
+        $addFiles($allFiles['images'] ?? null);
+        $addFiles($allFiles['images[]'] ?? null);
+        $addFiles($allFiles['gallery'] ?? null);
+        $addFiles($allFiles['gallery[]'] ?? null);
+        $addFiles($allFiles['logo'] ?? null);
+
+        return $uploaded;
+    }
+
+    public function isValidHourFormat(string $value): bool
+    {
+        return preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $value) === 1;
+    }
+}

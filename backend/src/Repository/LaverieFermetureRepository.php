@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Laverie;
 use App\Entity\LaverieFermeture;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -14,6 +15,21 @@ class LaverieFermetureRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, LaverieFermeture::class);
+    }
+
+    /**
+     * @return LaverieFermeture[]
+     */
+    public function findByLaverie(Laverie $laverie): array
+    {
+        return $this->findBy(['laverie' => $laverie]);
+    }
+
+    public function deleteByLaverie(Laverie $laverie): void
+    {
+        foreach ($this->findByLaverie($laverie) as $fermeture) {
+            $this->getEntityManager()->remove($fermeture);
+        }
     }
 
     //    /**

@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Laverie;
 use App\Entity\LaverieNote;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -14,6 +15,36 @@ class LaverieNoteRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, LaverieNote::class);
+    }
+
+    public function countCommentairesByLaverie(Laverie $laverie): int
+    {
+        return (int) $this->createQueryBuilder('n')
+            ->select('COUNT(n.id)')
+            ->where('n.laverie = :laverie')
+            ->andWhere('n.commentaire IS NOT NULL')
+            ->andWhere('n.commentaire <> :empty')
+            ->setParameter('laverie', $laverie)
+            ->setParameter('empty', '')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function getMoyenneByLaverie(Laverie $laverie): ?float
+    {
+        $result = $this->createQueryBuilder('n')
+            ->select('AVG(n.note)')
+            ->where('n.laverie = :laverie')
+            ->andWhere('n.note IS NOT NULL')
+            ->setParameter('laverie', $laverie)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        if ($result === null) {
+            return null;
+        }
+
+        return round((float) $result, 1);
     }
 
     //    /**

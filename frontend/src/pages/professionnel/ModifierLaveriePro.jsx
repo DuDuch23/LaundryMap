@@ -286,8 +286,8 @@ export default function ModifierLaveriePro() {
         </div>
       )}
 
-      <main className="flex-1">
-        <div className="mx-auto w-full max-w-md px-2 pb-8">
+      <main className="flex-1 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full max-w-md pb-8">
           <div className="mb-4 flex items-center justify-between">
             <h1 className="text-lg font-bold text-slate-900">Modifier ma laverie</h1>
             <Link

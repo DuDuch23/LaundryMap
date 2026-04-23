@@ -5,6 +5,7 @@ namespace App\Controller\Api;
 use App\Entity\Utilisateur;
 use App\Entity\EmailVerificationToken;
 use App\Enum\StatutUtilisateurEnum;
+use App\Repository\UtilisateurRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
