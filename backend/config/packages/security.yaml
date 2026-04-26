@@ -48,6 +48,10 @@ security:
         - { path: ^/api/langues, roles: PUBLIC_ACCESS }
         - { path: ^/api/verify-email, roles: PUBLIC_ACCESS }
         - { path: ^/api/resend-verification, roles: PUBLIC_ACCESS }
+        - { path: ^/api/laveries/recherche, roles: PUBLIC_ACCESS }
+        - { path: ^/api/laveries/geocode, roles: PUBLIC_ACCESS }
+        - { path: ^/api/services, roles: PUBLIC_ACCESS }
+        - { path: ^/api/methodes-paiement, roles: PUBLIC_ACCESS }
         - { path: ^/api/professionnel, roles: ROLE_PROFESSIONNEL }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
