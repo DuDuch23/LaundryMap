@@ -161,11 +161,24 @@ class ApiGoogleOAuthController extends AbstractController
 
                 $this->entityManager->persist($utilisateur);
             } else {
-                if ($utilisateur->getStatut() !== StatutUtilisateurEnum::STATUT_VALIDE) {
+                $statut = $utilisateur->getStatut();
+
+                if (in_array($statut, [
+                    StatutUtilisateurEnum::STATUT_REFUSE,
+                    StatutUtilisateurEnum::STATUT_BANNI,
+                    StatutUtilisateurEnum::STATUT_SUPPRIME,
+                ], true)) {
                     return $this->redirectWithClearedOauthState(
                         $this->buildFrontendErrorUrl('compte_non_valide', $request),
                         $request
                     );
+                }
+
+                // Compte créé classiquement mais email non vérifié : Google ayant
+                // confirmé la propriété de l'adresse, on valide le compte et on
+                // lie l'identifiant Google pour permettre la connexion SSO.
+                if ($statut === StatutUtilisateurEnum::STATUT_EN_ATTENTE) {
+                    $utilisateur->setStatut(StatutUtilisateurEnum::STATUT_VALIDE);
                 }
 
                 if (!$utilisateur->getOauthId()) {
