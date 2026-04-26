@@ -1,1 +1,0 @@
-import{c as o,j as t}from"./index-DCSBO5eW.js";const a=()=>{const r=o.c(1);let e;return r[0]===Symbol.for("react.memo_cache_sentinel")?(e=t.jsx("div",{children:t.jsx("h1",{children:"Tableau de bord"})}),r[0]=e):e=r[0],e};export{a as default};
