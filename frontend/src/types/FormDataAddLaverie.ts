@@ -14,6 +14,6 @@ export interface FormDataAddLaverie {
     horaires: Record<string, HorairesJour>;
     machines: Machine[];
     equipements: string[];
-    services: string[];
-    paiements: string[];
+    serviceIds: number[],
+    paiementIds: number[],
 }

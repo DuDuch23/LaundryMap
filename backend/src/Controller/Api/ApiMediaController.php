@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class ApiMediaController extends AbstractController
 {
@@ -171,7 +172,7 @@ class ApiMediaController extends AbstractController
         return $laverie;
     }
 
-    private function validerFichier(\Symfony\Component\HttpFoundation\File\UploadedFile $file): ?string
+    private function validerFichier(UploadedFile $file): ?string
     {
         if (!in_array($file->getMimeType(), self::TYPES_AUTORISES)) {
             return 'Format non autorisé. JPEG, PNG ou WebP uniquement.';
@@ -183,7 +184,7 @@ class ApiMediaController extends AbstractController
     }
 
     private function creerMedia(
-        \Symfony\Component\HttpFoundation\File\UploadedFile $file,
+        UploadedFile $file,
         SluggerInterface $slugger,
         EntityManagerInterface $em,
     ): Media {
@@ -193,13 +194,11 @@ class ApiMediaController extends AbstractController
 
         $nomSafe = $slugger->slug(pathinfo($nomOriginel, PATHINFO_FILENAME));
         $nomFichier = $nomSafe . '-' . uniqid() . '.' . $file->guessExtension();
-        $emplacement = $this->uploadsDirectory . '/' . $nomFichier;
 
-        // Le fichier tmp est supprimé après cette ligne
         $file->move($this->uploadsDirectory, $nomFichier);
 
         $media = new Media();
-        $media->setEmplacement($emplacement);
+        $media->setEmplacement($this->uploadsPublicPath . '/' . $nomFichier);
         $media->setNomOriginel($nomOriginel);
         $media->setPoids($taille ?? 0);
         $media->setMimeType($mimeType ?? 'image/jpeg');
@@ -208,10 +207,11 @@ class ApiMediaController extends AbstractController
         return $media;
     }
 
-    private function supprimerFichier(string $emplacement): void
+    private function supprimerFichier(string $emplacementRelatif): void
     {
-        if (file_exists($emplacement)) {
-            unlink($emplacement);
+        $cheminAbsolu = $this->uploadsDirectory . '/' . basename($emplacementRelatif);
+        if (file_exists($cheminAbsolu)) {
+            unlink($cheminAbsolu);
         }
     }
 
@@ -219,7 +219,7 @@ class ApiMediaController extends AbstractController
     {
         return [
             'id' => $media->getId(),
-            'url' => $this->uploadsPublicPath . '/' . basename($media->getEmplacement()),
+            'url' => $media->getEmplacement(),
             'nomOriginel' => $media->getNomOriginel(),
             'mimeType' => $media->getMimeType(),
             'poids' => $media->getPoids(),

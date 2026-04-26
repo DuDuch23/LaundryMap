@@ -1,5 +1,15 @@
 import axios from 'axios';
 import API_BASE_URL from "./api";
+import type {
+    GeoSuggestion,
+    MethodePaiementOption,
+    RechercheParams,
+    RechercheResult,
+    ServiceOption,
+} from '../types/Laverie';
+ 
+export type { GeoSuggestion, MethodePaiementOption, RechercheParams, RechercheResult, ServiceOption };
+
 
 const publicApiEndpoints = [
     '/api/inscription-utilisateur',
@@ -446,4 +456,51 @@ export async function supprimerFavori(laverieId: number): Promise<void> {
         error.status = response.status;
         throw error;
     }
+}
+
+export async function getServices(): Promise<ServiceOption[]> {
+    const res = await fetch(`${API_BASE_URL}/api/services`, {
+        headers: { accept: 'application/json' },
+    });
+    if (!res.ok) throw new Error(`Erreur chargement services (HTTP ${res.status})`);
+    const data = await res.json();
+    return data.services as ServiceOption[];
+}
+ 
+export async function getMethodesPaiement(): Promise<MethodePaiementOption[]> {
+    const res = await fetch(`${API_BASE_URL}/api/methodes-paiement`, {
+        headers: { accept: 'application/json' },
+    });
+    if (!res.ok) throw new Error(`Erreur chargement méthodes de paiement (HTTP ${res.status})`);
+    const data = await res.json();
+    return data.methodes as MethodePaiementOption[];
+}
+ 
+export async function searchLaveries(params: RechercheParams): Promise<RechercheResult> {
+    const qs = new URLSearchParams();
+ 
+    if (params.lat !== undefined)        qs.set('lat',        String(params.lat));
+    if (params.lng !== undefined)        qs.set('lng',        String(params.lng));
+    if (params.q)                        qs.set('q',          params.q);
+    if (params.rayon)                    qs.set('rayon',      String(params.rayon));
+    if (params.horaire)                  qs.set('horaire',    params.horaire);
+    if (params.serviceIds?.length)       qs.set('serviceIds', params.serviceIds.join(','));
+    if (params.paiementIds?.length)      qs.set('paiementIds', params.paiementIds.join(','));
+ 
+    const res = await fetch(`${API_BASE_URL}/api/laveries/recherche?${qs}`, {
+        headers: { accept: 'application/json' },
+    });
+    if (!res.ok) throw new Error(`Erreur recherche laveries (HTTP ${res.status})`);
+    return res.json() as Promise<RechercheResult>;
+}
+ 
+export async function geocodeSuggestions(q: string): Promise<GeoSuggestion[]> {
+    if (!q || q.trim().length < 2) return [];
+    const res = await fetch(
+        `${API_BASE_URL}/api/laveries/geocode?q=${encodeURIComponent(q.trim())}`,
+        { headers: { accept: 'application/json' } },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.suggestions ?? []) as GeoSuggestion[];
 }

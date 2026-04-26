@@ -273,7 +273,13 @@ export default function TableauDeBordPro() {
   const initiales = `${prenom.charAt(0)}${nom.charAt(0)}`.toUpperCase() || 'U';
   const photoProfilUrl = professionnel?.photoProfil || null;
 
-  const getLaverieImage = (laverie) => laverie?.image || laverie?.logo?.image || fallbackLaverieImage;
+  const getImageUrl = (relativePath) => {
+    if (!relativePath) return fallbackLaverieImage;
+    if (relativePath.startsWith('http')) return relativePath;
+    return `${API_BASE_URL}${relativePath}`;
+  };
+
+  const getLaverieImage = (laverie) => getImageUrl(laverie?.image || laverie?.logo?.emplacement);
   const getLaverieImageAlt = (laverie) => laverie?.imageAlt || laverie?.logo?.alt || laverie?.nom || 'Laverie';
   const getCommentairesCount = (laverie) => Number(laverie?.commentairesCount ?? 0);
   const getNoteMoyenne = (laverie) => {
