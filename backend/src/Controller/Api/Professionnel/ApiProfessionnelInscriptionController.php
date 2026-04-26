@@ -46,7 +46,7 @@ class ApiProfessionnelInscriptionController extends AbstractController
             $existeUtilisateur = $utilisateurRepository->findOneByEmail((string) ($donnees['email'] ?? ''));
 
             if ($existeUtilisateur) {
-                $erreursFront['email'] = 'Cet email est déjà utilisé';
+                $erreursFront['email'] = 'ERROR_EMAIL_IS_USING';
             }
 
             if (empty($sirenOuSiret)) {
