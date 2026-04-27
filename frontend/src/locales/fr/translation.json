@@ -27,8 +27,7 @@
       "resultats_other": "{{count}} laveries trouvées",
       "a_proximite": "À proximité",
       "voir_tout": "Voir tout",
-      "utiliser_position": "Utiliser ma position",
-      "utiliser_position_desc": "Trouver automatiquement les laveries proches de chez vous",
+      "utiliser_position": "Me localiser",
       "geo_chargement": "Localisation en cours…"
     },
     "laverie_card": {

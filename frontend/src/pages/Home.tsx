@@ -122,17 +122,15 @@ export default function Home() {
                             onClick={requestGeolocation}
                             disabled={geoLoading}
                             aria-busy={geoLoading}
-                            className="mt-3 w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white border border-slate-200 shadow-sm hover:bg-[#14A8DE]/5 hover:border-[#14A8DE]/30 active:scale-[.99] transition-all text-left group disabled:opacity-60 disabled:cursor-wait"
+                            className="absolute -top-[90px] right-5 w-auto rounded-[30px] bg-black mt-3 flex items-center gap-3 px-4 py-3 border border-slate-200 shadow-sm hover:bg-[#14A8DE]/5 hover:border-[#14A8DE]/30 active:scale-[.99] transition-all text-left group disabled:opacity-60 disabled:cursor-wait"
                         >
                             {/* Icône */}
                             <span className="shrink-0 w-9 h-9 rounded-full bg-[#14A8DE]/10 flex items-center justify-center group-hover:bg-[#14A8DE]/20 transition-colors" aria-hidden="true">
                                 {geoLoading ? (
                                     <div className="w-4 h-4 border-2 border-[#14A8DE] border-t-transparent rounded-full animate-spin" />
                                 ) : (
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#14A8DE" strokeWidth="2" aria-hidden="true">
-                                        <circle cx="12" cy="12" r="3"/>
-                                        <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
-                                        <circle cx="12" cy="12" r="9"/>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                    <path d="M7.425 13.5L5.2875 8.2125L0 6.075V5.025L13.5 0L8.475 13.5H7.425ZM7.9125 10.725L10.95 2.55L2.775 5.5875L6.45 7.05L7.9125 10.725Z" fill="white"/>
                                     </svg>
                                 )}
                             </span>
@@ -142,11 +140,6 @@ export default function Home() {
                                 <span className="block text-sm font-semibold text-slate-800">
                                     {geoLoading ? t('main.home.geo_chargement') : t('main.home.utiliser_position')}
                                 </span>
-                                {!geoLoading && (
-                                    <span className="block text-xs text-slate-500 mt-0.5">
-                                        {t('main.home.utiliser_position_desc')}
-                                    </span>
-                                )}
                             </span>
                         </button>
                     )}
