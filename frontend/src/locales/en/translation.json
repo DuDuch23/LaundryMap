@@ -27,8 +27,7 @@
       "resultats_other": "{{count}} laundromats found",
       "a_proximite": "Nearby",
       "voir_tout": "See all",
-      "utiliser_position": "Use my location",
-      "utiliser_position_desc": "Automatically find laundromats near you",
+      "utiliser_position": "Locate me",
       "geo_chargement": "Locating…"
     },
     "laverie_card": {
