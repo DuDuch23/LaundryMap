@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router';
+import { useLocation, useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 
 import { useGeolocation }   from '../hooks/useGeolocation';
@@ -129,6 +129,10 @@ export default function Home() {
 
                 {/* Résultats */}
                 <div className="px-5 mt-6 pb-20">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2>À proximité</h2>
+                        <Link to="/laveries">Voir tout</Link>
+                    </div>
                     <LaverieGrid
                         laveries={laveries} loading={loading} searched={searched}
                         activeLaverieId={activeLaverieId} onCardClick={handleLaverieSelect}

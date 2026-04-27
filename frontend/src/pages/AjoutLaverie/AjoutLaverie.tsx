@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import API_BASE_URL from '../../services/api';
-import { getMethodesPaiement, getServices } from '../../services/request';
+import { geocodeSuggestions, getMethodesPaiement, getServices } from '../../services/request';
 import { EQUIPEMENTS_OPTIONS } from '../../constants/Laverie';
 import { FormDataAddLaverie } from '../../types/FormDataAddLaverie';
 import { HorairesJour } from '../../types/HorairesJour';
 import { Machine } from '../../types/Machine';
 import { WiLineCentrale } from '../../types/wiline/WiLineCentrale';
-import type { MethodePaiementOption, ServiceOption } from '../../types/Laverie';
+import type { GeoSuggestion, MethodePaiementOption, ServiceOption } from '../../types/Laverie';
 
 interface PhotoLocale {
     id: string;
@@ -99,6 +99,15 @@ export default function AjoutLaverie() {
 
     // ── Formulaire ────────────────────────────────────────────────────────────
     // serviceIds / paiementIds contiennent les IDs sélectionnés (pas les noms)
+    const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'found' | 'not_found'>('idle');
+
+    const [adresseQuery, setAdresseQuery]                   = useState('');
+    const [adresseSuggestions, setAdresseSuggestions]       = useState<GeoSuggestion[]>([]);
+    const [showAdresseSuggestions, setShowAdresseSuggestions] = useState(false);
+    const [adresseGeocoding, setAdresseGeocoding]           = useState(false);
+    const suggestTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const skipNextGeo   = useRef(false);
+
     const [form, setForm] = useState<FormDataAddLaverie>({
         nomEtablissement: '',
         contactEmail: '',
@@ -107,6 +116,8 @@ export default function AjoutLaverie() {
         codePostal: '',
         ville: '',
         pays: 'France',
+        latitude: null,
+        longitude: null,
         wiLineApiKey: '',
         wiLineCentraleId: null,
         horaires: defaultHoraires(),
@@ -116,9 +127,79 @@ export default function AjoutLaverie() {
         paiementIds: [],
     });
 
+    useEffect(() => {
+        if (skipNextGeo.current) {
+            skipNextGeo.current = false;
+            return;
+        }
+        const { rue, codePostal, ville, pays } = form;
+        if (!rue.trim() || !codePostal.trim() || !ville.trim()) {
+            setGeoStatus('idle');
+            return;
+        }
+        setGeoStatus('loading');
+        const timer = setTimeout(async () => {
+            try {
+                const params = new URLSearchParams({
+                    format: 'json',
+                    limit: '1',
+                    street: rue.trim(),
+                    postalcode: codePostal.trim(),
+                    city: ville.trim(),
+                    country: pays.trim() || 'France',
+                });
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
+                    headers: { 'Accept-Language': 'fr' },
+                });
+                const data = await res.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    setForm((f) => ({ ...f, latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) }));
+                    setGeoStatus('found');
+                } else {
+                    setForm((f) => ({ ...f, latitude: null, longitude: null }));
+                    setGeoStatus('not_found');
+                }
+            } catch {
+                setGeoStatus('not_found');
+            }
+        }, 800);
+        return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [form.rue, form.codePostal, form.ville, form.pays]);
+
     const set = (key: keyof FormDataAddLaverie, value: any) => {
         setForm((f) => ({ ...f, [key]: value }));
         setErrors((e) => ({ ...e, [key]: undefined }));
+    };
+
+    const handleAdresseInput = (v: string) => {
+        setAdresseQuery(v);
+        if (suggestTimer.current) clearTimeout(suggestTimer.current);
+        if (v.trim().length < 2) { setAdresseSuggestions([]); setShowAdresseSuggestions(false); return; }
+        suggestTimer.current = setTimeout(async () => {
+            setAdresseGeocoding(true);
+            const results = await geocodeSuggestions(v);
+            setAdresseSuggestions(results);
+            setShowAdresseSuggestions(results.length > 0);
+            setAdresseGeocoding(false);
+        }, 350);
+    };
+
+    const selectionnerAdresse = (s: GeoSuggestion) => {
+        skipNextGeo.current = true;
+        setAdresseQuery(s.label);
+        setShowAdresseSuggestions(false);
+        setForm((f) => ({
+            ...f,
+            rue:        s.rue        ?? '',
+            codePostal: s.codePostal ?? '',
+            ville:      s.ville      ?? '',
+            pays:       s.pays       ?? 'France',
+            latitude:   s.latitude,
+            longitude:  s.longitude,
+        }));
+        setGeoStatus('found');
+        setErrors((e) => ({ ...e, rue: undefined, codePostal: undefined, ville: undefined, pays: undefined }));
     };
 
     const toggleEquipement = (val: string) => {
@@ -315,11 +396,12 @@ export default function AjoutLaverie() {
                     codePostal:       form.codePostal,
                     ville:            form.ville,
                     pays:             form.pays,
+                    latitude:         form.latitude,
+                    longitude:        form.longitude,
                     wiLineCentraleId: form.wiLineCentraleId,
                     horaires:         form.horaires,
                     machines:         form.machines,
                     equipements:      form.equipements,
-                    // On envoie les IDs, pas les noms
                     serviceIds:       form.serviceIds,
                     paiementIds:      form.paiementIds,
                 }),
@@ -372,6 +454,54 @@ export default function AjoutLaverie() {
                     <Card>
                         <SectionTitle step={2} title="Adresse" subtitle="Champs obligatoires" />
                         <div className="grid grid-cols-1 gap-4">
+
+                            {/* Recherche autocomplete */}
+                            <div className="relative">
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Rechercher une adresse
+                                </label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                                    </span>
+                                    <input
+                                        type="text"
+                                        value={adresseQuery}
+                                        onChange={(e) => handleAdresseInput(e.target.value)}
+                                        onBlur={() => setTimeout(() => setShowAdresseSuggestions(false), 200)}
+                                        placeholder="Ex : 12 rue des Fleurs, Mulhouse…"
+                                        autoComplete="off"
+                                        className="w-full pl-8 pr-8 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:border-[#14A8DE] focus:bg-white focus:ring-2 focus:ring-[#14A8DE]/20 outline-none transition-all"
+                                    />
+                                    {adresseGeocoding && (
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                                            <div className="w-3.5 h-3.5 border-2 border-[#14A8DE] border-t-transparent rounded-full animate-spin" />
+                                        </span>
+                                    )}
+                                </div>
+                                {showAdresseSuggestions && adresseSuggestions.length > 0 && (
+                                    <ul className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
+                                        {adresseSuggestions.map((s, i) => {
+                                            const [principal, ...reste] = s.label.split(',');
+                                            return (
+                                                <li key={i}>
+                                                    <button
+                                                        type="button"
+                                                        onMouseDown={() => selectionnerAdresse(s)}
+                                                        className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
+                                                    >
+                                                        <span className="font-medium text-gray-800">{principal}</span>
+                                                        {reste.length > 0 && (
+                                                            <span className="text-gray-400 text-xs ml-2">{reste.join(',').trim()}</span>
+                                                        )}
+                                                    </button>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                )}
+                            </div>
+
                             <Field label="Rue" required error={errors.rue}>
                                 <input type="text" value={form.rue} onChange={(e) => set('rue', e.target.value)} placeholder="12 rue des Fleurs" className={inputClass(errors.rue)} />
                             </Field>
@@ -386,6 +516,29 @@ export default function AjoutLaverie() {
                             <Field label="Pays" required error={errors.pays}>
                                 <input type="text" value={form.pays} onChange={(e) => set('pays', e.target.value)} placeholder="France" className={inputClass(errors.pays)} />
                             </Field>
+
+                            {/* Statut géocodage */}
+                            {geoStatus === 'loading' && (
+                                <div className="flex items-center gap-2 text-xs text-gray-400">
+                                    <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                                    Recherche de la position…
+                                </div>
+                            )}
+                            {geoStatus === 'found' && form.latitude !== null && form.longitude !== null && (
+                                <div className="flex items-center gap-4 p-3 bg-green-50 border border-green-200 rounded-xl">
+                                    <svg className="w-4 h-4 text-green-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>
+                                    <span className="text-xs text-green-700 font-medium">Position géolocalisée</span>
+                                    <span className="ml-auto text-xs text-green-600 font-mono">
+                                        {form.latitude.toFixed(5)}, {form.longitude.toFixed(5)}
+                                    </span>
+                                </div>
+                            )}
+                            {geoStatus === 'not_found' && (
+                                <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-xl">
+                                    <svg className="w-4 h-4 text-orange-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                                    <span className="text-xs text-orange-700">Position introuvable — la laverie sera géolocalisée ultérieurement.</span>
+                                </div>
+                            )}
                         </div>
                     </Card>
 

@@ -95,9 +95,13 @@ class ApiRechercheController extends AbstractController
         if (!is_array($data)) return $this->json(['suggestions' => []]);
 
         return $this->json(['suggestions' => array_map(static fn ($item) => [
-            'label'     => $item['display_name'],
-            'latitude'  => (float) $item['lat'],
-            'longitude' => (float) $item['lon'],
+            'label'      => $item['display_name'],
+            'latitude'   => (float) $item['lat'],
+            'longitude'  => (float) $item['lon'],
+            'rue'        => trim(($item['address']['house_number'] ?? '') . ' ' . ($item['address']['road'] ?? '')),
+            'codePostal' => $item['address']['postcode'] ?? '',
+            'ville'      => $item['address']['city'] ?? $item['address']['town'] ?? $item['address']['village'] ?? $item['address']['municipality'] ?? '',
+            'pays'       => $item['address']['country'] ?? 'France',
         ], $data)]);
     }
 

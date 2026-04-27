@@ -14,6 +14,7 @@ class LaverieService
     #[ORM\JoinColumn(name: 'service_id', referencedColumnName: 'id', nullable: false)]
     private Service $service;
 
+    #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: Laverie::class, inversedBy: 'services')]
     #[ORM\JoinColumn(name: 'laverie_id', referencedColumnName: 'id', nullable: false)]
     private Laverie $laverie;

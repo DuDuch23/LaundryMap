@@ -59,7 +59,7 @@ export default function LaverieMap({
     const laveriesAvecCoords = laveries.filter((l) => l.latitude && l.longitude);
 
     return (
-        <div className="relative w-full h-[260px] md:h-[380px] lg:h-[800px]">
+        <div className="relative w-full h-[260px] md:h-[380px] lg:h-[800px] max-h-[65vh]">
             <MapContainer
                 center={[centerPos.lat, centerPos.lng]}
                 zoom={zoom}
