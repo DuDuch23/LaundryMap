@@ -3,8 +3,10 @@ namespace App\Controller\Api;
 
 use App\Entity\Adresse;
 use App\Entity\Laverie;
+use App\Enum\StatutGeoEnum;
 use App\Entity\LaverieEquipement;
 use App\Entity\LaverieFermeture;
+use App\Entity\LaveriePaiement;
 use App\Entity\LaverieService;
 use App\Entity\LaverieMedia;
 use App\Entity\Media;
@@ -15,6 +17,7 @@ use App\Repository\LaverieEquipementRepository;
 use App\Repository\LaverieFermetureRepository;
 use App\Repository\LaverieMediaRepository;
 use App\Repository\LaverieRepository;
+use App\Repository\MethodePaiementRepository;
 use App\Repository\ProfessionnelRepository;
 use App\Repository\ServiceRepository;
 use App\Service\ApiWiLineService;
@@ -99,6 +102,7 @@ class ApiLaverieController extends ApiProfilController
         Request $request,
         EntityManagerInterface $em,
         ServiceRepository $serviceRepository,
+        MethodePaiementRepository $methodePaiementRepository,
     ): JsonResponse {
         // donnée reçu par le front
         $professionnel = $this->getProfessionnelValide();
@@ -129,6 +133,17 @@ class ApiLaverieController extends ApiProfilController
         $adresse->setCodePostal(trim($payload['codePostal']));
         $adresse->setVille(trim($payload['ville']));
         $adresse->setPays(trim($payload['pays']));
+
+        $latitude  = isset($payload['latitude'])  && is_numeric($payload['latitude'])  ? (float) $payload['latitude']  : null;
+        $longitude = isset($payload['longitude']) && is_numeric($payload['longitude']) ? (float) $payload['longitude'] : null;
+        $adresse->setLatitude($latitude);
+        $adresse->setLongitude($longitude);
+        $adresse->setStatutGeolocalisation(
+            $latitude !== null && $longitude !== null
+                ? StatutGeoEnum::GEOLOCALISEE
+                : StatutGeoEnum::EN_ATTENTE
+        );
+
         $em->persist($adresse);
 
         // Laverie
@@ -201,18 +216,28 @@ class ApiLaverieController extends ApiProfilController
         }
 
         // ── Services ─────────────────────────────────────────────────────────
-        // Le front envoie un tableau de noms de services : ["Pressing", "Retouches", ...]
-        if (!empty($payload['services']) && is_array($payload['services'])) {
-            foreach ($payload['services'] as $nomService) {
-                $service = $serviceRepository->findOneBy(['nom' => $nomService]);
-                if ($service === null) {
-                    continue;
-                }
+        if (!empty($payload['serviceIds']) && is_array($payload['serviceIds'])) {
+            foreach ($payload['serviceIds'] as $serviceId) {
+                $service = $serviceRepository->find((int) $serviceId);
+                if ($service === null) continue;
 
                 $laverieService = new LaverieService();
                 $laverieService->setLaverie($laverie);
                 $laverieService->setService($service);
                 $em->persist($laverieService);
+            }
+        }
+
+        // ── Paiements ─────────────────────────────────────────────────────────
+        if (!empty($payload['paiementIds']) && is_array($payload['paiementIds'])) {
+            foreach ($payload['paiementIds'] as $paiementId) {
+                $paiement = $methodePaiementRepository->find((int) $paiementId);
+                if ($paiement === null) continue;
+
+                $laveriePaiement = new LaveriePaiement();
+                $laveriePaiement->setLaverie($laverie);
+                $laveriePaiement->setPaiement($paiement);
+                $em->persist($laveriePaiement);
             }
         }
 

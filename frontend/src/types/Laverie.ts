@@ -40,6 +40,10 @@ export interface GeoSuggestion {
     label: string;
     latitude: number;
     longitude: number;
+    rue?: string;
+    codePostal?: string;
+    ville?: string;
+    pays?: string;
 }
 
 // ─── Filtres ─────────────────────────────────────────────────────────────────

@@ -9,6 +9,8 @@ export interface FormDataAddLaverie {
     codePostal: string;
     ville: string;
     pays: string;
+    latitude: number | null;
+    longitude: number | null;
     wiLineApiKey: string;
     wiLineCentraleId: number | null;
     horaires: Record<string, HorairesJour>;

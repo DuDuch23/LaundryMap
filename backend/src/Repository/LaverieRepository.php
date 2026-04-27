@@ -256,10 +256,7 @@ class LaverieRepository extends ServiceEntityRepository
         if ($iso === null) return true;
 
         foreach ($laverie->getFermetures() as $f) {
-            if ($f->getJour()->toIsoNumber() !== $iso) continue;
-            $debut = (int) $f->getHeureDebut()->format('H') * 60 + (int) $f->getHeureDebut()->format('i');
-            $fin   = (int) $f->getHeureFin()->format('H')   * 60 + (int) $f->getHeureFin()->format('i');
-            if (!($debut === 0 && $fin === 23 * 60 + 59)) return true;
+            if ($f->getJour()->toIsoNumber() === $iso) return true;
         }
 
         return false;
