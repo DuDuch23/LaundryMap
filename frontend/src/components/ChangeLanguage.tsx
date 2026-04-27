@@ -30,6 +30,7 @@ export default function ChangeLanguage({ langues, selectedLangueId, onSelectLang
         <select
             value={selectedLangueId === '' ? '' : String(selectedLangueId)}
             onChange={handleChange}
+            aria-label={t('main.change_language.aria_label')}
             className="w-auto min-w-32 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-700 bg-white outline-none transition-all focus:ring-2 focus:ring-[#22ACE2] focus:border-transparent"
         >
             <option value="" disabled>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { PARIS_FALLBACK } from '../constants/Laverie';
 import type { Position } from '../types/Laverie';
 
@@ -9,20 +9,19 @@ interface UseGeolocationResult {
     setCenterPos: (p: Position) => void;
     geoRefused: boolean;
     geoLoading: boolean;
+    /** À appeler uniquement sur une action explicite de l'utilisateur. */
+    requestGeolocation: () => void;
 }
 
-/**
- * Demande la géolocalisation navigateur une seule fois au mount.
- * - Si accordée : userPos + centerPos = position réelle
- * - Si refusée  : userPos = null, centerPos = Paris (fallback)
- */
 export function useGeolocation(): UseGeolocationResult {
     const [userPos, setUserPos]       = useState<Position | null>(null);
     const [centerPos, setCenterPos]   = useState<Position>(PARIS_FALLBACK);
     const [geoRefused, setGeoRefused] = useState(false);
-    const [geoLoading, setGeoLoading] = useState(true);
+    const [geoLoading, setGeoLoading] = useState(false);
 
-    useEffect(() => {
+    const requestGeolocation = () => {
+        if (!navigator.geolocation || geoLoading || userPos) return;
+        setGeoLoading(true);
         navigator.geolocation.getCurrentPosition(
             ({ coords }) => {
                 const p: Position = { lat: coords.latitude, lng: coords.longitude };
@@ -36,7 +35,7 @@ export function useGeolocation(): UseGeolocationResult {
             },
             { enableHighAccuracy: true, timeout: 8000 }
         );
-    }, []);
+    };
 
-    return { userPos, centerPos, setCenterPos, geoRefused, geoLoading };
+    return { userPos, centerPos, setCenterPos, geoRefused, geoLoading, requestGeolocation };
 }

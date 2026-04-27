@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ListX, SlidersHorizontal } from 'lucide-react';
 
 export interface FilterSection {
@@ -35,6 +36,7 @@ export default function FilterModal({
     values,
     onChange,
 }: FilterModalProps) {
+    const { t } = useTranslation();
     const modalRef = useRef<HTMLDivElement>(null);
     const previousFocusRef = useRef<Element | null>(null);
 
@@ -113,16 +115,15 @@ export default function FilterModal({
                         <button
                             onClick={onClose}
                             className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition"
-                            aria-label="Retour"
+                            aria-label={t('main.filter_modal.retour')}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                 <path d="m15 18-6-6 6-6" />
                             </svg>
                         </button>
-                        <h2 id="filter-modal-title" className="text-lg font-bold">Filtres</h2>
+                        <h2 id="filter-modal-title" className="text-lg font-bold">{t('main.filter_modal.titre')}</h2>
                     </div>
 
-                    {/* NOUVEAU : Affichage conditionnel des boutons */}
                     <div className="flex items-center gap-3">
                         {hasActiveFilters ? (
                             <>
@@ -130,22 +131,22 @@ export default function FilterModal({
                                     onClick={handleEffacer}
                                     className="text-sm font-medium text-gray-600 hover:text-gray-900 transition cursor-pointer"
                                 >
-                                    Effacer
+                                    {t('main.filter_modal.effacer')}
                                 </button>
                                 <button
                                     onClick={handleEffacer}
                                     className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition cursor-pointer"
-                                    aria-label="Effacer les filtres"
+                                    aria-label={t('main.filter_modal.effacer_aria')}
                                 >
-                                    <ListX size={20} />
+                                    <ListX size={20} aria-hidden="true" />
                                 </button>
                             </>
                         ) : (
                             <button
                                 className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition cursor-default"
-                                aria-label="Filtres"
+                                aria-label={t('main.filter_modal.filtres_aria')}
                             >
-                                <SlidersHorizontal size={20} />
+                                <SlidersHorizontal size={20} aria-hidden="true" />
                             </button>
                         )}
                     </div>
@@ -185,7 +186,7 @@ export default function FilterModal({
                         onClick={handleAppliquer}
                         className="w-fit mx-auto block bg-[#22ACE2] hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-full transition-colors shadow-sm cursor-pointer"
                     >
-                        Appliquer les filtres
+                        {t('main.filter_modal.appliquer')}
                     </button>
                 </div>
             </div>

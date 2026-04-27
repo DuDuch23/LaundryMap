@@ -5,7 +5,92 @@
       "tableau_de_bord": "Tableau de bord",
       "inscription": "Inscription",
       "connexion": "Connexion",
-      "mon_profil": "Mon profil"
+      "mon_profil": "Mon profil",
+      "aria_label": "Navigation principale",
+      "accueil": "Accueil",
+      "deconnexion": "Déconnexion",
+      "ajouter_laverie": "Ajouter une laverie",
+      "mes_laveries": "Mes laveries",
+      "mes_favoris": "Mes favoris",
+      "profil": "Profil",
+      "inscription_pro_court": "Inscription Pro",
+      "inscription_pro": "Inscription Professionnel",
+      "inscription_utilisateur": "Inscription Utilisateur",
+      "fermer_menu": "Fermer le menu",
+      "ouvrir_menu": "Ouvrir le menu"
+    },
+    "home": {
+      "geo_refuse": "Position refusée. Saisissez votre ville ou code postal dans la barre de recherche.",
+      "filtres": "Filtres",
+      "recherche_en_cours": "Recherche en cours…",
+      "resultats_one": "{{count}} laverie trouvée",
+      "resultats_other": "{{count}} laveries trouvées",
+      "a_proximite": "À proximité",
+      "voir_tout": "Voir tout",
+      "utiliser_position": "Utiliser ma position",
+      "utiliser_position_desc": "Trouver automatiquement les laveries proches de chez vous",
+      "geo_chargement": "Localisation en cours…"
+    },
+    "laverie_card": {
+      "disponible": "Disponible",
+      "ferme": "Fermé",
+      "voir_detail": "Voir le détail de {{nom}}"
+    },
+    "search_bar": {
+      "placeholder": "Rechercher par ville, code postal, adresse…",
+      "rechercher": "Rechercher",
+      "recentrer": "Recentrer sur ma position",
+      "suggestions": "Suggestions de localisation"
+    },
+    "filter_panel": {
+      "rayon_recherche": "Rayon de recherche",
+      "horaires": "Horaires",
+      "services": "Services",
+      "moyens_paiement": "Moyens de paiement",
+      "reinitialiser": "Réinitialiser",
+      "appliquer": "Appliquer les filtres",
+      "ouvert_maintenant": "Ouvert maintenant",
+      "rayon_aria": "Rayon de recherche en kilomètres, valeur actuelle : {{val}} km"
+    },
+    "laverie_map": {
+      "vous_etes_ici": "Vous êtes ici",
+      "position_detectee": "Position détectée",
+      "ouvert": "● Ouvert",
+      "ferme": "● Fermé",
+      "aria_label": "Carte des laveries"
+    },
+    "mes_favoris": {
+      "titre": "Mes favoris",
+      "sous_titre": "Retrouvez toutes les laveries enregistrées par votre compte",
+      "vos_favorites": "Vos laveries favorites",
+      "pas_encore": "Vous n'avez pas encore ajouté de laverie en favoris.",
+      "retirer_confirm": "Retirer « {{nom}} » de vos favoris ?",
+      "erreur_suppression": "Impossible de supprimer ce favori.",
+      "suppression_en_cours": "Suppression...",
+      "favori": "Favori",
+      "retirer_aria": "Retirer {{nom}} des favoris",
+      "ajoutee": "Ajoutée",
+      "modifiee": "Modifiée",
+      "non_renseignee": "Non renseignée",
+      "erreur": "Une erreur est survenue."
+    },
+    "laverie_grid": {
+      "aucune_laverie": "Aucune laverie trouvée",
+      "aucune_laverie_desc": "Essayez d'élargir votre zone de recherche ou de modifier vos filtres.",
+      "retirer_filtres": "Retirer les filtres",
+      "trouver_laverie": "Trouvez une laverie près de chez vous",
+      "trouver_laverie_desc": "Autorisez la géolocalisation ou saisissez votre ville dans le champ de recherche."
+    },
+    "filter_modal": {
+      "titre": "Filtres",
+      "retour": "Retour",
+      "effacer": "Effacer",
+      "effacer_aria": "Effacer les filtres",
+      "filtres_aria": "Filtres",
+      "appliquer": "Appliquer les filtres"
+    },
+    "change_language": {
+      "aria_label": "Sélectionner la langue"
     },
     "inscription_professionnel": {
       "titre": "S'inscrire en tant que professionnel",
