@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import type { Laverie } from '../../types/Laverie';
 import API_BASE_URL from '../../services/api';
 
@@ -16,6 +17,7 @@ function formatDistance(km: number): string {
 
 export default function LaverieCard({ laverie: l, active, onClick }: Props) {
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     return (
         <div
@@ -66,8 +68,8 @@ export default function LaverieCard({ laverie: l, active, onClick }: Props) {
                             ? 'bg-emerald-100 text-emerald-700'
                             : 'bg-slate-100 text-slate-500'
                     }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${l.estOuvert ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-                        {l.estOuvert ? 'Disponible' : 'Fermé'}
+                        <span className={`w-1.5 h-1.5 rounded-full ${l.estOuvert ? 'bg-emerald-500' : 'bg-slate-400'}`} aria-hidden="true" />
+                        {l.estOuvert ? t('main.laverie_card.disponible') : t('main.laverie_card.ferme')}
                     </span>
 
                     <div className="flex items-center gap-2">
@@ -79,6 +81,7 @@ export default function LaverieCard({ laverie: l, active, onClick }: Props) {
                         <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); navigate(`/laveries/${l.id}`); }}
+                            aria-label={t('main.laverie_card.voir_detail', { nom: l.nom })}
                             className="text-xs font-semibold text-[#14A8DE] hover:text-[#119ac8] transition-colors"
                         >
                             →

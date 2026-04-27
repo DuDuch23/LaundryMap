@@ -81,22 +81,22 @@ export default function Header() {
 
                     {/* ── Navigation desktop ── */}
                     <ul className="hidden md:flex items-center gap-1">
-                        <li><NavLink to="/" end className={navLinkClass}>Accueil</NavLink></li>
+                        <li><NavLink to="/" end className={navLinkClass}>{t('main.header.accueil')}</NavLink></li>
 
                         {isAuthenticated ? (
                             <>
                                 {isPro && (
                                     <>
-                                        <li><NavLink to="/professionnel/tableau-de-bord" className={navLinkClass}>Tableau de bord</NavLink></li>
-                                        <li><NavLink to="/nouvelle-laverie" className={navLinkClass}>Ajouter une laverie</NavLink></li>
-                                        <li><NavLink to="/mes-laveries" className={navLinkClass}>Mes laveries</NavLink></li>
+                                        <li><NavLink to="/professionnel/tableau-de-bord" className={navLinkClass}>{t('main.header.tableau_de_bord')}</NavLink></li>
+                                        <li><NavLink to="/nouvelle-laverie" className={navLinkClass}>{t('main.header.ajouter_laverie')}</NavLink></li>
+                                        <li><NavLink to="/mes-laveries" className={navLinkClass}>{t('main.header.mes_laveries')}</NavLink></li>
                                     </>
                                 )}
-                                {isStandardUser && <li><NavLink to="/mes-favoris" className={navLinkClass}>Mes favoris</NavLink></li>}
-                                <li><NavLink to="/profil" className={navLinkClass}>Profil</NavLink></li>
+                                {isStandardUser && <li><NavLink to="/mes-favoris" className={navLinkClass}>{t('main.header.mes_favoris')}</NavLink></li>}
+                                <li><NavLink to="/profil" className={navLinkClass}>{t('main.header.profil')}</NavLink></li>
                                 <li>
                                     <button type="button" onClick={handleLogout} className="px-4 py-2 rounded-lg text-sm font-semibold text-red-500 bg-white cursor-pointer">
-                                        Déconnexion
+                                        {t('main.header.deconnexion')}
                                     </button>
                                 </li>
                             </>
@@ -104,14 +104,14 @@ export default function Header() {
                             <>
                                 <li>
                                     <NavLink to="/inscription-pro" className={navLinkClass}>
-                                        <span className="md:block xl:hidden">Inscription Pro</span>
-                                        <span className="hidden xl:block">Inscription Professionnel</span>
+                                        <span className="md:block xl:hidden">{t('main.header.inscription_pro_court')}</span>
+                                        <span className="hidden xl:block">{t('main.header.inscription_pro')}</span>
                                     </NavLink>
                                 </li>
-                                <li><NavLink to="/inscription-utilisateur" className={navLinkClass}>Inscription Utilisateur</NavLink></li>
+                                <li><NavLink to="/inscription-utilisateur" className={navLinkClass}>{t('main.header.inscription_utilisateur')}</NavLink></li>
                                 <li>
                                     <NavLink to="/connexion" className={({ isActive }) => `block px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${isActive ? 'bg-white text-[#14A8DE]' : 'bg-white/15 text-white hover:bg-white/25'}`}>
-                                        Connexion
+                                        {t('main.header.connexion')}
                                     </NavLink>
                                 </li>
                             </>
@@ -122,7 +122,7 @@ export default function Header() {
                     <button
                         className="md:hidden cursor-pointer header-icon-btn"
                         onClick={() => setIsOpen(!isOpen)}
-                        aria-label={isOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+                        aria-label={isOpen ? t('main.header.fermer_menu') : t('main.header.ouvrir_menu')}
                         aria-expanded={isOpen}
                         aria-controls="nav-mobile"
                     >
@@ -142,13 +142,13 @@ export default function Header() {
                         <div id="nav-mobile" className="absolute top-full left-0 w-full bg-white shadow-2xl border-b border-gray-200 md:hidden z-50">
                             <ul>
                                 <li className="border-b border-gray-100">
-                                    <NavLink to="/" end className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>Accueil</NavLink>
+                                    <NavLink to="/" end className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>{t('main.header.accueil')}</NavLink>
                                 </li>
 
                                 {isAuthenticated && isPro && (
                                     <li className="border-b border-gray-100">
                                         <NavLink to="/professionnel/tableau-de-bord" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>
-                                            Tableau de bord
+                                            {t('main.header.tableau_de_bord')}
                                         </NavLink>
                                     </li>
                                 )}
@@ -171,20 +171,20 @@ export default function Header() {
                                         {isPro && (
                                             <>
                                                 <li className="border-b border-gray-100">
-                                                    <NavLink to="/nouvelle-laverie" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>Ajouter une laverie</NavLink>
+                                                    <NavLink to="/nouvelle-laverie" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>{t('main.header.ajouter_laverie')}</NavLink>
                                                 </li>
                                                 <li className="border-b border-gray-100">
-                                                    <NavLink to="/mes-laveries" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>Mes laveries</NavLink>
+                                                    <NavLink to="/mes-laveries" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>{t('main.header.mes_laveries')}</NavLink>
                                                 </li>
                                             </>
                                         )}
                                         {isStandardUser && (
                                             <li className="border-b border-gray-100">
-                                                <NavLink to="/mes-favoris" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>Mes favoris</NavLink>
+                                                <NavLink to="/mes-favoris" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>{t('main.header.mes_favoris')}</NavLink>
                                             </li>
                                         )}
                                         <li className="border-b border-gray-100">
-                                            <NavLink to="/profil" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>Profil</NavLink>
+                                            <NavLink to="/profil" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>{t('main.header.profil')}</NavLink>
                                         </li>
                                     </ul>
 
@@ -193,17 +193,17 @@ export default function Header() {
                                         className="block w-full text-left px-6 py-4 border-t border-gray-100 font-semibold text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
                                         onClick={handleLogout}
                                     >
-                                        Déconnexion
+                                        {t('main.header.deconnexion')}
                                     </button>
                                 </div>
                             ) : (
                                 <div className="border-t-2 border-gray-200">
                                     <ul>
                                         <li className="border-b border-gray-100">
-                                            <NavLink to="/inscription-pro" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>Inscription Professionnel</NavLink>
+                                            <NavLink to="/inscription-pro" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>{t('main.header.inscription_pro')}</NavLink>
                                         </li>
                                         <li className="border-b border-gray-100">
-                                            <NavLink to="/inscription-utilisateur" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>Inscription Utilisateur</NavLink>
+                                            <NavLink to="/inscription-utilisateur" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>{t('main.header.inscription_utilisateur')}</NavLink>
                                         </li>
                                         <li>
                                             <NavLink
@@ -211,7 +211,7 @@ export default function Header() {
                                                 className={({ isActive }) => `block px-6 py-4 font-semibold transition-colors ${isActive ? 'bg-blue-50 text-[#14A8DE]' : 'text-[#14A8DE] hover:bg-blue-50'}`}
                                                 onClick={() => setIsOpen(false)}
                                             >
-                                                Connexion
+                                                {t('main.header.connexion')}
                                             </NavLink>
                                         </li>
                                     </ul>

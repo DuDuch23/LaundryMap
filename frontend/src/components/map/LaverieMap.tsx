@@ -1,4 +1,5 @@
 import L from 'leaflet';
+import { useTranslation } from 'react-i18next';
 import { Circle, MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import type { Laverie, Position } from '../../types/Laverie';
 import RecenterMap from './RecenterMap';
@@ -56,10 +57,15 @@ interface Props {
 export default function LaverieMap({
     centerPos, zoom, userPos, laveries, activeLaverieId, onMarkerClick,
 }: Props) {
+    const { t } = useTranslation();
     const laveriesAvecCoords = laveries.filter((l) => l.latitude && l.longitude);
 
     return (
-        <div className="relative w-full h-[260px] md:h-[380px] lg:h-[800px] max-h-[65vh]">
+        <div
+            className="relative w-full h-[260px] md:h-[380px] lg:h-[800px] max-h-[65vh]"
+            role="region"
+            aria-label={t('main.laverie_map.aria_label')}
+        >
             <MapContainer
                 center={[centerPos.lat, centerPos.lng]}
                 zoom={zoom}
@@ -77,7 +83,7 @@ export default function LaverieMap({
                 {userPos && (
                     <>
                         <Marker position={[userPos.lat, userPos.lng]} icon={userIcon}>
-                            <Popup>Vous êtes ici</Popup>
+                            <Popup>{t('main.laverie_map.vous_etes_ici')}</Popup>
                         </Marker>
                         <Circle
                             center={[userPos.lat, userPos.lng]}
@@ -102,7 +108,7 @@ export default function LaverieMap({
                             <p className="text-sm font-semibold">{l.nom}</p>
                             <p className="text-xs text-slate-500 mt-0.5">{l.adresse}</p>
                             <p className={`text-xs font-medium mt-1 ${l.estOuvert ? 'text-emerald-600' : 'text-rose-500'}`}>
-                                {l.estOuvert ? '● Ouvert' : '● Fermé'}
+                                {l.estOuvert ? t('main.laverie_map.ouvert') : t('main.laverie_map.ferme')}
                             </p>
                         </Popup>
                     </Marker>
@@ -111,9 +117,12 @@ export default function LaverieMap({
 
             {/* Badge position détectée */}
             {userPos && (
-                <div className="absolute bottom-3 left-3 z-[400] flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm border border-white/60">
-                    <span className="w-2 h-2 rounded-full bg-[#14A8DE] animate-pulse" />
-                    Position détectée
+                <div
+                    className="absolute bottom-3 left-3 z-[400] flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm border border-white/60"
+                    aria-live="polite"
+                >
+                    <span className="w-2 h-2 rounded-full bg-[#14A8DE] animate-pulse" aria-hidden="true" />
+                    {t('main.laverie_map.position_detectee')}
                 </div>
             )}
         </div>

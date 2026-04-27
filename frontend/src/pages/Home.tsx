@@ -25,8 +25,9 @@ export default function Home() {
         if (flashMessageKey) sessionStorage.removeItem('flashMessageKey');
     }, [flashMessageKey, location.pathname, location.state, navigate]);
 
-    // ── Géolocalisation ───────────────────────────────────────────────────────
-    const { userPos, centerPos, setCenterPos, geoRefused } = useGeolocation();
+    // ── Géolocalisation à la demande ──────────────────────────────────────────
+    // requestGeolocation() n'est appelé QUE sur clic explicite de l'utilisateur.
+    const { userPos, centerPos, setCenterPos, geoRefused, geoLoading, requestGeolocation } = useGeolocation();
     const [mapZoom, setMapZoom] = useState(12);
 
     // ── Recherche ─────────────────────────────────────────────────────────────
@@ -37,6 +38,7 @@ export default function Home() {
         handleSearchInput, lancerRecherche, rechercherParTexte,
     } = useLaverieSearch();
 
+    // Dès que la position est accordée, lancer une recherche automatique.
     useEffect(() => {
         if (userPos) { setMapZoom(14); lancerRecherche(userPos); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -60,6 +62,12 @@ export default function Home() {
         lancerRecherche(pos);
     };
 
+    // Le bouton CTA de géolocalisation s'affiche uniquement :
+    //  - avant toute recherche (searched = false)
+    //  - tant que la position n'est pas encore connue
+    //  - tant qu'elle n'a pas été refusée
+    const showGeoCta = !searched && !userPos && !geoRefused;
+
     return (
         <div className="flex flex-col bg-slate-50 min-h-screen pt-20 w-full">
             <div className="w-full max-w-[1280px] mx-auto">
@@ -70,12 +78,13 @@ export default function Home() {
                     </div>
                 )}
 
+                {/* Bannière de refus — uniquement si l'utilisateur a explicitement cliqué */}
                 {geoRefused && !searched && (
-                    <div className="mx-5 mt-4 flex items-start gap-3 p-3 rounded-xl bg-[#14A8DE]/10 border border-[#14A8DE]/20 text-sm text-[#0d7ba8]" role="status">
-                        <svg className="shrink-0 mt-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <div className="mx-5 mt-4 flex items-start gap-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-800" role="status">
+                        <svg className="shrink-0 mt-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
                         </svg>
-                        <p>Géolocalisation refusée. Saisissez votre ville ou code postal dans la barre de recherche pour trouver des laveries à proximité.</p>
+                        <p>{t('main.home.geo_refuse')}</p>
                     </div>
                 )}
 
@@ -98,19 +107,65 @@ export default function Home() {
                         onSuggestionBlur={() => setShowSuggestions(false)}
                     />
 
+                    {/*
+                      * Bouton CTA de géolocalisation.
+                      *
+                      * Affiché uniquement AVANT toute recherche et avant que la position
+                      * soit connue. Il explique clairement POURQUOI la position est utile,
+                      * ce qui augmente le taux d'acceptation et la confiance de l'utilisateur.
+                      *
+                      * La demande navigateur ne se déclenche QUE sur ce clic.
+                      */}
+                    {showGeoCta && (
+                        <button
+                            type="button"
+                            onClick={requestGeolocation}
+                            disabled={geoLoading}
+                            aria-busy={geoLoading}
+                            className="mt-3 w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white border border-slate-200 shadow-sm hover:bg-[#14A8DE]/5 hover:border-[#14A8DE]/30 active:scale-[.99] transition-all text-left group disabled:opacity-60 disabled:cursor-wait"
+                        >
+                            {/* Icône */}
+                            <span className="shrink-0 w-9 h-9 rounded-full bg-[#14A8DE]/10 flex items-center justify-center group-hover:bg-[#14A8DE]/20 transition-colors" aria-hidden="true">
+                                {geoLoading ? (
+                                    <div className="w-4 h-4 border-2 border-[#14A8DE] border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#14A8DE" strokeWidth="2" aria-hidden="true">
+                                        <circle cx="12" cy="12" r="3"/>
+                                        <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+                                        <circle cx="12" cy="12" r="9"/>
+                                    </svg>
+                                )}
+                            </span>
+
+                            {/* Texte */}
+                            <span>
+                                <span className="block text-sm font-semibold text-slate-800">
+                                    {geoLoading ? t('main.home.geo_chargement') : t('main.home.utiliser_position')}
+                                </span>
+                                {!geoLoading && (
+                                    <span className="block text-xs text-slate-500 mt-0.5">
+                                        {t('main.home.utiliser_position_desc')}
+                                    </span>
+                                )}
+                            </span>
+                        </button>
+                    )}
+
                     <div className="flex items-center justify-between mt-3">
                         <button
                             type="button"
                             onClick={() => setShowFilters((v) => !v)}
+                            aria-expanded={showFilters}
+                            aria-label={t('main.home.filtres')}
                             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${nbFiltresActifs > 0 ? 'bg-[#14A8DE] text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
                         >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                                 <line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/>
                             </svg>
-                            Filtres
-                            {nbFiltresActifs > 0 && <span className="bg-white/30 text-white rounded-full px-1.5 py-0.5 text-xs font-bold leading-none">{nbFiltresActifs}</span>}
+                            {t('main.home.filtres')}
+                            {nbFiltresActifs > 0 && <span className="bg-white/30 text-white rounded-full px-1.5 py-0.5 text-xs font-bold leading-none" aria-label={`${nbFiltresActifs}`}>{nbFiltresActifs}</span>}
                         </button>
-                        {searched && <p className="text-xs text-slate-500">{loading ? 'Recherche en cours…' : `${laveries.length} laverie${laveries.length !== 1 ? 's' : ''} trouvée${laveries.length !== 1 ? 's' : ''}`}</p>}
+                        {searched && <p className="text-xs text-slate-500" role="status" aria-live="polite">{loading ? t('main.home.recherche_en_cours') : t('main.home.resultats', { count: laveries.length })}</p>}
                     </div>
 
                     {showFilters && (
@@ -130,8 +185,8 @@ export default function Home() {
                 {/* Résultats */}
                 <div className="px-5 mt-6 pb-20">
                     <div className="flex items-center justify-between mb-4">
-                        <h2>À proximité</h2>
-                        <Link to="/laveries">Voir tout</Link>
+                        <h2>{t('main.home.a_proximite')}</h2>
+                        <Link to="/laveries">{t('main.home.voir_tout')}</Link>
                     </div>
                     <LaverieGrid
                         laveries={laveries} loading={loading} searched={searched}

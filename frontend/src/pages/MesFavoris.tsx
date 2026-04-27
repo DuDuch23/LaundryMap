@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import API_BASE_URL from '../services/api';
 import { getMesFavoris, supprimerFavori, type FavoriLaverie } from '../services/request';
 
@@ -13,6 +14,7 @@ function HeartIcon({ className = '' }: { className?: string }) {
 }
 
 export default function MesFavoris() {
+	const { t } = useTranslation();
 	const [favoris, setFavoris] = useState<FavoriLaverie[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -21,12 +23,12 @@ export default function MesFavoris() {
 	useEffect(() => {
 		getMesFavoris()
 			.then((data) => setFavoris(Array.isArray(data.favoris) ? data.favoris : []))
-			.catch((err: any) => setError(err?.message || 'Une erreur est survenue.'))
+			.catch((err: any) => setError(err?.message || t('main.mes_favoris.erreur')))
 			.finally(() => setLoading(false));
-	}, []);
+	}, [t]);
 
 	const handleSupprimerFavori = async (laverie: FavoriLaverie) => {
-		const confirmation = window.confirm(`Retirer « ${laverie.nom} » de vos favoris ?`);
+		const confirmation = window.confirm(t('main.mes_favoris.retirer_confirm', { nom: laverie.nom }));
 		if (!confirmation) {
 			return;
 		}
@@ -36,20 +38,20 @@ export default function MesFavoris() {
 			await supprimerFavori(laverie.id);
 			setFavoris((prev) => prev.filter((item) => item.id !== laverie.id));
 		} catch (err: any) {
-			setError(err?.message || 'Impossible de supprimer ce favori.');
+			setError(err?.message || t('main.mes_favoris.erreur_suppression'));
 		} finally {
 			setRemovingId(null);
 		}
 	};
 
 	if (loading) {
-		return <div className="min-h-screen w-full bg-slate-50 pt-24" />;
+		return <div className="min-h-screen w-full bg-slate-50 pt-24" aria-busy="true" />;
 	}
 
 	if (error) {
 		return (
 			<div className="min-h-screen w-full bg-slate-50 pt-24 px-5">
-				<div className="mx-auto max-w-[1280px] rounded-2xl bg-rose-100 px-4 py-3 text-rose-700">{error}</div>
+				<div className="mx-auto max-w-[1280px] rounded-2xl bg-rose-100 px-4 py-3 text-rose-700" role="alert">{error}</div>
 			</div>
 		);
 	}
@@ -63,18 +65,18 @@ export default function MesFavoris() {
 							<HeartIcon className="h-7 w-7 text-white" />
 						</div>
 						<div>
-							<h1 className="text-xl font-semibold sm:text-2xl">Mes favoris</h1>
-							<p className="mt-1 text-sm text-white/90">Retrouvez toutes les laveries enregistrées par votre compte</p>
+							<h1 className="text-xl font-semibold sm:text-2xl">{t('main.mes_favoris.titre')}</h1>
+							<p className="mt-1 text-sm text-white/90">{t('main.mes_favoris.sous_titre')}</p>
 						</div>
 					</div>
 				</section>
 
 				<section className="mt-8 text-center">
-					<h2 className="mb-4 text-lg font-bold text-slate-900 sm:text-xl">Vos laveries favorites</h2>
+					<h2 className="mb-4 text-lg font-bold text-slate-900 sm:text-xl">{t('main.mes_favoris.vos_favorites')}</h2>
 
 					{favoris.length === 0 ? (
 						<div className="rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-							<p className="text-sm text-slate-600">Vous n&apos;avez pas encore ajouté de laverie en favoris.</p>
+							<p className="text-sm text-slate-600">{t('main.mes_favoris.pas_encore')}</p>
 						</div>
 					) : (
 						<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -93,10 +95,11 @@ export default function MesFavoris() {
 											onClick={() => handleSupprimerFavori(laverie)}
 											disabled={removingId === laverie.id}
 											className="absolute left-4 top-4 z-10 inline-flex items-center gap-1 rounded-full bg-rose-500/90 px-3 py-1.5 text-xs font-semibold text-white shadow-lg backdrop-blur-sm transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-60"
-											aria-label={`Retirer ${laverie.nom} des favoris`}
+											aria-label={t('main.mes_favoris.retirer_aria', { nom: laverie.nom })}
+											aria-busy={removingId === laverie.id}
 										>
 											<HeartIcon className="h-3.5 w-3.5" />
-											{removingId === laverie.id ? 'Suppression...' : 'Favori'}
+											{removingId === laverie.id ? t('main.mes_favoris.suppression_en_cours') : t('main.mes_favoris.favori')}
 										</button>
 									</div>
 
@@ -108,10 +111,12 @@ export default function MesFavoris() {
 
 										<div className="mt-4 space-y-1 text-xs text-slate-500">
 											<p>
-												<span className="font-semibold">Ajoutée :</span> {laverie.dateAjout || 'Non renseignée'}
+												<span className="font-semibold">{t('main.mes_favoris.ajoutee')} :</span>{' '}
+												{laverie.dateAjout || t('main.mes_favoris.non_renseignee')}
 											</p>
 											<p>
-												<span className="font-semibold">Modifiée :</span> {laverie.dateModification || 'Non renseignée'}
+												<span className="font-semibold">{t('main.mes_favoris.modifiee')} :</span>{' '}
+												{laverie.dateModification || t('main.mes_favoris.non_renseignee')}
 											</p>
 										</div>
 									</div>

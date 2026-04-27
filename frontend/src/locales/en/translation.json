@@ -5,7 +5,92 @@
       "tableau_de_bord": "Dashboard",
       "inscription": "Sign up",
       "connexion": "Login",
-      "mon_profil": "My profile"
+      "mon_profil": "My profile",
+      "aria_label": "Main navigation",
+      "accueil": "Home",
+      "deconnexion": "Log out",
+      "ajouter_laverie": "Add a laundromat",
+      "mes_laveries": "My laundromats",
+      "mes_favoris": "My favourites",
+      "profil": "Profile",
+      "inscription_pro_court": "Pro Sign Up",
+      "inscription_pro": "Professional Sign Up",
+      "inscription_utilisateur": "User Sign Up",
+      "fermer_menu": "Close menu",
+      "ouvrir_menu": "Open menu"
+    },
+    "home": {
+      "geo_refuse": "Location denied. Enter your city or postcode in the search bar.",
+      "filtres": "Filters",
+      "recherche_en_cours": "Searching…",
+      "resultats_one": "{{count}} laundromat found",
+      "resultats_other": "{{count}} laundromats found",
+      "a_proximite": "Nearby",
+      "voir_tout": "See all",
+      "utiliser_position": "Use my location",
+      "utiliser_position_desc": "Automatically find laundromats near you",
+      "geo_chargement": "Locating…"
+    },
+    "laverie_card": {
+      "disponible": "Open",
+      "ferme": "Closed",
+      "voir_detail": "View details for {{nom}}"
+    },
+    "search_bar": {
+      "placeholder": "Search by city, postcode, address…",
+      "rechercher": "Search",
+      "recentrer": "Centre on my location",
+      "suggestions": "Location suggestions"
+    },
+    "filter_panel": {
+      "rayon_recherche": "Search radius",
+      "horaires": "Hours",
+      "services": "Services",
+      "moyens_paiement": "Payment methods",
+      "reinitialiser": "Reset",
+      "appliquer": "Apply filters",
+      "ouvert_maintenant": "Open now",
+      "rayon_aria": "Search radius in kilometres, current value: {{val}} km"
+    },
+    "laverie_map": {
+      "vous_etes_ici": "You are here",
+      "position_detectee": "Location detected",
+      "ouvert": "● Open",
+      "ferme": "● Closed",
+      "aria_label": "Laundromat map"
+    },
+    "mes_favoris": {
+      "titre": "My favourites",
+      "sous_titre": "Find all laundromats saved to your account",
+      "vos_favorites": "Your favourite laundromats",
+      "pas_encore": "You haven't added any laundromats to your favourites yet.",
+      "retirer_confirm": "Remove « {{nom}} » from your favourites?",
+      "erreur_suppression": "Unable to remove this favourite.",
+      "suppression_en_cours": "Removing...",
+      "favori": "Favourite",
+      "retirer_aria": "Remove {{nom}} from favourites",
+      "ajoutee": "Added",
+      "modifiee": "Modified",
+      "non_renseignee": "Not provided",
+      "erreur": "An error occurred."
+    },
+    "laverie_grid": {
+      "aucune_laverie": "No laundromats found",
+      "aucune_laverie_desc": "Try expanding your search area or adjusting your filters.",
+      "retirer_filtres": "Remove filters",
+      "trouver_laverie": "Find a laundromat near you",
+      "trouver_laverie_desc": "Allow location access or enter your city in the search bar."
+    },
+    "filter_modal": {
+      "titre": "Filters",
+      "retour": "Back",
+      "effacer": "Clear",
+      "effacer_aria": "Clear filters",
+      "filtres_aria": "Filters",
+      "appliquer": "Apply filters"
+    },
+    "change_language": {
+      "aria_label": "Select language"
     },
     "inscription_professionnel": {
       "titre": "Register as a professional",
