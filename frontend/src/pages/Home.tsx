@@ -96,7 +96,7 @@ export default function Home() {
                 />
 
                 {/* Recherche & filtres */}
-                <div className="px-5 -mt-5 relative z-10">
+                <div className="px-5 mt-5 relative z-10">
                     <SearchBar
                         value={searchQuery} onChange={handleSearchInput}
                         onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim()) rechercherParTexte(searchQuery); }}
@@ -122,24 +122,20 @@ export default function Home() {
                             onClick={requestGeolocation}
                             disabled={geoLoading}
                             aria-busy={geoLoading}
-                            className="absolute -top-[90px] right-5 w-auto rounded-[30px] bg-black mt-3 flex items-center gap-3 px-4 py-3 border border-slate-200 shadow-sm hover:bg-[#14A8DE]/5 hover:border-[#14A8DE]/30 active:scale-[.99] transition-all text-left group disabled:opacity-60 disabled:cursor-wait"
+                            className="absolute -top-[120px] right-5 w-auto rounded-full bg-black mt-3 flex items-center gap-3 px-4 py-3 border border-white/20 shadow-sm hover:bg-white hover:border-white active:scale-[.99] transition-all text-left group disabled:opacity-60 disabled:cursor-wait"
                         >
-                            {/* Icône */}
-                            <span className="shrink-0 w-9 h-9 rounded-full bg-[#14A8DE]/10 flex items-center justify-center group-hover:bg-[#14A8DE]/20 transition-colors" aria-hidden="true">
+                            <span className="shrink-0 w-9 h-9 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-black transition-colors" aria-hidden="true">
                                 {geoLoading ? (
                                     <div className="w-4 h-4 border-2 border-[#14A8DE] border-t-transparent rounded-full animate-spin" />
                                 ) : (
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                    <path d="M7.425 13.5L5.2875 8.2125L0 6.075V5.025L13.5 0L8.475 13.5H7.425ZM7.9125 10.725L10.95 2.55L2.775 5.5875L6.45 7.05L7.9125 10.725Z" fill="white"/>
+                                        <path d="M7.425 13.5L5.2875 8.2125L0 6.075V5.025L13.5 0L8.475 13.5H7.425ZM7.9125 10.725L10.95 2.55L2.775 5.5875L6.45 7.05L7.9125 10.725Z" className="fill-white group-hover:fill-white" fill="white"/>
                                     </svg>
                                 )}
                             </span>
 
-                            {/* Texte */}
-                            <span>
-                                <span className="block text-sm font-semibold text-slate-800">
-                                    {geoLoading ? t('main.home.geo_chargement') : t('main.home.utiliser_position')}
-                                </span>
+                            <span className="block text-md font-semibold text-white group-hover:text-black transition-colors">
+                                {geoLoading ? t('main.home.geo_chargement') : t('main.home.utiliser_position')}
                             </span>
                         </button>
                     )}
