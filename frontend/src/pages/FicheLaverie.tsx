@@ -13,10 +13,10 @@ import {
 	Weight,
 } from 'lucide-react';
 import { AccessibleButton, SkipLink } from '../components/accessibility';
-import API_BASE_URL from '../services/api';
+import API_BASE_URL, { uploadPath, resolveUrl } from '../services/api';
 import { fetchPublicLaverieDetail, ajouterFavori, supprimerFavori, type LaveriePublicDetail } from '../services/request';
 
-const fallbackLaverieImage = `${API_BASE_URL}/uploads/laveries/default-laundry.jpg`;
+const fallbackLaverieImage = uploadPath('/uploads/laveries/default-laundry.jpg');
 
 function formatDistance(distance: number | null): string {
 	if (distance === null) {
@@ -163,10 +163,10 @@ export default function FicheLaverie() {
 		return isOpenNow(laverie) ? 'Ouverte maintenant' : 'Fermée maintenant';
 	}, [laverie]);
 
-	const heroImage = laverie?.image || fallbackLaverieImage;
+	const heroImage = resolveUrl(laverie?.image || fallbackLaverieImage);
 	const images = useMemo(() => {
 		if (!laverie) return [];
-		const list = laverie.images.length > 0 ? laverie.images.map((image) => image.image) : [heroImage];
+		const list = laverie.images.length > 0 ? laverie.images.map((image) => resolveUrl(image.image)) : [heroImage];
 		return [...list, fallbackLaverieImage, fallbackLaverieImage].slice(0, 3);
 	}, [laverie, heroImage]);
 

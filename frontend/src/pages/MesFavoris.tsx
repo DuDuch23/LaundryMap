@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import API_BASE_URL from '../services/api';
+import API_BASE_URL, { uploadPath, resolveUrl } from '../services/api';
 import { getMesFavoris, supprimerFavori, type FavoriLaverie } from '../services/request';
 
-const fallbackLaverieImage = `${API_BASE_URL}/uploads/laveries/01-lave-linge-blanc-1.jpg`;
+const fallbackLaverieImage = uploadPath('/uploads/laveries/default-laundry.jpg');
 
 function HeartIcon({ className = '' }: { className?: string }) {
 	return (
@@ -101,7 +101,7 @@ export default function MesFavoris() {
 								>
 									<div className="relative h-40 w-full bg-slate-200">
 										<img
-											src={laverie.image || fallbackLaverieImage}
+											src={resolveUrl(laverie.image || fallbackLaverieImage)}
 											alt={laverie.imageAlt || laverie.nom}
 											loading="lazy"
 											decoding="async"
