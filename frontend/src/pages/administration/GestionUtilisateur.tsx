@@ -62,7 +62,7 @@ const FILTER_SECTIONS: FilterSection[] = [
         label: 'Propriétaire',
         key: 'proprietaire',
         options: [
-            { label: 'Aléatoire', value: '' },
+            { label: 'Tous', value: '' },
             { label: 'Oui', value: 'oui' },
             { label: 'Non', value: 'non' },
         ],
@@ -71,7 +71,7 @@ const FILTER_SECTIONS: FilterSection[] = [
         label: 'Trie',
         key: 'ordre',
         options: [
-            { label: 'Aléatoire', value: '' },
+            { label: 'Par défaut', value: '' },
             { label: 'De A à Z', value: 'croissant' },
             { label: 'De Z à A', value: 'decroissant' },
         ],
@@ -123,16 +123,10 @@ export default function GestionUtilisateurs() {
 
             const data = await fetchAdminUtilisateurs(page, filtresApi);
 
-            const utilisateursTries = data.utilisateurs.sort((a: Utilisateur, b: Utilisateur) => {
-                const aEnAttente = a.professionnel?.statut === 'En attente' || (!a.professionnel && a.statut === 'En attente');
-                const bEnAttente = b.professionnel?.statut === 'En attente' || (!b.professionnel && b.statut === 'En attente');
-                
-                if (aEnAttente && !bEnAttente) return -1;
-                if (!aEnAttente && bEnAttente) return 1;
-                return 0;
-            });
-
-            setUtilisateurs(utilisateursTries);
+            // Le tri "En attente d'abord" + l'ordre alphabétique sont gérés côté
+            // backend (UtilisateurRepository::createFilteredQueryBuilder) AVANT
+            // la pagination. On affiche donc les résultats tels quels.
+            setUtilisateurs(data.utilisateurs);
             setEnAttenteCount(data.totalEnAttente);
             setPagination(data.pagination);
         } catch {

@@ -43,7 +43,7 @@ const FILTER_SECTIONS: FilterSection[] = [
         label: 'Trie',
         key: 'ordre',
         options: [
-            { label: 'Aléatoire', value: '' },
+            { label: 'Par défaut', value: '' },
             { label: 'De A à Z', value: 'croissant' },
             { label: 'De Z à A', value: 'decroissant' },
         ],
@@ -89,16 +89,7 @@ export default function GestionLaveries() {
 
             const data = await fetchAdminLaveries(page, filtresApi);
 
-            const laveriesTriees = data.laveries.sort((a: LaverieItem, b: LaverieItem) => {
-                const aEnAttente = a.statut === 'En attente';
-                const bEnAttente = b.statut === 'En attente';
-
-                if (aEnAttente && !bEnAttente) return -1;
-                if (!aEnAttente && bEnAttente) return 1;
-                return 0;
-            });
-
-            setLaveries(laveriesTriees);
+            setLaveries(data.laveries);
             setEnAttenteCount(data.totalEnAttente);
             setPagination(data.pagination);
         } catch {
