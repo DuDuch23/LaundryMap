@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import type { Laverie } from '../../types/Laverie';
-import API_BASE_URL from '../../services/api';
+import API_BASE_URL, { resolveUrl, uploadPath } from '../../services/api';
 
-const FALLBACK_IMG = `${API_BASE_URL}/uploads/laveries/default-laundry.jpg`;
+const FALLBACK_IMG = uploadPath('/uploads/laveries/default-laundry.jpg');
 
 interface Props {
     laverie: Laverie;
@@ -33,7 +33,7 @@ export default function LaverieCard({ laverie: l, active, onClick }: Props) {
             {/* Image carrée */}
             <div className="w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden bg-slate-100">
                 <img
-                    src={l.image || FALLBACK_IMG}
+                    src={resolveUrl(l.image || FALLBACK_IMG)}
                     alt={l.nom}
                     className="w-full h-full object-cover"
                     loading="lazy"

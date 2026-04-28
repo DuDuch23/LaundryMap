@@ -174,8 +174,8 @@ class ApiUtilisateurController extends AbstractController
                 }
 
                 $couleur = match($laverie->getStatut()->name) {
-                    'STATUT_VALIDEE' => 'Validé',
-                    'STATUT_REFUSEE' => 'Refusé',
+                    'STATUT_VALIDEE' => 'Validée',
+                    'STATUT_REFUSEE' => 'Refusée',
                     default          => 'En attente'
                 };
 
@@ -198,7 +198,6 @@ class ApiUtilisateurController extends AbstractController
                     'nom' => $laverie->getNomEtablissement(),
                     'statut' => $couleur,
                     'adresse' => $adresseComplete,
-                    'distance' => null,
                     'image' => $image,
                     'imageAlt' => $image ? $laverie->getNomEtablissement() : null,
                 ];

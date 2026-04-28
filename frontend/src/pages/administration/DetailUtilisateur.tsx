@@ -8,7 +8,6 @@ interface LaverieDetail {
     nom: string;
     statut: string;
     adresse: string;
-    distance?: string;
     image?: string;
     imageAlt?: string;
 }
@@ -172,14 +171,13 @@ export default function DetailUtilisateur() {
                                     <div className="flex-1">
                                         <h3 className="font-bold text-sm underline decoration-1 underline-offset-2">{laverie.nom}</h3>
                                         <p className="text-xs font-bold text-gray-800 mt-1">{laverie.adresse || 'Adresse inconnue'}</p>
-                                        <p className="text-xs italic text-gray-500 mb-2">{laverie.distance || 'à X km de votre position'}</p>
                                         <span className={`px-3 py-1 text-[10px] rounded-full font-medium ${getBadgeStyle(laverie.statut)}`}>
                                             {laverie.statut}
                                         </span>
                                     </div>
 
                                     {/* Bouton "..." */}
-                                    <Link to="/admin/gestion-laveries" className="bg-[#22ACE2] text-white p-2 rounded-xl hover:bg-blue-500 transition shadow-sm cursor-pointer shrink-0" aria-label="Voir les laveries">
+                                    <Link to={`/admin/laveries/${laverie.id}`} className="bg-[#22ACE2] text-white p-2 rounded-xl hover:bg-blue-500 transition shadow-sm cursor-pointer shrink-0" aria-label={`Voir le détail de ${laverie.nom}`}>
                                         <MoreHorizontal size={16} />
                                     </Link>
                                 </div>

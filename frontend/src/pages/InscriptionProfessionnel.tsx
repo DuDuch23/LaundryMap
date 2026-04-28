@@ -349,7 +349,7 @@ export default function InscriptionProfessionnel() {
                             onBlur={() => setTimeout(() => setShowAdresseSuggestions(false), 200)}
                             placeholder={t('main.inscription_professionnel.placeholder_adresse')}
                             autoComplete="off"
-                            className='w-full pl-8 pr-8 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:border-[#14A8DE] focus:bg-white focus:ring-2 focus:ring-[#14A8DE]/20 outline-none transition-all'
+                            className='max-w-[stretch] w-full pl-8 pr-8 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:border-[#14A8DE] focus:bg-white focus:ring-2 focus:ring-[#14A8DE]/20 outline-none transition-all'
                         />
                         {adresseGeocoding && (
                             <span className='absolute right-3 top-1/2 -translate-y-1/2'>
@@ -430,28 +430,6 @@ export default function InscriptionProfessionnel() {
                     />
                 </div>
 
-                {/* Statut géocodage */}
-                {geoStatus === 'loading' && (
-                    <div className='flex items-center gap-2 text-xs text-gray-400'>
-                        <svg className='animate-spin w-3.5 h-3.5' viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-                        Recherche de la position…
-                    </div>
-                )}
-                {geoStatus === 'found' && latitude !== null && longitude !== null && (
-                    <div className='flex items-center gap-4 p-3 bg-green-50 border border-green-200 rounded-xl'>
-                        <svg className='w-4 h-4 text-green-600 shrink-0' viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>
-                        <span className='text-xs text-green-700 font-medium'>Position géolocalisée</span>
-                        <span className='ml-auto text-xs text-green-600 font-mono'>
-                            {latitude.toFixed(5)}, {longitude.toFixed(5)}
-                        </span>
-                    </div>
-                )}
-                {geoStatus === 'not_found' && (
-                    <div className='flex items-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-xl'>
-                        <svg className='w-4 h-4 text-orange-500 shrink-0' viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-                        <span className='text-xs text-orange-700'>Position introuvable — l'adresse sera géolocalisée ultérieurement.</span>
-                    </div>
-                )}
 
                 <AccessibleInput
                     id="rgpd"

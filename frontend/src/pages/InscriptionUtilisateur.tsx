@@ -273,7 +273,7 @@ export default function RegisterUser() {
           label={t("main.inscription_utilisateur.accepte_condition")}
           type="checkbox"
           className={'flex flex-row-reverse justify-end'}
-          value={cguAccepted.toString()}
+          value={cguAccepted}
           onChange={handleChangeCgu}
           error={errors.cguAccepted}
           placeholder=""

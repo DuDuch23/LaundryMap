@@ -6,63 +6,53 @@ use App\Entity\Laverie;
 use App\Entity\LaverieMedia;
 use App\Entity\Media;
 use App\Entity\Utilisateur;
+use App\Service\MediaService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\String\Slugger\SluggerInterface;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class ApiMediaController extends AbstractController
 {
-    private const TYPES_AUTORISES = ['image/jpeg', 'image/png', 'image/webp'];
-    private const TAILLE_MAX = 5 * 1024 * 1024; // 5 Mo
+    private const MAX_PHOTOS = 15;
 
     public function __construct(
-        private string $uploadsDirectory,
-        private string $uploadsPublicPath,
+        private readonly MediaService $mediaService,
+        // Gardés pour la compatibilité de configuration Symfony (services.yaml)
+        private readonly string $uploadsDirectory,
+        private readonly string $uploadsPublicPath,
     ) {}
 
     #[Route('/api/laveries/{id}/logo', name: 'api_laverie_logo', methods: ['POST'])]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    public function uploadLogo(
-        int $id,
-        Request $request,
-        EntityManagerInterface $em,
-        SluggerInterface $slugger,
-    ): JsonResponse {
+    public function uploadLogo(int $id, Request $request, EntityManagerInterface $em): JsonResponse
+    {
         $laverie = $this->getLaverieOwnee($id, $em);
-        if ($laverie instanceof JsonResponse) {
-            return $laverie;
-        }
+        if ($laverie instanceof JsonResponse) return $laverie;
 
         $file = $request->files->get('logo');
         if (!$file) {
             return $this->json(['message' => 'Aucun fichier reçu.'], 400);
         }
 
-        $erreur = $this->validerFichier($file);
+        $erreur = $this->mediaService->validerFichier($file);
         if ($erreur) return $this->json(['message' => $erreur], 400);
 
-        // Supprime l'ancien logo (fichier + entité)
         if ($laverie->getLogo()) {
             $ancienMedia = $laverie->getLogo();
             $laverie->setLogo(null);
-            $this->supprimerFichier($ancienMedia->getEmplacement());
+            $this->mediaService->supprimerFichier($ancienMedia->getEmplacement());
             $em->remove($ancienMedia);
         }
 
-        $media = $this->creerMedia($file, $slugger, $em);
+        $media = $this->mediaService->creerMedia($file);
         $laverie->setLogo($media);
         $laverie->setDateModification(new \DateTime());
         $em->flush();
 
-        return $this->json([
-            'message' => 'Logo mis à jour.',
-            'logo' => $this->serializeMedia($media),
-        ]);
+        return $this->json(['message' => 'Logo mis à jour.', 'logo' => $this->serializeMedia($media)]);
     }
 
     #[Route('/api/laveries/{id}/logo', name: 'api_laverie_logo_delete', methods: ['DELETE'])]
@@ -70,9 +60,7 @@ class ApiMediaController extends AbstractController
     public function deleteLogo(int $id, EntityManagerInterface $em): JsonResponse
     {
         $laverie = $this->getLaverieOwnee($id, $em);
-        if ($laverie instanceof JsonResponse) {
-            return $laverie;
-        }
+        if ($laverie instanceof JsonResponse) return $laverie;
 
         if (!$laverie->getLogo()) {
             return $this->json(['message' => 'Aucun logo à supprimer.'], 404);
@@ -80,7 +68,7 @@ class ApiMediaController extends AbstractController
 
         $media = $laverie->getLogo();
         $laverie->setLogo(null);
-        $this->supprimerFichier($media->getEmplacement());
+        $this->mediaService->supprimerFichier($media->getEmplacement());
         $em->remove($media);
         $em->flush();
 
@@ -89,12 +77,8 @@ class ApiMediaController extends AbstractController
 
     #[Route('/api/laveries/{id}/photos', name: 'api_laverie_photos', methods: ['POST'])]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    public function uploadPhoto(
-        int $id,
-        Request $request,
-        EntityManagerInterface $em,
-        SluggerInterface $slugger,
-    ): JsonResponse {
+    public function uploadPhoto(int $id, Request $request, EntityManagerInterface $em): JsonResponse
+    {
         $laverie = $this->getLaverieOwnee($id, $em);
         if ($laverie instanceof JsonResponse) return $laverie;
 
@@ -103,10 +87,14 @@ class ApiMediaController extends AbstractController
             return $this->json(['message' => 'Aucun fichier reçu.'], 400);
         }
 
-        $erreur = $this->validerFichier($file);
+        if ($laverie->getMedias()->count() >= self::MAX_PHOTOS) {
+            return $this->json(['message' => 'Limite de ' . self::MAX_PHOTOS . ' photos atteinte.'], 400);
+        }
+
+        $erreur = $this->mediaService->validerFichier($file);
         if ($erreur) return $this->json(['message' => $erreur], 400);
 
-        $media = $this->creerMedia($file, $slugger, $em);
+        $media = $this->mediaService->creerMedia($file);
 
         $laverieMedia = new LaverieMedia();
         $laverieMedia->setLaverie($laverie);
@@ -117,10 +105,7 @@ class ApiMediaController extends AbstractController
         $laverie->setDateModification(new \DateTime());
         $em->flush();
 
-        return $this->json([
-            'message' => 'Photo ajoutée.',
-            'photo'   => $this->serializeMedia($media),
-        ], 201);
+        return $this->json(['message' => 'Photo ajoutée.', 'photo' => $this->serializeMedia($media)], 201);
     }
 
     #[Route('/api/laveries/{id}/photos/{mediaId}', name: 'api_laverie_photo_delete', methods: ['DELETE'])]
@@ -132,7 +117,7 @@ class ApiMediaController extends AbstractController
 
         $laverieMedia = $em->getRepository(LaverieMedia::class)->findOneBy([
             'laverie' => $laverie,
-            'media' => $mediaId,
+            'media'   => $mediaId,
         ]);
 
         if (!$laverieMedia) {
@@ -143,7 +128,7 @@ class ApiMediaController extends AbstractController
         $em->remove($laverieMedia);
 
         if ($media) {
-            $this->supprimerFichier($media->getEmplacement());
+            $this->mediaService->supprimerFichier($media->getEmplacement());
             $em->remove($media);
         }
 
@@ -172,57 +157,14 @@ class ApiMediaController extends AbstractController
         return $laverie;
     }
 
-    private function validerFichier(UploadedFile $file): ?string
-    {
-        if (!in_array($file->getMimeType(), self::TYPES_AUTORISES)) {
-            return 'Format non autorisé. JPEG, PNG ou WebP uniquement.';
-        }
-        if ($file->getSize() > self::TAILLE_MAX) {
-            return 'Fichier trop lourd (5 Mo max).';
-        }
-        return null;
-    }
-
-    private function creerMedia(
-        UploadedFile $file,
-        SluggerInterface $slugger,
-        EntityManagerInterface $em,
-    ): Media {
-        $taille = $file->getSize();
-        $mimeType = $file->getMimeType();
-        $nomOriginel = $file->getClientOriginalName();
-
-        $nomSafe = $slugger->slug(pathinfo($nomOriginel, PATHINFO_FILENAME));
-        $nomFichier = $nomSafe . '-' . uniqid() . '.' . $file->guessExtension();
-
-        $file->move($this->uploadsDirectory, $nomFichier);
-
-        $media = new Media();
-        $media->setEmplacement($this->uploadsPublicPath . '/' . $nomFichier);
-        $media->setNomOriginel($nomOriginel);
-        $media->setPoids($taille ?? 0);
-        $media->setMimeType($mimeType ?? 'image/jpeg');
-        $em->persist($media);
-
-        return $media;
-    }
-
-    private function supprimerFichier(string $emplacementRelatif): void
-    {
-        $cheminAbsolu = $this->uploadsDirectory . '/' . basename($emplacementRelatif);
-        if (file_exists($cheminAbsolu)) {
-            unlink($cheminAbsolu);
-        }
-    }
-
     private function serializeMedia(Media $media): array
     {
         return [
-            'id' => $media->getId(),
-            'url' => $media->getEmplacement(),
+            'id'          => $media->getId(),
+            'url'         => $media->getEmplacement(),
             'nomOriginel' => $media->getNomOriginel(),
-            'mimeType' => $media->getMimeType(),
-            'poids' => $media->getPoids(),
+            'mimeType'    => $media->getMimeType(),
+            'poids'       => $media->getPoids(),
         ];
     }
 }

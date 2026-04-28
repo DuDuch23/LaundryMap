@@ -4,6 +4,7 @@ namespace App\Controller\Api\Administration;
 
 use App\Entity\LaverieHistoriqueInteraction;
 use App\Repository\LaverieRepository;
+use App\Service\Professionnel\ProfessionnelLaverieFormatterService;
 use Doctrine\ORM\EntityManagerInterface;
 use Pagerfanta\Doctrine\ORM\QueryAdapter;
 use Pagerfanta\Pagerfanta;
@@ -18,6 +19,55 @@ use Psr\Log\LoggerInterface;
 
 class ApiLaverieController extends AbstractController
 {
+    #[Route('/api/laveries/{id}', name: 'api_public_laverie_detail', methods: ['GET'], requirements: ['id' => '\\d+'])]
+    public function getPublicLaverieDetail(
+        int $id,
+        Request $request,
+        LaverieRepository $laverieRepository,
+        ProfessionnelLaverieFormatterService $formatter,
+    ): JsonResponse {
+        $laverie = $laverieRepository->find($id);
+
+        if (!$laverie || $laverie->getSupprimee_le() !== null || $laverie->getStatut()->value !== 'Validée') {
+            return $this->json(['message' => 'Laverie introuvable'], 404);
+        }
+
+        $adresse = $laverie->getAdresse();
+        $gallery = $formatter->buildGalleryResponse($laverie, $request);
+        $equipements = $formatter->buildEquipementsResponse($laverie);
+        $horaires = $formatter->buildHorairesResponse($laverie);
+        $mainImage = $gallery[0]['image'] ?? null;
+
+        if ($mainImage === null && $laverie->getLogo() !== null && $formatter->isProjectManagedMediaPath($laverie->getLogo()->getEmplacement())) {
+            $mainImage = $formatter->toPublicMediaUrl($laverie->getLogo()->getEmplacement(), $request);
+        }
+
+        return $this->json([
+            'id' => $laverie->getId(),
+            'nom' => $laverie->getNomEtablissement(),
+            'statut' => 'Validée',
+            'description' => $laverie->getDescription(),
+            'adresse' => $adresse?->getAdresse(),
+            'codePostal' => $adresse?->getCodePostal(),
+            'ville' => $adresse?->getVille(),
+            'latitude' => $adresse?->getLatitude(),
+            'longitude' => $adresse?->getLongitude(),
+            'distance' => null,
+            'wiLineReference' => $laverie->getWiLineReference(),
+            'image' => $mainImage,
+            'images' => $gallery,
+            'equipements' => $equipements,
+            'horaires' => $horaires,
+            'commentairesCount' => $formatter->countLaverieCommentaires($laverie),
+            'noteMoyenne' => $formatter->getLaverieNoteMoyenne($laverie),
+            'professionnel' => [
+                'id' => $laverie->getProfessionnel()?->getId(),
+                'nom' => $laverie->getProfessionnel()?->getUtilisateur()?->getNom(),
+                'prenom' => $laverie->getProfessionnel()?->getUtilisateur()?->getPrenom(),
+            ],
+        ]);
+    }
+
     #[Route('/api/admin/laveries', name: 'api_admin_laveries_liste', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN')]
     public function getLaveries(
@@ -65,7 +115,6 @@ class ApiLaverieController extends AbstractController
                 'nom' => $laverie->getNomEtablissement(),
                 'statut' => $statutReact,
                 'adresse' => $adresseComplete,
-                'distance' => null,
                 'image' => $image,
                 'professionnel' => [
                     'id' => $pro->getId(),
@@ -153,7 +202,6 @@ class ApiLaverieController extends AbstractController
             'statut' => $statutReact,
             'description' => $laverie->getDescription(),
             'adresse' => $adresseComplete,
-            'distance' => null,
             'wiLineReference' => $laverie->getWiLineReference(),
             'images' => $images,
             'equipements' => $equipements,
@@ -195,68 +243,72 @@ class ApiLaverieController extends AbstractController
             return $this->json(['message' => 'Un motif de refus est obligatoire.'], 400);
         }
 
-        $historique = new LaverieHistoriqueInteraction();
-        $historique->setAdministrateur($administrateur);
-        $historique->setLaverie($laverie);
-        $historique->setDate(new \DateTime());
+        try {
+            $historique = new LaverieHistoriqueInteraction();
+            $historique->setAdministrateur($administrateur);
+            $historique->setLaverie($laverie);
+            $historique->setDate(new \DateTime());
 
-        $user = $laverie->getProfessionnel()->getUtilisateur();
-
-        if ($action === 'accepter') {
-            $laverie->setStatut(\App\Enum\StatutLaverieEnum::STATUT_VALIDEE);
-            $historique->setAction('Validation de la laverie');
-            $historique->setMotifAction($motif ?: 'Laverie vérifiée et validée.');
-
-            $frontendBaseUrl = $this->getParameter('app.frontend_url');
-            $email = (new TemplatedEmail())
-                ->from($this->getParameter('mailer_from'))
-                ->to($user->getEmail())
-                ->subject('Votre laverie "' . $laverie->getNomEtablissement() . '" a été validée !')
-                ->htmlTemplate('emails/validation_laverie.html.twig')
-                ->context([
-                    'user' => $user,
-                    'laverie' => $laverie,
-                    'motif' => $motif,
-                    'loginUrl' => $frontendBaseUrl . '/connexion',
-                ]);
-
-            try {
-                $mailer->send($email);
-            } catch (\Throwable $e) {
-                $logger->error('Echec envoi mail validation laverie', [
-                    'laverieId' => $laverie->getId(),
-                    'exception' => $e,
-                ]);
+            $pro = $laverie->getProfessionnel();
+            if (!$pro) {
+                throw new \RuntimeException('La laverie n\'a pas de professionnel rattache (laverie.professionnel == null)');
             }
-        } else {
-            $laverie->setStatut(\App\Enum\StatutLaverieEnum::STATUT_REFUSEE);
-            $historique->setAction('Refus de la laverie');
-            $historique->setMotifAction($motif ?: 'Laverie refusée par l\'administration.');
-
-            $email = (new TemplatedEmail())
-                ->from($this->getParameter('mailer_from'))
-                ->to($user->getEmail())
-                ->subject('Information concernant votre laverie "' . $laverie->getNomEtablissement() . '"')
-                ->htmlTemplate('emails/refus_laverie.html.twig')
-                ->context([
-                    'user' => $user,
-                    'laverie' => $laverie,
-                    'motif' => $motif,
-                ]);
-
-            try {
-                $mailer->send($email);
-            } catch (\Throwable $e) {
-                $logger->error('Echec envoi mail refus laverie', [
-                    'laverieId' => $laverie->getId(),
-                    'exception' => $e,
-                ]);
+            $user = $pro->getUtilisateur();
+            if (!$user) {
+                throw new \RuntimeException('Le professionnel n\'a pas d\'utilisateur rattache (pro.utilisateur == null)');
             }
+
+            if ($action === 'accepter') {
+                $laverie->setStatut(\App\Enum\StatutLaverieEnum::STATUT_VALIDEE);
+                $historique->setAction('Validation de la laverie');
+                $historique->setMotifAction($motif ?: 'Laverie vérifiée et validée.');
+
+                $frontendBaseUrl = $this->getParameter('app.frontend_url');
+                $email = (new TemplatedEmail())
+                    ->from($this->getParameter('mailer_from'))
+                    ->to($user->getEmail())
+                    ->subject('Votre laverie "' . $laverie->getNomEtablissement() . '" a été validée !')
+                    ->htmlTemplate('emails/validation_laverie.html.twig')
+                    ->context([
+                        'user' => $user,
+                        'laverie' => $laverie,
+                        'motif' => $motif,
+                        'loginUrl' => $frontendBaseUrl . '/connexion',
+                    ]);
+
+                $mailer->send($email);
+            } else {
+                $laverie->setStatut(\App\Enum\StatutLaverieEnum::STATUT_REFUSEE);
+                $historique->setAction('Refus de la laverie');
+                $historique->setMotifAction($motif ?: 'Laverie refusée par l\'administration.');
+
+                $email = (new TemplatedEmail())
+                    ->from($this->getParameter('mailer_from'))
+                    ->to($user->getEmail())
+                    ->subject('Information concernant votre laverie "' . $laverie->getNomEtablissement() . '"')
+                    ->htmlTemplate('emails/refus_laverie.html.twig')
+                    ->context([
+                        'user' => $user,
+                        'laverie' => $laverie,
+                        'motif' => $motif,
+                    ]);
+
+                $mailer->send($email);
+            }
+
+            $em->persist($historique);
+            $em->flush();
+
+            return $this->json(['message' => 'Statut de la laverie mis à jour avec succès']);
+        } catch (\Throwable $e) {
+            // ⚠️ TEMPORAIRE — diagnostic prod, à retirer une fois la cause identifiee
+            return $this->json([
+                'debug_class'   => get_class($e),
+                'debug_message' => $e->getMessage(),
+                'debug_file'    => $e->getFile() . ':' . $e->getLine(),
+                'debug_previous'=> $e->getPrevious()?->getMessage(),
+                'debug_trace'   => array_slice(explode("\n", $e->getTraceAsString()), 0, 8),
+            ], 500);
         }
-
-        $em->persist($historique);
-        $em->flush();
-
-        return $this->json(['message' => 'Statut de la laverie mis à jour avec succès']);
     }
 }
