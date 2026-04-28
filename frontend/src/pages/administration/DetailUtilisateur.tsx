@@ -177,7 +177,7 @@ export default function DetailUtilisateur() {
                                     </div>
 
                                     {/* Bouton "..." */}
-                                    <Link to="/admin/gestion-laveries" className="bg-[#22ACE2] text-white p-2 rounded-xl hover:bg-blue-500 transition shadow-sm cursor-pointer shrink-0" aria-label="Voir les laveries">
+                                    <Link to={`/admin/laveries/${laverie.id}`} className="bg-[#22ACE2] text-white p-2 rounded-xl hover:bg-blue-500 transition shadow-sm cursor-pointer shrink-0" aria-label={`Voir le détail de ${laverie.nom}`}>
                                         <MoreHorizontal size={16} />
                                     </Link>
                                 </div>

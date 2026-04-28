@@ -232,7 +232,7 @@ export default function DetailLaverie() {
                     
                     {/* Colonne de gauche : Equipements */}
                     <div className="flex flex-col">
-                        <h2 className="font-bold text-base underline decoration-[1.5px] decoration-black underline-offset-4 mb-4">Équipements :</h2>
+                        <h2 className="font-bold text-base underline decoration-[1.5px] decoration-black underline-offset-4 mb-4">Services proposés :</h2>
                         
                         <div className="space-y-4 mb-4">
                             {equipementsAffichage.map((eq) => (
