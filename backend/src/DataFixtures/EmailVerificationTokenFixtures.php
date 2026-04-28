@@ -11,10 +11,6 @@ use Doctrine\Persistence\ObjectManager;
 class EmailVerificationTokenFixtures extends Fixture implements DependentFixtureInterface
 {
     /*
-     * Tous les utilisateurs des fixtures sont considérés comme ayant déjà
-     * vérifié leur email (pas d'envoi de mail réel en mode fixtures).
-     * Le statut "En attente" en admin viendra uniquement du Professionnel.statut
-     * (validation admin pas encore faite), pas de l'email.
      *
      * Index correspondent à UtilisateurFixtures :
      *   0 = Marc Dupont    (pro validé)
@@ -45,7 +41,6 @@ class EmailVerificationTokenFixtures extends Fixture implements DependentFixture
             $token->setToken($this->genererTokenAleatoire());
             $token->setCreatedAt(new \DateTimeImmutable('-1 day'));
             $token->setExpiresAt(new \DateTimeImmutable('+2 hours'));
-            // Email vérifié pour tous (pas d'envoi mail en fixtures)
             $token->setVerifiedAt(new \DateTimeImmutable('-23 hours'));
 
             $manager->persist($token);
