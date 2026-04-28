@@ -115,7 +115,9 @@ export function AccessibleInput({
         id={id}
         name={name || id}
         type={type}
-        {...(isCheckbox ? { checked: !!value } : { value: value ?? '' })}
+        {...(isCheckbox
+          ? { checked: value === true || value === 'true' }
+          : { value: value ?? '' })}
         className={`
           ${type === 'checkbox' ? 'w-4 h-4 accent-[#22ACE2]' : ''}
           ${type !== 'submit' && type !== 'checkbox' ? 'border border-solid rounded-lg bg-white p-4 w-full' : ''}
