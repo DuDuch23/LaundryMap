@@ -20,6 +20,10 @@ const EmailVerification = React.lazy(() => import('./pages/EmailVerification'));
 const AjoutLaverie = React.lazy(() => import('./pages/AjoutLaverie/AjoutLaverie'));
 const MesLaveries = React.lazy(() => import('./pages/MesLaveries/MesLaveries'));
 const MesFavoris = React.lazy(() => import('./pages/MesFavoris'));
+const FicheLaverie = React.lazy(() => import('./pages/FicheLaverie'));
+const TermsOfUse = React.lazy(() => import('./pages/TermsOfUse'));
+const LegalNotice = React.lazy(() => import('./pages/LegalNotice'));
+const ProprieteIntellectuelle = React.lazy(() => import('./pages/ProprieteIntellectuelle'));
 const TableauDeBordPro = React.lazy(() => import('./pages/professionnel/TableauDeBordPro'));
 const ModifierLaveriePro = React.lazy(() => import('./pages/professionnel/ModifierLaveriePro'));
 const ProRoute = React.lazy(() => import('./routes/ProRoute'));
@@ -96,6 +100,10 @@ function App() {
               <Route path="/email-verifie" element={<EmailVerification />} />
               <Route path="/nouvelle-laverie" element={<AjoutLaverie />} />
               <Route path="/mes-laveries" element={<MesLaveries />} />
+              <Route path="/laveries/:id" element={<FicheLaverie />} />
+              <Route path="/cgu" element={<TermsOfUse />} />
+              <Route path="/mentions-legales" element={<LegalNotice />} />
+              <Route path="/propriete-intellectuelle" element={<ProprieteIntellectuelle />} />
               <Route element={<UserRoute />}>
                 <Route path="/mes-favoris" element={<MesFavoris />} />
               </Route>

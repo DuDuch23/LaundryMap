@@ -272,6 +272,51 @@ class ApiProfilController extends AbstractController
         return $this->json(['message' => 'Favori supprimé avec succès.'], 200);
     }
 
+    #[Route('/api/profil/favoris/{laverieId}', name: 'api_profil_favoris_add', methods: ['POST'])]
+    #[IsGranted('ROLE_USER')]
+    public function addFavori(int $laverieId, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $utilisateur = $this->getUser();
+
+        if (!$utilisateur instanceof Utilisateur) {
+            return $this->json(['message' => 'Utilisateur non authentifié.'], 401);
+        }
+
+        if ($utilisateur->isProfessionnel()) {
+            return $this->json(['message' => 'Accès réservé aux utilisateurs non professionnels.'], 403);
+        }
+
+        $laverie = $entityManager->getRepository(Laverie::class)->find($laverieId);
+        if (!$laverie instanceof Laverie) {
+            return $this->json(['message' => 'Laverie introuvable.'], 404);
+        }
+
+        // Vérifier que la laverie n'est pas supprimée
+        if ($laverie->getSupprimee_le() !== null) {
+            return $this->json(['message' => 'Laverie introuvable.'], 404);
+        }
+
+        // Vérifier que la laverie n'est déjà pas en favoris
+        $favoriExistant = $entityManager->getRepository(LaverieFavori::class)->findOneBy([
+            'utilisateur' => $utilisateur,
+            'laverie' => $laverie,
+        ]);
+
+        if ($favoriExistant instanceof LaverieFavori) {
+            return $this->json(['message' => 'Cette laverie est déjà en favoris.'], 200);
+        }
+
+        // Ajouter aux favoris
+        $favori = new LaverieFavori();
+        $favori->setUtilisateur($utilisateur);
+        $favori->setLaverie($laverie);
+
+        $entityManager->persist($favori);
+        $entityManager->flush();
+
+        return $this->json(['message' => 'Favori ajouté avec succès.'], 201);
+    }
+
     #[Route('/api/profil', name: 'api_profil', methods: ['GET'])]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function getProfil(): JsonResponse

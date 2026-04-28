@@ -380,6 +380,48 @@ export interface FavoriLaverie {
     imageAlt: string | null;
 }
 
+export interface LaveriePublicDetail {
+    id: number;
+    nom: string;
+    statut: string;
+    description: string | null;
+    adresse: string | null;
+    codePostal: string | null;
+    ville: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    distance: number | null;
+    wiLineReference: number | null;
+    image: string | null;
+    images: Array<{
+        id?: number;
+        image: string;
+        alt?: string;
+    }>;
+    equipements: Array<{
+        id: number;
+        equipementReference?: number | null;
+        nom: string;
+        type: string;
+        capacite: number;
+        tarif: number;
+        duree: number;
+    }>;
+    horaires: Array<{
+        jour: string;
+        debut: string;
+        fin: string;
+        ferme: boolean;
+    }>;
+    commentairesCount: number;
+    noteMoyenne: number | null;
+    professionnel?: {
+        id?: number | null;
+        nom?: string | null;
+        prenom?: string | null;
+    };
+}
+
 interface MesFavorisData {
     favoris: FavoriLaverie[];
     total: number;
@@ -436,6 +478,28 @@ export async function getMesFavoris(): Promise<MesFavorisData> {
     return data as MesFavorisData;
 }
 
+export async function ajouterFavori(laverieId: number): Promise<void> {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+        throw new Error('Aucun token de connexion trouvé.');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/profil/favoris/${laverieId}`, {
+        method: 'POST',
+        headers: {
+            accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        const error: any = new Error('Impossible d\'ajouter ce favori.');
+        error.status = response.status;
+        throw error;
+    }
+}
+
 export async function supprimerFavori(laverieId: number): Promise<void> {
     const token = localStorage.getItem('token');
 
@@ -456,6 +520,22 @@ export async function supprimerFavori(laverieId: number): Promise<void> {
         error.status = response.status;
         throw error;
     }
+}
+
+export async function fetchPublicLaverieDetail(id: string): Promise<LaveriePublicDetail> {
+    const response = await fetch(`${API_BASE_URL}/api/laveries/${id}`, {
+        headers: {
+            accept: 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        const error: any = new Error('Impossible de récupérer la fiche de la laverie.');
+        error.status = response.status;
+        throw error;
+    }
+
+    return response.json() as Promise<LaveriePublicDetail>;
 }
 
 export async function getServices(): Promise<ServiceOption[]> {
