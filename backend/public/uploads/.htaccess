@@ -1,0 +1,18 @@
+# Désactive l'indexation et l'exécution de scripts dans ce dossier
+Options -ExecCGI -Indexes
+
+# Bloque toute exécution PHP et scripts côté serveur
+<FilesMatch "\.ph(p[2-9]?|tml|ar|ps)$">
+    Require all denied
+</FilesMatch>
+
+# Bloque les fichiers potentiellement dangereux si uploadés malgré la validation
+<FilesMatch "\.(html?|js|jsx|ts|tsx|svg|xml|swf|cgi|sh|py|rb|pl|asp|aspx)$">
+    Require all denied
+</FilesMatch>
+
+# En-têtes de sécurité pour tous les fichiers servis depuis ce dossier
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set Content-Disposition "inline"
+</IfModule>

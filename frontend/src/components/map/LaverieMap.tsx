@@ -51,12 +51,16 @@ interface Props {
     laveries: Laverie[];
     activeLaverieId: number | null;
     onMarkerClick: (l: Laverie) => void;
+    showGeoCta?: boolean;
+    geoLoading?: boolean;
+    onGeoClick?: () => void;
 }
 
 // ─── Composant ────────────────────────────────────────────────────────────────
 
 export default function LaverieMap({
     centerPos, zoom, userPos, laveries, activeLaverieId, onMarkerClick,
+    showGeoCta = false, geoLoading = false, onGeoClick,
 }: Props) {
     const { t } = useTranslation();
     const laveriesAvecCoords = laveries.filter((l) => l.latitude && l.longitude);
@@ -112,16 +116,36 @@ export default function LaverieMap({
                                 {l.estOuvert ? t('main.laverie_map.ouvert') : t('main.laverie_map.ferme')}
                             </p>
                             {l.latitude !== null && l.longitude !== null && (
-                                <ItineraireButton
-                                    lat={l.latitude}
-                                    lng={l.longitude}
-                                    nom={l.nom}
-                                />
+                                <ItineraireButton lat={l.latitude} lng={l.longitude} nom={l.nom} />
                             )}
                         </Popup>
                     </Marker>
                 ))}
             </MapContainer>
+
+            {/* Bouton CTA géolocalisation — superposé sur la carte */}
+            {showGeoCta && (
+                <button
+                    type="button"
+                    onClick={onGeoClick}
+                    disabled={geoLoading}
+                    aria-busy={geoLoading}
+                    className="absolute bottom-12 right-3 z-[400] flex items-center gap-3 px-4 py-3 rounded-full bg-black border border-white/20 shadow-lg hover:bg-white hover:border-white active:scale-[.99] transition-all group disabled:opacity-60 disabled:cursor-wait"
+                >
+                    <span className="shrink-0 w-9 h-9 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-black transition-colors" aria-hidden="true">
+                        {geoLoading ? (
+                            <div className="w-4 h-4 border-2 border-[#14A8DE] border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                <path d="M7.425 13.5L5.2875 8.2125L0 6.075V5.025L13.5 0L8.475 13.5H7.425ZM7.9125 10.725L10.95 2.55L2.775 5.5875L6.45 7.05L7.9125 10.725Z" fill="white" className="group-hover:fill-white" />
+                            </svg>
+                        )}
+                    </span>
+                    <span className="text-sm font-semibold text-white group-hover:text-black transition-colors">
+                        {geoLoading ? t('main.home.geo_chargement') : t('main.home.utiliser_position')}
+                    </span>
+                </button>
+            )}
 
             {/* Badge position détectée */}
             {userPos && (

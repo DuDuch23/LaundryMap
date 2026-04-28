@@ -21,6 +21,7 @@ use App\Repository\MethodePaiementRepository;
 use App\Repository\ProfessionnelRepository;
 use App\Repository\ServiceRepository;
 use App\Service\ApiWiLineService;
+use App\Service\MediaService;
 use App\Service\Professionnel\ProfessionnelLaverieFormatterService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -103,39 +104,45 @@ class ApiLaverieController extends ApiProfilController
         EntityManagerInterface $em,
         ServiceRepository $serviceRepository,
         MethodePaiementRepository $methodePaiementRepository,
+        MediaService $mediaService,
     ): JsonResponse {
-        // donnée reçu par le front
         $professionnel = $this->getProfessionnelValide();
         if ($professionnel instanceof JsonResponse) {
             return $professionnel;
         }
 
-        $payload = json_decode($request->getContent(), true);
-
-        if (!is_array($payload)) {
-            return $this->json(['message' => 'Corps de requête invalide.'], 400);
-        }
+        // Lecture des champs texte (multipart/form-data)
+        $get = fn(string $k): string => trim($request->request->get($k, ''));
 
         foreach (['nomEtablissement', 'rue', 'codePostal', 'ville', 'pays'] as $champ) {
-            if (empty(trim((string)($payload[$champ] ?? '')))) {
+            if ($get($champ) === '') {
                 return $this->json(['message' => "Le champ '$champ' est obligatoire."], 400);
             }
         }
 
-        if (empty($payload['horaires']) || !is_array($payload['horaires'])) {
+        // Champs complexes envoyés en JSON-string dans le FormData
+        $horaires   = json_decode($request->request->get('horaires',   '{}'), true);
+        $machines   = json_decode($request->request->get('machines',   '[]'), true);
+        $equipements = json_decode($request->request->get('equipements', '[]'), true);
+        $serviceIds = json_decode($request->request->get('serviceIds', '[]'), true);
+        $paiementIds = json_decode($request->request->get('paiementIds', '[]'), true);
+
+        if (empty($horaires) || !is_array($horaires)) {
             return $this->json(['message' => 'Les horaires sont obligatoires.'], 400);
         }
 
-        //  Adresse
+        // ── Adresse ──────────────────────────────────────────────────────────
         $adresse = new Adresse();
-        $adresse->setAdresse(trim($payload['rue'] . ', ' . $payload['codePostal'] . ' ' . $payload['ville'] . ', ' . $payload['pays']));
-        $adresse->setRue(trim($payload['rue']));
-        $adresse->setCodePostal(trim($payload['codePostal']));
-        $adresse->setVille(trim($payload['ville']));
-        $adresse->setPays(trim($payload['pays']));
+        $adresse->setAdresse($get('rue') . ', ' . $get('codePostal') . ' ' . $get('ville') . ', ' . $get('pays'));
+        $adresse->setRue($get('rue'));
+        $adresse->setCodePostal($get('codePostal'));
+        $adresse->setVille($get('ville'));
+        $adresse->setPays($get('pays'));
 
-        $latitude  = isset($payload['latitude'])  && is_numeric($payload['latitude'])  ? (float) $payload['latitude']  : null;
-        $longitude = isset($payload['longitude']) && is_numeric($payload['longitude']) ? (float) $payload['longitude'] : null;
+        $latRaw = $request->request->get('latitude');
+        $lngRaw = $request->request->get('longitude');
+        $latitude  = ($latRaw !== null && is_numeric($latRaw))  ? (float) $latRaw  : null;
+        $longitude = ($lngRaw !== null && is_numeric($lngRaw)) ? (float) $lngRaw : null;
         $adresse->setLatitude($latitude);
         $adresse->setLongitude($longitude);
         $adresse->setStatutGeolocalisation(
@@ -143,45 +150,36 @@ class ApiLaverieController extends ApiProfilController
                 ? StatutGeoEnum::GEOLOCALISEE
                 : StatutGeoEnum::EN_ATTENTE
         );
-
         $em->persist($adresse);
 
-        // Laverie
+        // ── Laverie ───────────────────────────────────────────────────────────
         $laverie = new Laverie();
         $laverie->setProfessionnel($professionnel);
-        $laverie->setNomEtablissement(trim($payload['nomEtablissement']));
-        $laverie->setContactEmail(!empty($payload['contactEmail']) ? trim($payload['contactEmail']) : null);
-        $laverie->setDescription(!empty($payload['description']) ? trim($payload['description']) : null);
+        $laverie->setNomEtablissement($get('nomEtablissement'));
+        $laverie->setContactEmail($get('contactEmail') !== '' ? $get('contactEmail') : null);
+        $laverie->setDescription($get('description') !== '' ? $get('description') : null);
         $laverie->setAdresse($adresse);
         $laverie->setStatut(StatutLaverieEnum::STATUT_EN_ATTENTE);
         $laverie->setDateAjout(new \DateTime());
-        $laverie->setDateModification(new \DateTime());        
+        $laverie->setDateModification(new \DateTime());
 
-        // Référence WI-LINE — on stocke l'ID numérique de la centrale si fourni
-        if (!empty($payload['wiLineCentraleId'])) {
-            $laverie->setWiLineReference((int) $payload['wiLineCentraleId']);
+        $wiLineId = $request->request->get('wiLineCentraleId');
+        if ($wiLineId !== null && $wiLineId !== '') {
+            $laverie->setWiLineReference((int) $wiLineId);
         }
 
         $em->persist($laverie);
 
-        // ── Horaires (LaverieFermeture) ──────────────────────────────────────
-        // On stocke les plages d'ouverture par jour.
-        // Le front envoie : { "Lundi": { "ouvert": true, "ouverture": "07:00", "fermeture": "22:00" }, ... }
+        // ── Horaires ──────────────────────────────────────────────────────────
         $jourMapping = [
-            'Lundi' => JourEnum::LUNDI,
-            'Mardi' => JourEnum::MARDI,
-            'Mercredi' => JourEnum::MERCREDI,
-            'Jeudi' => JourEnum::JEUDI,
-            'Vendredi' => JourEnum::VENDREDI,
-            'Samedi' => JourEnum::SAMEDI,
+            'Lundi'    => JourEnum::LUNDI,   'Mardi'    => JourEnum::MARDI,
+            'Mercredi' => JourEnum::MERCREDI, 'Jeudi'    => JourEnum::JEUDI,
+            'Vendredi' => JourEnum::VENDREDI, 'Samedi'   => JourEnum::SAMEDI,
             'Dimanche' => JourEnum::DIMANCHE,
         ];
 
-        foreach ($payload['horaires'] as $jourLabel => $horaire) {
-            if (empty($horaire['ouvert'])) {
-                continue; // jour fermé, on ne persiste pas
-            }
-
+        foreach ($horaires as $jourLabel => $horaire) {
+            if (empty($horaire['ouvert'])) continue;
             $jourEnum = $jourMapping[$jourLabel] ?? null;
             if ($jourEnum === null) continue;
 
@@ -195,32 +193,30 @@ class ApiLaverieController extends ApiProfilController
             $em->persist($fermeture);
         }
 
-        if (!empty($payload['machines']) && is_array($payload['machines'])) {
-            foreach ($payload['machines'] as $machineData) {
+        // ── Machines ──────────────────────────────────────────────────────────
+        if (is_array($machines)) {
+            foreach ($machines as $machineData) {
                 if (empty($machineData['type'])) continue;
 
                 $equipement = new LaverieEquipement();
                 $equipement->setLaverie($laverie);
-                $equipement->setNom($machineData['nom'] ?? $machineData['type_name'] ?? $machineData['type']);
+                $equipement->setNom($machineData['nom'] ?? $machineData['type']);
                 $equipement->setType($machineData['type']);
                 $equipement->setCapacite((int) ($machineData['capacite'] ?? 0));
                 $equipement->setTarif((float) ($machineData['tarif'] ?? 0));
                 $equipement->setDuree((int) ($machineData['duree'] ?? 0));
-
                 if (!empty($machineData['wiline_machine_id'])) {
                     $equipement->setEquipementReference((int) $machineData['wiline_machine_id']);
                 }
-
                 $em->persist($equipement);
             }
         }
 
-        // ── Services ─────────────────────────────────────────────────────────
-        if (!empty($payload['serviceIds']) && is_array($payload['serviceIds'])) {
-            foreach ($payload['serviceIds'] as $serviceId) {
+        // ── Services ──────────────────────────────────────────────────────────
+        if (is_array($serviceIds)) {
+            foreach ($serviceIds as $serviceId) {
                 $service = $serviceRepository->find((int) $serviceId);
                 if ($service === null) continue;
-
                 $laverieService = new LaverieService();
                 $laverieService->setLaverie($laverie);
                 $laverieService->setService($service);
@@ -229,11 +225,10 @@ class ApiLaverieController extends ApiProfilController
         }
 
         // ── Paiements ─────────────────────────────────────────────────────────
-        if (!empty($payload['paiementIds']) && is_array($payload['paiementIds'])) {
-            foreach ($payload['paiementIds'] as $paiementId) {
+        if (is_array($paiementIds)) {
+            foreach ($paiementIds as $paiementId) {
                 $paiement = $methodePaiementRepository->find((int) $paiementId);
                 if ($paiement === null) continue;
-
                 $laveriePaiement = new LaveriePaiement();
                 $laveriePaiement->setLaverie($laverie);
                 $laveriePaiement->setPaiement($paiement);
@@ -241,13 +236,34 @@ class ApiLaverieController extends ApiProfilController
             }
         }
 
+        // ── Médias (logo + photos dans la même requête) ───────────────────────
+        $logoFile = $request->files->get('logo');
+        if ($logoFile) {
+            $erreur = $mediaService->validerFichier($logoFile);
+            if ($erreur) return $this->json(['message' => "Logo : $erreur"], 400);
+            $logo = $mediaService->creerMedia($logoFile);
+            $laverie->setLogo($logo);
+        }
+
+        $photoFiles = $request->files->get('photos') ?? [];
+        if (!is_array($photoFiles)) {
+            $photoFiles = [$photoFiles];
+        }
+        foreach ($photoFiles as $photoFile) {
+            if ($photoFile === null) continue;
+            $erreur = $mediaService->validerFichier($photoFile);
+            if ($erreur) return $this->json(['message' => "Photo : $erreur"], 400);
+            $media = $mediaService->creerMedia($photoFile);
+            $laverieMedia = new LaverieMedia();
+            $laverieMedia->setLaverie($laverie);
+            $laverieMedia->setMedia($media);
+            $laverieMedia->setDescription('');
+            $em->persist($laverieMedia);
+        }
+
         $em->flush();
 
-
-        return $this->json([
-            'message' => 'Laverie créée et soumise à validation.',
-            'id' => $laverie->getId(),
-        ], 201);
+        return $this->json(['message' => 'Laverie créée et soumise à validation.', 'id' => $laverie->getId()], 201);
     }
 
     public function modifierLaverie()

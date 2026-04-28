@@ -23,6 +23,10 @@ services:
         arguments:
             $uploadsDirectory: '%kernel.project_dir%/public/uploads/laveries'
             $uploadsPublicPath: '/uploads/laveries'
+    App\Service\MediaService:
+        arguments:
+            $uploadsDirectory: '%kernel.project_dir%/public/uploads/laveries'
+            $uploadsPublicPath: '/uploads/laveries'
     # App\Service\ApiSirenSiretService:
     #     arguments:
     #         $inseeToken: '%env(INSEE_TOKEN)%'
