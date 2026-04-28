@@ -17,7 +17,9 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Psr\Log\LoggerInterface;
 
 class ApiUtilisateurController extends AbstractController
 {
@@ -215,7 +217,7 @@ class ApiUtilisateurController extends AbstractController
 
     #[Route('/api/admin/utilisateurs/{id}/statut', name: 'api_admin_utilisateur_statut', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN')]
-    public function updateStatut(int $id, Request $request, UtilisateurRepository $utilisateurRepository, EntityManagerInterface $em, MailerInterface $mailer): JsonResponse
+    public function updateStatut(int $id, Request $request, UtilisateurRepository $utilisateurRepository, EntityManagerInterface $em, MailerInterface $mailer, LoggerInterface $logger): JsonResponse
     {
         $administrateur = $this->getUser();
 
@@ -276,7 +278,14 @@ class ApiUtilisateurController extends AbstractController
                     'loginUrl' => $frontendBaseUrl . '/connexion',
                 ]);
 
-            $mailer->send($email);
+            try {
+                $mailer->send($email);
+            } catch (\Throwable $e) {
+                $logger->error('Echec envoi mail validation utilisateur', [
+                    'utilisateurId' => $user->getId(),
+                    'exception' => $e,
+                ]);
+            }
         } else {
             $user->setStatut(\App\Enum\StatutUtilisateurEnum::STATUT_REFUSE);
             if ($pro) {
@@ -292,8 +301,15 @@ class ApiUtilisateurController extends AbstractController
                 ->subject('Information concernant votre compte LaundryMap')
                 ->htmlTemplate('emails/refus_utilisateur.html.twig')
                 ->context(['user' => $user, 'motif' => $motif]);
-            
-            $mailer->send($email);
+
+            try {
+                $mailer->send($email);
+            } catch (\Throwable $e) {
+                $logger->error('Echec envoi mail refus utilisateur', [
+                    'utilisateurId' => $user->getId(),
+                    'exception' => $e,
+                ]);
+            }
         }
 
         $em->persist($historique);
