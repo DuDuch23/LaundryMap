@@ -415,6 +415,24 @@ export interface LaveriePublicDetail {
         fin: string;
         ferme: boolean;
     }>;
+    services: Array<{
+        id: number;
+        nom: string;
+    }>;
+    paiements: Array<{
+        id: number;
+        nom: string;
+    }>;
+    commentaires: Array<{
+        id: number;
+        note: number;
+        commentaire: string;
+        date: string;
+        utilisateur: {
+            prenom: string;
+            nom: string;
+        };
+    }>;
     commentairesCount: number;
     noteMoyenne: number | null;
     professionnel?: {
