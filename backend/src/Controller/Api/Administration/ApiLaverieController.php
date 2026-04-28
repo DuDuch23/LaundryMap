@@ -65,7 +65,6 @@ class ApiLaverieController extends AbstractController
                 'nom' => $laverie->getNomEtablissement(),
                 'statut' => $statutReact,
                 'adresse' => $adresseComplete,
-                'distance' => null,
                 'image' => $image,
                 'professionnel' => [
                     'id' => $pro->getId(),
@@ -153,7 +152,6 @@ class ApiLaverieController extends AbstractController
             'statut' => $statutReact,
             'description' => $laverie->getDescription(),
             'adresse' => $adresseComplete,
-            'distance' => null,
             'wiLineReference' => $laverie->getWiLineReference(),
             'images' => $images,
             'equipements' => $equipements,

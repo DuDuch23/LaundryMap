@@ -198,7 +198,6 @@ class ApiUtilisateurController extends AbstractController
                     'nom' => $laverie->getNomEtablissement(),
                     'statut' => $couleur,
                     'adresse' => $adresseComplete,
-                    'distance' => null,
                     'image' => $image,
                     'imageAlt' => $image ? $laverie->getNomEtablissement() : null,
                 ];
