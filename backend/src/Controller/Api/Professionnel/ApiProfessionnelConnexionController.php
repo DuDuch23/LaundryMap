@@ -43,13 +43,13 @@ class ApiProfessionnelConnexionController extends AbstractController
             $professionnel = $professionnelRepository->findOneByUtilisateurEmail($email);
 
             if (!$professionnel) {
-                return $this->json(['erreur' => 'Identifiants invalides'], 401);
+                return $this->json(['erreur' => 'Email ou mot de passe incorrect'], 401);
             }
 
             $utilisateur = $professionnel->getUtilisateur();
 
             if (!$passwordHasher->isPasswordValid($utilisateur, $motDePasse)) {
-                return $this->json(['erreur' => 'Identifiants invalides'], 401);
+                return $this->json(['erreur' => 'Email ou mot de passe incorrect'], 401);
             }
 
             $utilisateur->setDateDerniereConnexion(new \DateTime());
