@@ -212,7 +212,7 @@ export default function GestionLaveries() {
                         <line x1="8" y1="7" x2="8" y2="7.01" />
                         <line x1="12" y1="7" x2="12" y2="7.01" />
                     </svg>
-                    <p className="text-green-500 font-bold text-xl">+{enAttenteCount}</p>
+                    <p className="text-green-500 font-bold text-xl">{enAttenteCount}</p>
                 </div>
 
                 {/* INDICATEUR DE CHARGEMENT */}

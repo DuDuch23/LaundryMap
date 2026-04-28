@@ -252,7 +252,7 @@ export default function GestionUtilisateurs() {
                 <div className="bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm mb-8 mx-4">
                     <h2 className="font-bold mb-4">Utilisateurs en attentes</h2>
                     <UserRound size={40} className="mx-auto mb-2 text-black" />
-                    <p className="text-green-500 font-bold text-xl">+{enAttenteCount}</p>
+                    <p className="text-green-500 font-bold text-xl">{enAttenteCount}</p>
                 </div>
 
                 {/* INDICATEUR DE CHARGEMENT */}
