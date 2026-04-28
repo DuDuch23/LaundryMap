@@ -87,16 +87,7 @@ export default function Home() {
                         <p>{t('main.home.geo_refuse')}</p>
                     </div>
                 )}
-
-                {/* Carte */}
-                <LaverieMap
-                    centerPos={centerPos} zoom={mapZoom} userPos={userPos}
-                    laveries={laveries} activeLaverieId={activeLaverieId}
-                    onMarkerClick={handleLaverieSelect}
-                />
-
-                {/* Recherche & filtres */}
-                <div className="px-5 mt-5 relative z-10">
+                <div className="mt-5 relative z-10 px-5">
                     <SearchBar
                         value={searchQuery} onChange={handleSearchInput}
                         onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim()) rechercherParTexte(searchQuery); }}
@@ -122,7 +113,7 @@ export default function Home() {
                             onClick={requestGeolocation}
                             disabled={geoLoading}
                             aria-busy={geoLoading}
-                            className="absolute -top-[120px] right-5 w-auto rounded-full bg-black mt-3 flex items-center gap-3 px-4 py-3 border border-white/20 shadow-sm hover:bg-white hover:border-white active:scale-[.99] transition-all text-left group disabled:opacity-60 disabled:cursor-wait"
+                            className="absolute top-[620px] right-5 w-auto mt-3 rounded-full bg-black flex items-center gap-3 px-4 py-3 border border-white/20 shadow-sm hover:bg-white hover:border-white active:scale-[.99] transition-all text-left group disabled:opacity-60 disabled:cursor-wait"
                         >
                             <span className="shrink-0 w-9 h-9 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-black transition-colors" aria-hidden="true">
                                 {geoLoading ? (
@@ -170,6 +161,15 @@ export default function Home() {
                         />
                     )}
                 </div>
+
+                {/* Carte */}
+                <LaverieMap
+                    centerPos={centerPos} zoom={mapZoom} userPos={userPos}
+                    laveries={laveries} activeLaverieId={activeLaverieId}
+                    onMarkerClick={handleLaverieSelect}
+                />
+
+                {/* Recherche & filtres */}
 
                 {/* Résultats */}
                 <div className="px-5 mt-6 pb-20">

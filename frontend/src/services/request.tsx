@@ -62,6 +62,8 @@ interface InscriptionProfessionnelData {
     codePostal: string;
     ville: string;
     pays: string;
+    latitude: number | null;
+    longitude: number | null;
 }
 
 interface InscriptionUtilisateurData {

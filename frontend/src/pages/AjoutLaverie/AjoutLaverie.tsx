@@ -434,9 +434,116 @@ export default function AjoutLaverie() {
 
                 <div className="space-y-6">
 
-                    {/* ── 1. Informations générales ── */}
+                    {/* ── 1. WI-LINE ── */}
                     <Card>
-                        <SectionTitle step={1} title="Informations générales" />
+                        <SectionTitle step={1} title="Centrale WI-LINE" subtitle="Optionnel — importe automatiquement les machines depuis votre centrale" />
+                        <div className="flex gap-3 mb-4 flex-wrap">
+                            <div className="flex-1">
+                                <input
+                                    type="text"
+                                    value={form.wiLineApiKey}
+                                    onChange={(e) => { set('wiLineApiKey', e.target.value); setWiLineConnecte(false); setWiLineCentrales([]); }}
+                                    placeholder="Code client WI-LINE (api_key)"
+                                    className={inputClass(errors.wiLineApiKey)}
+                                />
+                                {errors.wiLineApiKey && <p className="text-xs text-red-500 mt-1">{errors.wiLineApiKey}</p>}
+                            </div>
+                            <button
+                                type="button"
+                                onClick={connecterWiLine}
+                                disabled={wiLineLoading || !form.wiLineApiKey.trim()}
+                                className="px-4 py-2.5 rounded-xl bg-[#14A8DE] text-white text-sm font-medium hover:bg-[#119ac8] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0"
+                            >
+                                {wiLineLoading ? 'Connexion...' : 'Connecter'}
+                            </button>
+                        </div>
+
+                        {wiLineConnecte && wiLineCentrales.length > 0 && (
+                            <div>
+                                <p className="text-sm font-medium text-gray-700 mb-2">
+                                    ✓ {wiLineCentrales.length} centrale{wiLineCentrales.length > 1 ? 's' : ''} trouvée{wiLineCentrales.length > 1 ? 's' : ''} — sélectionnez celle à associer :
+                                </p>
+                                <div className="space-y-2">
+                                    {wiLineCentrales.map((c) => (
+                                        <label key={c.serial} className="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors hover:bg-gray-50 has-[:checked]:border-[#14A8DE] has-[:checked]:bg-blue-50">
+                                            <input type="radio" name="wiline_centrale" value={c.serial} checked={wiLineSelectedSerial === c.serial} onChange={() => selectionnerCentrale(c.serial)} className="accent-[#14A8DE]" />
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-800">{c.nom}</p>
+                                                <p className="text-xs text-gray-400">{c.serial} — {c.machines.length} machine{c.machines.length > 1 ? 's' : ''}</p>
+                                            </div>
+                                        </label>
+                                    ))}
+                                </div>
+                                {wiLineSelectedSerial && <p className="text-xs text-green-600 mt-2">✓ {form.machines.length} machine(s) importée(s) dans la section ci-dessous.</p>}
+                            </div>
+                        )}
+                        {wiLineConnecte && wiLineCentrales.length === 0 && (
+                            <p className="text-sm text-gray-500">Aucune centrale trouvée pour ce compte.</p>
+                        )}
+                    </Card>
+
+                    {/* ── 2. Machines ── */}
+                    <Card>
+                        <div className="flex items-start justify-between mb-6">
+                            <SectionTitle step={2} title="Machines" subtitle="Ajoutez vos machines manuellement ou via WI-LINE" />
+                            <button type="button" onClick={addMachine} className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[#14A8DE] text-[#14A8DE] text-sm font-medium hover:bg-[#14A8DE]/5 transition-colors shrink-0">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
+                                Ajouter
+                            </button>
+                        </div>
+                        {form.machines.length === 0 ? (
+                            <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-xl">
+                                <p className="text-sm text-gray-400">Aucune machine ajoutée</p>
+                                <p className="text-xs text-gray-300 mt-1">Connectez une centrale WI-LINE ou ajoutez manuellement</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {form.machines.map((machine, idx) => (
+                                    <div key={machine.id} className={`p-4 rounded-xl border ${machine.wiline_machine_id ? 'bg-blue-50 border-blue-100' : 'bg-gray-50 border-gray-100'}`}>
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Machine #{idx + 1}</span>
+                                                {machine.wiline_machine_id && <span className="text-xs bg-[#14A8DE]/10 text-[#14A8DE] px-2 py-0.5 rounded-full font-medium">WI-LINE</span>}
+                                            </div>
+                                            <button type="button" onClick={() => removeMachine(machine.id)} className="text-gray-400 hover:text-red-500 transition-colors">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                                            </button>
+                                        </div>
+                                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                                            <div className="sm:col-span-1">
+                                                <label className="block text-xs font-medium text-gray-600 mb-1">Nom</label>
+                                                <input type="text" value={machine.nom} onChange={(e) => updateMachine(machine.id, 'nom', e.target.value)} placeholder="Ex: Machine 1" className="w-full max-w-[stretch] px-2.5 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#14A8DE] focus:outline-none" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
+                                                <select value={machine.type} onChange={(e) => updateMachine(machine.id, 'type', e.target.value)} className="w-full max-w-[stretch] px-2.5 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#14A8DE] focus:outline-none">
+                                                    <option value="lave-linge">Lave-linge</option>
+                                                    <option value="sèche-linge">Sèche-linge</option>
+                                                    <option value="autre">Autre</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600 mb-1">Capacité (kg)</label>
+                                                <input type="number" value={machine.capacite} onChange={(e) => updateMachine(machine.id, 'capacite', e.target.value)} placeholder="8" className="w-full max-w-[stretch] px-2.5 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#14A8DE] focus:outline-none" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600 mb-1">Tarif (€)</label>
+                                                <input type="number" step="0.10" value={machine.tarif} onChange={(e) => updateMachine(machine.id, 'tarif', e.target.value)} placeholder="4.50" className="w-full max-w-[stretch] px-2.5 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#14A8DE] focus:outline-none" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600 mb-1">Durée (min)</label>
+                                                <input type="number" value={machine.duree} onChange={(e) => updateMachine(machine.id, 'duree', e.target.value)} placeholder="45" className="w-full max-w-[stretch] px-2.5 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#14A8DE] focus:outline-none" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </Card>
+
+                    {/* ── 3. Informations générales ── */}
+                    <Card>
+                        <SectionTitle step={3} title="Informations générales" />
                         <div className="grid grid-cols-1 gap-4">
                             <Field label="Nom de l'établissement" required error={errors.nomEtablissement}>
                                 <input type="text" value={form.nomEtablissement} onChange={(e) => set('nomEtablissement', e.target.value)} placeholder="Ex : Laverie du Centre" className={inputClass(errors.nomEtablissement)} />
@@ -450,9 +557,9 @@ export default function AjoutLaverie() {
                         </div>
                     </Card>
 
-                    {/* ── 2. Adresse ── */}
+                    {/* ── 4. Adresse ── */}
                     <Card>
-                        <SectionTitle step={2} title="Adresse" subtitle="Champs obligatoires" />
+                        <SectionTitle step={4} title="Adresse" subtitle="Champs obligatoires" />
                         <div className="grid grid-cols-1 gap-4">
 
                             {/* Recherche autocomplete */}
@@ -542,9 +649,9 @@ export default function AjoutLaverie() {
                         </div>
                     </Card>
 
-                    {/* ── 3. Horaires ── */}
+                    {/* ── 5 Horaires ── */}
                     <Card>
-                        <SectionTitle step={3} title="Horaires d'ouverture" subtitle="Au moins un jour obligatoire" />
+                        <SectionTitle step={5} title="Horaires d'ouverture" subtitle="Au moins un jour obligatoire" />
                         {errors.horaires && <p className="text-xs text-red-500 mb-3">{errors.horaires}</p>}
                         <div className="space-y-3 flex-wrap">
                             {JOURS.map((jour) => {
@@ -573,9 +680,9 @@ export default function AjoutLaverie() {
                         </div>
                     </Card>
 
-                    {/* ── 4. Équipements, services & paiements ── */}
+                    {/* ── 6. Équipements, services & paiements ── */}
                     <Card>
-                        <SectionTitle step={4} title="Équipements & services" />
+                        <SectionTitle step={6} title="Équipements & services" />
                         <div className="space-y-6">
 
                             {/* Équipements — statiques */}
@@ -633,113 +740,6 @@ export default function AjoutLaverie() {
                                 )}
                             </div>
                         </div>
-                    </Card>
-
-                    {/* ── 5. WI-LINE ── */}
-                    <Card>
-                        <SectionTitle step={5} title="Centrale WI-LINE" subtitle="Optionnel — importe automatiquement les machines depuis votre centrale" />
-                        <div className="flex gap-3 mb-4 flex-wrap">
-                            <div className="flex-1">
-                                <input
-                                    type="text"
-                                    value={form.wiLineApiKey}
-                                    onChange={(e) => { set('wiLineApiKey', e.target.value); setWiLineConnecte(false); setWiLineCentrales([]); }}
-                                    placeholder="Code client WI-LINE (api_key)"
-                                    className={inputClass(errors.wiLineApiKey)}
-                                />
-                                {errors.wiLineApiKey && <p className="text-xs text-red-500 mt-1">{errors.wiLineApiKey}</p>}
-                            </div>
-                            <button
-                                type="button"
-                                onClick={connecterWiLine}
-                                disabled={wiLineLoading || !form.wiLineApiKey.trim()}
-                                className="px-4 py-2.5 rounded-xl bg-[#14A8DE] text-white text-sm font-medium hover:bg-[#119ac8] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0"
-                            >
-                                {wiLineLoading ? 'Connexion...' : 'Connecter'}
-                            </button>
-                        </div>
-
-                        {wiLineConnecte && wiLineCentrales.length > 0 && (
-                            <div>
-                                <p className="text-sm font-medium text-gray-700 mb-2">
-                                    ✓ {wiLineCentrales.length} centrale{wiLineCentrales.length > 1 ? 's' : ''} trouvée{wiLineCentrales.length > 1 ? 's' : ''} — sélectionnez celle à associer :
-                                </p>
-                                <div className="space-y-2">
-                                    {wiLineCentrales.map((c) => (
-                                        <label key={c.serial} className="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors hover:bg-gray-50 has-[:checked]:border-[#14A8DE] has-[:checked]:bg-blue-50">
-                                            <input type="radio" name="wiline_centrale" value={c.serial} checked={wiLineSelectedSerial === c.serial} onChange={() => selectionnerCentrale(c.serial)} className="accent-[#14A8DE]" />
-                                            <div>
-                                                <p className="text-sm font-medium text-gray-800">{c.nom}</p>
-                                                <p className="text-xs text-gray-400">{c.serial} — {c.machines.length} machine{c.machines.length > 1 ? 's' : ''}</p>
-                                            </div>
-                                        </label>
-                                    ))}
-                                </div>
-                                {wiLineSelectedSerial && <p className="text-xs text-green-600 mt-2">✓ {form.machines.length} machine(s) importée(s) dans la section ci-dessous.</p>}
-                            </div>
-                        )}
-                        {wiLineConnecte && wiLineCentrales.length === 0 && (
-                            <p className="text-sm text-gray-500">Aucune centrale trouvée pour ce compte.</p>
-                        )}
-                    </Card>
-
-                    {/* ── 6. Machines ── */}
-                    <Card>
-                        <div className="flex items-start justify-between mb-6">
-                            <SectionTitle step={6} title="Machines" subtitle="Ajoutez vos machines manuellement ou via WI-LINE" />
-                            <button type="button" onClick={addMachine} className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[#14A8DE] text-[#14A8DE] text-sm font-medium hover:bg-[#14A8DE]/5 transition-colors shrink-0">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
-                                Ajouter
-                            </button>
-                        </div>
-                        {form.machines.length === 0 ? (
-                            <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-xl">
-                                <p className="text-sm text-gray-400">Aucune machine ajoutée</p>
-                                <p className="text-xs text-gray-300 mt-1">Connectez une centrale WI-LINE ou ajoutez manuellement</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-3">
-                                {form.machines.map((machine, idx) => (
-                                    <div key={machine.id} className={`p-4 rounded-xl border ${machine.wiline_machine_id ? 'bg-blue-50 border-blue-100' : 'bg-gray-50 border-gray-100'}`}>
-                                        <div className="flex items-center justify-between mb-3">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Machine #{idx + 1}</span>
-                                                {machine.wiline_machine_id && <span className="text-xs bg-[#14A8DE]/10 text-[#14A8DE] px-2 py-0.5 rounded-full font-medium">WI-LINE</span>}
-                                            </div>
-                                            <button type="button" onClick={() => removeMachine(machine.id)} className="text-gray-400 hover:text-red-500 transition-colors">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
-                                            </button>
-                                        </div>
-                                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                                            <div className="sm:col-span-1">
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Nom</label>
-                                                <input type="text" value={machine.nom} onChange={(e) => updateMachine(machine.id, 'nom', e.target.value)} placeholder="Ex: Machine 1" className="w-full max-w-[stretch] px-2.5 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#14A8DE] focus:outline-none" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
-                                                <select value={machine.type} onChange={(e) => updateMachine(machine.id, 'type', e.target.value)} className="w-full max-w-[stretch] px-2.5 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#14A8DE] focus:outline-none">
-                                                    <option value="lave-linge">Lave-linge</option>
-                                                    <option value="sèche-linge">Sèche-linge</option>
-                                                    <option value="autre">Autre</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Capacité (kg)</label>
-                                                <input type="number" value={machine.capacite} onChange={(e) => updateMachine(machine.id, 'capacite', e.target.value)} placeholder="8" className="w-full max-w-[stretch] px-2.5 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#14A8DE] focus:outline-none" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Tarif (€)</label>
-                                                <input type="number" step="0.10" value={machine.tarif} onChange={(e) => updateMachine(machine.id, 'tarif', e.target.value)} placeholder="4.50" className="w-full max-w-[stretch] px-2.5 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#14A8DE] focus:outline-none" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Durée (min)</label>
-                                                <input type="number" value={machine.duree} onChange={(e) => updateMachine(machine.id, 'duree', e.target.value)} placeholder="45" className="w-full max-w-[stretch] px-2.5 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#14A8DE] focus:outline-none" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
                     </Card>
 
                     {/* ── 7. Médias ── */}
