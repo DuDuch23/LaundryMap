@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Circle, MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import type { Laverie, Position } from '../../types/Laverie';
 import RecenterMap from './RecenterMap';
+import ItineraireButton from './ItineraireButton';
 
 // ─── Icônes ───────────────────────────────────────────────────────────────────
 
@@ -110,6 +111,13 @@ export default function LaverieMap({
                             <p className={`text-xs font-medium mt-1 ${l.estOuvert ? 'text-emerald-600' : 'text-rose-500'}`}>
                                 {l.estOuvert ? t('main.laverie_map.ouvert') : t('main.laverie_map.ferme')}
                             </p>
+                            {l.latitude !== null && l.longitude !== null && (
+                                <ItineraireButton
+                                    lat={l.latitude}
+                                    lng={l.longitude}
+                                    nom={l.nom}
+                                />
+                            )}
                         </Popup>
                     </Marker>
                 ))}

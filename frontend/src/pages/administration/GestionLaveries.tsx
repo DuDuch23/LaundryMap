@@ -15,7 +15,6 @@ interface LaverieItem {
     nom: string;
     statut: string;
     adresse: string;
-    distance?: string;
     image?: string;
     professionnel: LaveriePro;
 }
@@ -41,12 +40,12 @@ const FILTER_SECTIONS: FilterSection[] = [
         ],
     },
     {
-        label: 'Ordre',
+        label: 'Trie',
         key: 'ordre',
         options: [
             { label: 'Aléatoire', value: '' },
-            { label: 'Croissant', value: 'croissant' },
-            { label: 'Décroissant', value: 'decroissant' },
+            { label: 'De A à Z', value: 'croissant' },
+            { label: 'De Z à A', value: 'decroissant' },
         ],
     },
 ];
@@ -256,7 +255,6 @@ export default function GestionLaveries() {
                             <div className="p-4">
                                 <h3 className="font-bold text-sm underline decoration-1 underline-offset-2 mb-1">{laverie.nom}</h3>
                                 <p className="text-xs font-bold text-gray-800">{laverie.adresse}</p>
-                                <p className="text-xs italic text-gray-500 mt-1">{laverie.distance || 'à X km de votre position'}</p>
 
                                 {laverie.statut === 'En attente' && (
                                     <div className="flex justify-end mt-3">

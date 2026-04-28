@@ -68,12 +68,12 @@ const FILTER_SECTIONS: FilterSection[] = [
         ],
     },
     {
-        label: 'Ordre',
+        label: 'Trie',
         key: 'ordre',
         options: [
             { label: 'Aléatoire', value: '' },
-            { label: 'Croissant', value: 'croissant' },
-            { label: 'Décroissant', value: 'decroissant' },
+            { label: 'De A à Z', value: 'croissant' },
+            { label: 'De Z à A', value: 'decroissant' },
         ],
     },
 ];

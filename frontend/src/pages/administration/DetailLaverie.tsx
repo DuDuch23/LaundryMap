@@ -30,7 +30,6 @@ interface LaverieDetailData {
     statut: string;
     description?: string;
     adresse: string;
-    distance?: string;
     wiLineReference?: number;
     images: ImageDetail[];
     equipements: Equipement[];
@@ -206,7 +205,6 @@ export default function DetailLaverie() {
                 <div className="grid grid-cols-2 gap-4 mb-8">
                     <div>
                         <p className="text-sm font-bold text-gray-900 leading-tight mb-1">{laverie.adresse}</p>
-                        <p className="text-xs italic text-gray-500">{laverie.distance || 'à X km de votre position'}</p>
                     </div>
                     {laverie.description && (
                         <div>
@@ -234,7 +232,7 @@ export default function DetailLaverie() {
                     
                     {/* Colonne de gauche : Equipements */}
                     <div className="flex flex-col">
-                        <h2 className="font-bold text-base underline decoration-[1.5px] decoration-black underline-offset-4 mb-4">Équipements :</h2>
+                        <h2 className="font-bold text-base underline decoration-[1.5px] decoration-black underline-offset-4 mb-4">Services proposés :</h2>
                         
                         <div className="space-y-4 mb-4">
                             {equipementsAffichage.map((eq) => (
