@@ -56,7 +56,11 @@
       "position_detectee": "Location detected",
       "ouvert": "● Open",
       "ferme": "● Closed",
-      "aria_label": "Laundromat map"
+      "aria_label": "Laundromat map",
+      "itineraire": "Directions",
+      "ouvrir_waze": "Open directions in Waze",
+      "ouvrir_maps": "Open directions in Google Maps",
+      "annuler": "Cancel"
     },
     "mes_favoris": {
       "titre": "My favourites",

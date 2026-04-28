@@ -56,7 +56,11 @@
       "position_detectee": "Position détectée",
       "ouvert": "● Ouvert",
       "ferme": "● Fermé",
-      "aria_label": "Carte des laveries"
+      "aria_label": "Carte des laveries",
+      "itineraire": "Itinéraire",
+      "ouvrir_waze": "Ouvrir l'itinéraire dans Waze",
+      "ouvrir_maps": "Ouvrir l'itinéraire dans Google Maps",
+      "annuler": "Annuler"
     },
     "mes_favoris": {
       "titre": "Mes favoris",
