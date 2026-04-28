@@ -32,6 +32,12 @@ class UtilisateurRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('u')
             ->leftJoin('u.professionnel', 'p');
 
+        // Ne sélectionner que les utilisateurs ayant vérifié leur emails
+        $qb->andWhere('EXISTS (
+                SELECT 1 FROM App\\Entity\\EmailVerificationToken evt
+                WHERE evt.user = u AND evt.verifiedAt IS NOT NULL
+            )');
+
         // Filtre par statut
         if ($statut) {
             $statutEnum = match($statut) {
@@ -68,13 +74,29 @@ class UtilisateurRepository extends ServiceEntityRepository
             }
         }
 
-        // Ordre
+        if (!$statut) {
+            $qb->addSelect("
+                CASE
+                    WHEN (p.id IS NOT NULL AND p.statut = :priorStatutPro)
+                      OR (p.id IS NULL AND u.statut = :priorStatutUser)
+                    THEN 0 ELSE 1
+                END AS HIDDEN priorite_statut
+            ")
+               ->setParameter('priorStatutPro', \App\Enum\StatutProfessionnelEnum::STATUT_EN_ATTENTE)
+               ->setParameter('priorStatutUser', StatutUtilisateurEnum::STATUT_EN_ATTENTE)
+               ->orderBy('priorite_statut', 'ASC');
+        }
+
         if ($ordre === 'croissant') {
-            $qb->orderBy('u.id', 'ASC');
+            $qb->addOrderBy('u.nom', 'ASC')
+               ->addOrderBy('u.prenom', 'ASC')
+               ->addOrderBy('u.email', 'ASC');
         } elseif ($ordre === 'decroissant') {
-            $qb->orderBy('u.id', 'DESC');
+            $qb->addOrderBy('u.nom', 'DESC')
+               ->addOrderBy('u.prenom', 'DESC')
+               ->addOrderBy('u.email', 'DESC');
         } else {
-            $qb->orderBy('u.id', 'ASC');
+            $qb->addOrderBy('u.id', 'DESC');
         }
 
         return $qb;
@@ -86,9 +108,17 @@ class UtilisateurRepository extends ServiceEntityRepository
             ->select('COUNT(u.id)')
             ->leftJoin('u.professionnel', 'p')
             ->where(
-                '(p.id IS NOT NULL AND p.statut = :statutAttente) OR (p.id IS NULL AND u.statut = :statutAttente)'
+                '(p.id IS NOT NULL AND p.statut = :statutAttentePro) OR (p.id IS NULL AND u.statut = :statutAttenteUser)'
             )
-            ->setParameter('statutAttente', StatutUtilisateurEnum::STATUT_EN_ATTENTE)
+            // Ne compter que les utilisateurs ayant validé leur email (cohérent
+            // avec createFilteredQueryBuilder : un user non vérifié n'apparaît
+            // pas en admin et ne doit donc pas être compté).
+            ->andWhere('EXISTS (
+                SELECT 1 FROM App\\Entity\\EmailVerificationToken evt
+                WHERE evt.user = u AND evt.verifiedAt IS NOT NULL
+            )')
+            ->setParameter('statutAttentePro', \App\Enum\StatutProfessionnelEnum::STATUT_EN_ATTENTE)
+            ->setParameter('statutAttenteUser', StatutUtilisateurEnum::STATUT_EN_ATTENTE)
             ->getQuery()
             ->getSingleScalarResult();
     }

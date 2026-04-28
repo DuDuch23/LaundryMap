@@ -92,15 +92,15 @@ export default function ItineraireButton({ lat, lng }: Props) {
                 <div
                     role="menu"
                     aria-label={t('main.laverie_map.itineraire')}
-                    className="absolute left-0 right-0 top-full mt-1 z-[1000] bg-white rounded-lg border border-slate-200 shadow-lg overflow-hidden"
+                    className="absolute left-0 top-full mt-1 z-[1000] min-w-full w-max bg-white rounded-lg border border-slate-200 shadow-lg overflow-hidden"
                 >
                     <button
                         type="button"
                         role="menuitem"
                         onClick={ouvrirWaze}
-                        className="w-full inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-800 hover:bg-slate-50 transition-colors cursor-pointer text-left"
+                        className="w-full inline-flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-slate-800 hover:bg-slate-50 transition-colors cursor-pointer text-left whitespace-nowrap"
                     >
-                        <WazeLogo className="w-4 h-4 flex-shrink-0" />
+                        <WazeLogo className="w-5 h-5 flex-shrink-0" />
                         Waze
                     </button>
                     <div className="h-px bg-slate-100" aria-hidden="true" />
@@ -108,9 +108,9 @@ export default function ItineraireButton({ lat, lng }: Props) {
                         type="button"
                         role="menuitem"
                         onClick={ouvrirGoogleMaps}
-                        className="w-full inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-800 hover:bg-slate-50 transition-colors cursor-pointer text-left"
+                        className="w-full inline-flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-slate-800 hover:bg-slate-50 transition-colors cursor-pointer text-left whitespace-nowrap"
                     >
-                        <Map size={14} className="text-[#EA4335] flex-shrink-0" aria-hidden="true" />
+                        <Map size={18} className="text-[#EA4335] flex-shrink-0" aria-hidden="true" />
                         Google Maps
                     </button>
                 </div>
