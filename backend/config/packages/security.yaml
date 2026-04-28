@@ -50,7 +50,7 @@ security:
         - { path: ^/api/resend-verification, roles: PUBLIC_ACCESS }
         - { path: ^/api/laveries/recherche, roles: PUBLIC_ACCESS }
         - { path: ^/api/laveries/geocode, roles: PUBLIC_ACCESS }
-        - { path: ^/api/laveries/[0-9]+$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/laveries/, roles: PUBLIC_ACCESS }
         - { path: ^/api/services, roles: PUBLIC_ACCESS }
         - { path: ^/api/methodes-paiement, roles: PUBLIC_ACCESS }
         - { path: ^/api/professionnel, roles: ROLE_PROFESSIONNEL }
