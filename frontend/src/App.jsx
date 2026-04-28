@@ -18,7 +18,7 @@ const GestionLaveries = React.lazy(() => import('./pages/administration/GestionL
 const DetailLaverie = React.lazy(() => import('./pages/administration/DetailLaverie'));
 const EmailVerification = React.lazy(() => import('./pages/EmailVerification'));
 const AjoutLaverie = React.lazy(() => import('./pages/AjoutLaverie/AjoutLaverie'));
-const MesLaveries = React.lazy(() => import('./pages/MesLaveries/MesLaveries'));
+
 const MesFavoris = React.lazy(() => import('./pages/MesFavoris'));
 const FicheLaverie = React.lazy(() => import('./pages/FicheLaverie'));
 const TermsOfUse = React.lazy(() => import('./pages/TermsOfUse'));
@@ -99,7 +99,7 @@ function App() {
               <Route path="/connexion" element={<Connexion />} />
               <Route path="/email-verifie" element={<EmailVerification />} />
               <Route path="/nouvelle-laverie" element={<AjoutLaverie />} />
-              <Route path="/mes-laveries" element={<MesLaveries />} />
+
               <Route path="/laveries/:id" element={<FicheLaverie />} />
               <Route path="/cgu" element={<TermsOfUse />} />
               <Route path="/mentions-legales" element={<LegalNotice />} />
