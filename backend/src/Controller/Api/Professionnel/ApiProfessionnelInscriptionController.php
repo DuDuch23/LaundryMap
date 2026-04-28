@@ -3,6 +3,7 @@
 namespace App\Controller\Api\Professionnel;
 
 use App\Entity\Adresse;
+use App\Entity\EmailVerificationToken;
 use App\Entity\Utilisateur;
 use App\Entity\Professionnel;
 use App\Enum\StatutGeoEnum;
@@ -12,11 +13,15 @@ use App\Repository\ProfessionnelRepository;
 use App\Repository\UtilisateurRepository;
 use App\Service\ApiSirenSiretService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -32,6 +37,8 @@ class ApiProfessionnelInscriptionController extends AbstractController
         ApiSirenSiretService $sirenService,
         ProfessionnelRepository $professionnelRepository,
         UtilisateurRepository $utilisateurRepository,
+        MailerInterface $mailer,
+        LoggerInterface $logger,
     ): JsonResponse {
         try {
             $donnees = json_decode($request->getContent(), true);
@@ -125,10 +132,48 @@ class ApiProfessionnelInscriptionController extends AbstractController
             $entityManager->persist($utilisateur);
             $entityManager->persist($adresse);
             $entityManager->persist($professionnel);
+
+            //CREATION DU TOKEN DE VERIFICATION
+            $tokenString = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+            $expiresAt   = new \DateTimeImmutable('+2 hours');
+
+            $verificationToken = new EmailVerificationToken();
+            $verificationToken->setUser($utilisateur);
+            $verificationToken->setToken($tokenString);
+            $verificationToken->setCreatedAt(new \DateTimeImmutable());
+            $verificationToken->setExpiresAt($expiresAt);
+
+            $entityManager->persist($verificationToken);
             $entityManager->flush();
 
+            $verificationUrl = $this->generateUrl(
+                'api_verify_email',
+                ['token' => $tokenString],
+                UrlGeneratorInterface::ABSOLUTE_URL
+            );
+
+            $emailMessage = (new TemplatedEmail())
+                ->from($this->getParameter('mailer_from'))
+                ->to($utilisateur->getEmail())
+                ->subject('Confirmez votre inscription professionnelle sur LaundryMap')
+                ->htmlTemplate('emails/confirmation_email.html.twig')
+                ->context([
+                    'user'            => $utilisateur,
+                    'verificationUrl' => $verificationUrl,
+                    'expiresAt'       => $expiresAt,
+                ]);
+
+            try {
+                $mailer->send($emailMessage);
+            } catch (\Throwable $e) {
+                $logger->error('Echec envoi mail confirmation inscription pro', [
+                    'utilisateurId' => $utilisateur->getId(),
+                    'exception'     => $e,
+                ]);
+            }
+
             return $this->json(
-                ['message' => 'Inscription réussie avec succès !'],
+                ['message' => 'Inscription réussie ! Un email de vérification vous a été envoyé.'],
                 201,
                 [],
                 ['groups' => ['professionnel:read']]

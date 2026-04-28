@@ -32,6 +32,12 @@ class UtilisateurRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('u')
             ->leftJoin('u.professionnel', 'p');
 
+        // Ne sélectionner que les utilisateurs ayant vérifié leur emails
+        $qb->andWhere('EXISTS (
+                SELECT 1 FROM App\\Entity\\EmailVerificationToken evt
+                WHERE evt.user = u AND evt.verifiedAt IS NOT NULL
+            )');
+
         // Filtre par statut
         if ($statut) {
             $statutEnum = match($statut) {
@@ -102,9 +108,17 @@ class UtilisateurRepository extends ServiceEntityRepository
             ->select('COUNT(u.id)')
             ->leftJoin('u.professionnel', 'p')
             ->where(
-                '(p.id IS NOT NULL AND p.statut = :statutAttente) OR (p.id IS NULL AND u.statut = :statutAttente)'
+                '(p.id IS NOT NULL AND p.statut = :statutAttentePro) OR (p.id IS NULL AND u.statut = :statutAttenteUser)'
             )
-            ->setParameter('statutAttente', StatutUtilisateurEnum::STATUT_EN_ATTENTE)
+            // Ne compter que les utilisateurs ayant validé leur email (cohérent
+            // avec createFilteredQueryBuilder : un user non vérifié n'apparaît
+            // pas en admin et ne doit donc pas être compté).
+            ->andWhere('EXISTS (
+                SELECT 1 FROM App\\Entity\\EmailVerificationToken evt
+                WHERE evt.user = u AND evt.verifiedAt IS NOT NULL
+            )')
+            ->setParameter('statutAttentePro', \App\Enum\StatutProfessionnelEnum::STATUT_EN_ATTENTE)
+            ->setParameter('statutAttenteUser', StatutUtilisateurEnum::STATUT_EN_ATTENTE)
             ->getQuery()
             ->getSingleScalarResult();
     }
