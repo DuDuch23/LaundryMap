@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { AccessibleButton, SkipLink } from '../components/accessibility';
 import API_BASE_URL, { uploadPath, resolveUrl } from '../services/api';
+import Notification from '../components/Notification';
 import { fetchPublicLaverieDetail, ajouterFavori, supprimerFavori, type LaveriePublicDetail } from '../services/request';
 
 const fallbackLaverieImage = uploadPath('/uploads/laveries/default-laundry.jpg');
@@ -98,6 +99,7 @@ export default function FicheLaverie() {
 	const [shareFeedback, setShareFeedback] = useState<string | null>(null);
 	const [isFavorite, setIsFavorite] = useState(false);
 	const [favoritePending, setFavoritePending] = useState(false);
+	const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
 	useEffect(() => {
 		let active = true;
@@ -210,21 +212,15 @@ export default function FicheLaverie() {
 			setFavoritePending(true);
 
 			if (isFavorite) {
-				// Demander confirmation avant de retirer
-				if (!window.confirm('Êtes-vous sûr de vouloir retirer cette laverie de vos favoris ?')) {
-					setFavoritePending(false);
-					return;
-				}
+				// Retirer des favoris sans confirmation
 				await supprimerFavori(laverie.id);
 				setIsFavorite(false);
-				setShareFeedback('Retiré des favoris');
+				setNotification({ type: 'error', message: 'Retiré des favoris' });
 			} else {
 				await ajouterFavori(laverie.id);
 				setIsFavorite(true);
-				setShareFeedback('Ajouté aux favoris');
+				setNotification({ type: 'success', message: 'Ajouté aux favoris' });
 			}
-
-			window.setTimeout(() => setShareFeedback(null), 2000);
 		} catch (err: any) {
 			setShareFeedback(err?.message || 'Erreur');
 			window.setTimeout(() => setShareFeedback(null), 2000);
@@ -272,6 +268,10 @@ export default function FicheLaverie() {
 	}
 
 	return (
+		<>
+			{notification && (
+				<Notification type={notification.type} message={notification.message} onClose={() => setNotification(null)} />
+			)}
 		<div className="bg-slate-50 px-5 pb-16 pt-16 sm:pt-20 lg:px-0 lg:pt-24">
 			<SkipLink />
 			<main id="main-content" role="main" tabIndex={-1} className="mx-auto max-w-[1280px]">
@@ -522,5 +522,6 @@ export default function FicheLaverie() {
 				</div>
 			</main>
 		</div>
+		</>
 	);
 }

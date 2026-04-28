@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import API_BASE_URL, { uploadPath, resolveUrl } from '../services/api';
+import Notification from '../components/Notification';
 import { getMesFavoris, supprimerFavori, type FavoriLaverie } from '../services/request';
 
 const fallbackLaverieImage = uploadPath('/uploads/laveries/default-laundry.jpg');
@@ -21,6 +22,7 @@ export default function MesFavoris() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [removingId, setRemovingId] = useState<number | null>(null);
+	const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
 	useEffect(() => {
 		getMesFavoris()
@@ -30,15 +32,13 @@ export default function MesFavoris() {
 	}, [t]);
 
 	const handleSupprimerFavori = async (laverie: FavoriLaverie) => {
-		const confirmation = window.confirm(t('main.mes_favoris.retirer_confirm', { nom: laverie.nom }));
-		if (!confirmation) {
-			return;
-		}
+		// Remove favorite without confirmation
 
 		try {
 			setRemovingId(laverie.id);
 			await supprimerFavori(laverie.id);
 			setFavoris((prev) => prev.filter((item) => item.id !== laverie.id));
+			setNotification({ type: 'error', message: 'Laverie retirée des favoris' });
 		} catch (err: any) {
 			setError(err?.message || t('main.mes_favoris.erreur_suppression'));
 		} finally {
@@ -63,6 +63,14 @@ export default function MesFavoris() {
 	}
 
 	return (
+		<>
+			{notification && (
+				<Notification
+					type={notification.type}
+					message={notification.message}
+					onClose={() => setNotification(null)}
+				/>
+			)}
 		<div className="bg-slate-50 pt-24 pb-16 px-5 lg:px-0">
 			<main className="mx-auto max-w-[1280px]">
 				<section className="overflow-hidden rounded-[28px] bg-gradient-to-b from-cyan-500 to-cyan-600 text-white shadow-md">
@@ -147,5 +155,6 @@ export default function MesFavoris() {
 				</section>
 			</main>
 		</div>
+		</>
 	);
 }
