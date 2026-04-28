@@ -114,7 +114,7 @@ export default function FilterModal({
                     <div className="flex items-center gap-3">
                         <button
                             onClick={onClose}
-                            className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition"
+                            className="bg-[#14A8DE] text-white p-1.5 rounded-md hover:bg-[#1296c8] transition"
                             aria-label={t('main.filter_modal.retour')}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -135,7 +135,7 @@ export default function FilterModal({
                                 </button>
                                 <button
                                     onClick={handleEffacer}
-                                    className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition cursor-pointer"
+                                    className="bg-[#14A8DE] text-white p-1.5 rounded-md hover:bg-[#1296c8] transition cursor-pointer"
                                     aria-label={t('main.filter_modal.effacer_aria')}
                                 >
                                     <ListX size={20} aria-hidden="true" />
@@ -143,7 +143,7 @@ export default function FilterModal({
                             </>
                         ) : (
                             <button
-                                className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition cursor-default"
+                                className="bg-[#14A8DE] text-white p-1.5 rounded-md hover:bg-[#1296c8] transition cursor-default"
                                 aria-label={t('main.filter_modal.filtres_aria')}
                             >
                                 <SlidersHorizontal size={20} aria-hidden="true" />

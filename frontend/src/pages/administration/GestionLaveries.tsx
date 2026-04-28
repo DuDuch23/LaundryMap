@@ -166,7 +166,7 @@ export default function GestionLaveries() {
             {/* HEADER */}
             <div className="bg-white flex items-center justify-between p-4 shadow-sm mb-6">
                 <div className="flex items-center gap-3">
-                    <Link to="/admin/tableau-de-bord" className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition block" aria-label="Retour">
+                    <Link to="/admin/tableau-de-bord" className="bg-[#14A8DE] text-white p-1.5 rounded-md hover:bg-[#1296c8] transition block" aria-label="Retour">
                         <ChevronLeft size={20} />
                     </Link>
                     <h1 className="text-lg font-bold">Gestion des laveries</h1>
@@ -184,7 +184,7 @@ export default function GestionLaveries() {
                             </button>
                             <button
                                 onClick={ouvrirFiltres}
-                                className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition cursor-pointer"
+                                className="bg-[#14A8DE] text-white p-1.5 rounded-md hover:bg-[#1296c8] transition cursor-pointer"
                                 aria-label="Ouvrir les filtres (Filtres actifs)"
                             >
                                 <ListX size={20} />
@@ -193,7 +193,7 @@ export default function GestionLaveries() {
                     ) : (
                         <button
                             onClick={ouvrirFiltres}
-                            className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition cursor-pointer"
+                            className="bg-[#14A8DE] text-white p-1.5 rounded-md hover:bg-[#1296c8] transition cursor-pointer"
                             aria-label="Ouvrir les filtres"
                         >
                             <SlidersHorizontal size={20} />

@@ -253,7 +253,7 @@ export default function DetailLaverie() {
                         {laverie.equipements.length > 2 && (
                             <button
                                 onClick={() => setEquipementModalOuverte(true)}
-                                className="bg-black text-white hover:bg-gray-800 font-bold py-2 px-3 rounded-xl text-xs transition-colors cursor-pointer flex items-center justify-center gap-2 w-max mt-auto"
+                                className="bg-[#14A8DE] text-white hover:bg-[#1296c8] font-bold py-2 px-3 rounded-xl text-xs transition-colors cursor-pointer flex items-center justify-center gap-2 w-max mt-auto"
                             >
                                 <LayoutGrid size={14} />
                                 Voir plus
@@ -273,7 +273,7 @@ export default function DetailLaverie() {
 
                         <Link
                             to={`/admin/utilisateurs/${laverie.professionnel.utilisateurId}`}
-                            className="bg-black text-white hover:bg-gray-800 font-bold py-2 px-3 rounded-xl text-xs transition-colors cursor-pointer flex items-center justify-center gap-2 w-max mt-auto"
+                            className="bg-[#14A8DE] text-white hover:bg-[#1296c8] font-bold py-2 px-3 rounded-xl text-xs transition-colors cursor-pointer flex items-center justify-center gap-2 w-max mt-auto"
                         >
                             <User size={14} />
                             Voir propriétaire

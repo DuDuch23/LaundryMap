@@ -122,10 +122,6 @@ export default function GestionUtilisateurs() {
             if (filtresActifs.ordre) filtresApi.ordre = filtresActifs.ordre;
 
             const data = await fetchAdminUtilisateurs(page, filtresApi);
-
-            // Le tri "En attente d'abord" + l'ordre alphabétique sont gérés côté
-            // backend (UtilisateurRepository::createFilteredQueryBuilder) AVANT
-            // la pagination. On affiche donc les résultats tels quels.
             setUtilisateurs(data.utilisateurs);
             setEnAttenteCount(data.totalEnAttente);
             setPagination(data.pagination);
@@ -215,7 +211,7 @@ export default function GestionUtilisateurs() {
             {/* HEADER */}
             <div className="bg-white flex items-center justify-between p-4 shadow-sm mb-6">
                 <div className="flex items-center gap-3">
-                    <Link to="/admin/tableau-de-bord" className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition block" aria-label="Retour">
+                    <Link to="/admin/tableau-de-bord" className="bg-[#14A8DE] text-white p-1.5 rounded-md hover:bg-[#1296c8] transition block" aria-label="Retour">
                         <ChevronLeft size={20} />
                     </Link>
                     <h1 className="text-lg font-bold">Gestion des utilisateurs</h1>
@@ -233,7 +229,7 @@ export default function GestionUtilisateurs() {
                             </button>
                             <button
                                 onClick={ouvrirFiltres}
-                                className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition cursor-pointer"
+                                className="bg-[#14A8DE] text-white p-1.5 rounded-md hover:bg-[#1296c8] transition cursor-pointer"
                                 aria-label="Ouvrir les filtres (Filtres actifs)"
                             >
                                 <ListX size={20} />
@@ -242,7 +238,7 @@ export default function GestionUtilisateurs() {
                     ) : (
                         <button
                             onClick={ouvrirFiltres}
-                            className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition cursor-pointer"
+                            className="bg-[#14A8DE] text-white p-1.5 rounded-md hover:bg-[#1296c8] transition cursor-pointer"
                             aria-label="Ouvrir les filtres"
                         >
                             <SlidersHorizontal size={20} />
