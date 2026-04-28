@@ -490,13 +490,13 @@ export default function TableauDeBordPro() {
 
             <div className="mt-6 flex flex-col items-center gap-3">
               <Link
-                to="/professionnel/laveries"
+                to="/mes-laveries"
                 className="block w-full max-w-xl rounded-xl bg-cyan-500 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-cyan-600"
               >
                 Voir toutes les laveries
               </Link>
               <Link
-                to="/professionnel/laveries/ajouter"
+                to="/nouvelle-laverie"
                 className="block w-full max-w-xl rounded-xl border-2 border-cyan-500 px-4 py-3 text-center text-sm font-semibold text-cyan-600 transition hover:bg-cyan-50"
               >
                 Ajouter une laverie

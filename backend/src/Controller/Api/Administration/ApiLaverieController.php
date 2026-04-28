@@ -36,6 +36,9 @@ class ApiLaverieController extends AbstractController
         $gallery = $formatter->buildGalleryResponse($laverie, $request);
         $equipements = $formatter->buildEquipementsResponse($laverie);
         $horaires = $formatter->buildHorairesResponse($laverie);
+        $services = $formatter->buildServicesResponse($laverie);
+        $paiements = $formatter->buildPaiementsResponse($laverie);
+        $commentaires = $formatter->buildCommentairesResponse($laverie);
         $mainImage = $gallery[0]['image'] ?? null;
 
         if ($mainImage === null && $laverie->getLogo() !== null && $formatter->isProjectManagedMediaPath($laverie->getLogo()->getEmplacement())) {
@@ -57,6 +60,9 @@ class ApiLaverieController extends AbstractController
             'image' => $mainImage,
             'images' => $gallery,
             'equipements' => $equipements,
+            'services' => $services,
+            'paiements' => $paiements,
+            'commentaires' => $commentaires,
             'horaires' => $horaires,
             'commentairesCount' => $formatter->countLaverieCommentaires($laverie),
             'noteMoyenne' => $formatter->getLaverieNoteMoyenne($laverie),
