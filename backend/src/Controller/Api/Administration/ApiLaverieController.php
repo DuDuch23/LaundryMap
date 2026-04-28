@@ -14,6 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Psr\Log\LoggerInterface;
 
 class ApiLaverieController extends AbstractController
 {
@@ -168,7 +169,7 @@ class ApiLaverieController extends AbstractController
 
     #[Route('/api/admin/laveries/{id}/statut', name: 'api_admin_laverie_statut', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN')]
-    public function updateStatut(int $id, Request $request, LaverieRepository $laverieRepository, EntityManagerInterface $em, MailerInterface $mailer): JsonResponse
+    public function updateStatut(int $id, Request $request, LaverieRepository $laverieRepository, EntityManagerInterface $em, MailerInterface $mailer, LoggerInterface $logger): JsonResponse
     {
         $administrateur = $this->getUser();
 
