@@ -250,20 +250,20 @@ export default function RegisterUser() {
           error={errors.confirmPassword}
         />
 
-        <ul className="text-xs text-gray-600 mb-6 pl-2 space-y-1">
-          <li style={{ color: password.length >= 12 ? "green" : "red" }}>
+        <ul className="mb-6 space-y-1 pl-2 text-xs">
+          <li className={password.length >= 12 ? "text-green-700" : "text-red-700"}>
             ✓ {t("main.inscription_utilisateur.mot_de_passe_caractere_minimum")}
           </li>
-          <li style={{ color: /[A-Z]/.test(password) ? "green" : "red" }}>
+          <li className={/[A-Z]/.test(password) ? "text-green-700" : "text-red-700"}>
             ✓ {t("main.inscription_utilisateur.une_majuscule")}
           </li>
-          <li style={{ color: /[a-z]/.test(password) ? "green" : "red" }}>
+          <li className={/[a-z]/.test(password) ? "text-green-700" : "text-red-700"}>
             ✓ {t("main.inscription_utilisateur.une_minuscule")}
           </li>
-          <li style={{ color: /\d/.test(password) ? "green" : "red" }}>
+          <li className={/\d/.test(password) ? "text-green-700" : "text-red-700"}>
             ✓ {t("main.inscription_utilisateur.un_chiffre")}
           </li>
-          <li style={{ color: /[@$!%*?&^#]/.test(password) ? "green" : "red" }}>
+          <li className={/[@$!%*?&^#]/.test(password) ? "text-green-700" : "text-red-700"}>
             ✓ {t("main.inscription_utilisateur.un_caractere_special")}
           </li>
         </ul>

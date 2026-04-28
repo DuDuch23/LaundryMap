@@ -5,6 +5,7 @@ namespace App\Controller\Api\Professionnel;
 use App\Entity\Adresse;
 use App\Entity\Utilisateur;
 use App\Entity\Professionnel;
+use App\Enum\StatutGeoEnum;
 use App\Enum\StatutProfessionnelEnum;
 use App\Enum\StatutUtilisateurEnum;
 use App\Repository\ProfessionnelRepository;
@@ -92,6 +93,14 @@ class ApiProfessionnelInscriptionController extends AbstractController
             $adresse->setCodePostal((int) ($donnees['codePostal'] ?? 0));
             $adresse->setVille($donnees['ville'] ?? '');
             $adresse->setPays($donnees['pays'] ?? 'France');
+
+            $lat = isset($donnees['latitude']) && is_numeric($donnees['latitude']) ? (float) $donnees['latitude'] : null;
+            $lon = isset($donnees['longitude']) && is_numeric($donnees['longitude']) ? (float) $donnees['longitude'] : null;
+            $adresse->setLatitude($lat);
+            $adresse->setLongitude($lon);
+            $adresse->setStatutGeolocalisation(
+                ($lat !== null && $lon !== null) ? StatutGeoEnum::GEOLOCALISEE : StatutGeoEnum::EN_ATTENTE
+            );
 
             $erreursAdresse = $validator->validate($adresse);
             foreach ($erreursAdresse as $erreur) {
