@@ -58,10 +58,10 @@ export default function Footer() {
             </li>
             <li>
               <Link
-                to="/contact"
+                to="/propriete-intellectuelle"
                 className="!text-white text-lg underline underline-offset-2"
               >
-                {t("main.footer.contact")}
+                {t("main.footer.propriete_intellectuelle")}
               </Link>
             </li>
             <li>

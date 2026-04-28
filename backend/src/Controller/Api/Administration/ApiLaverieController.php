@@ -4,6 +4,7 @@ namespace App\Controller\Api\Administration;
 
 use App\Entity\LaverieHistoriqueInteraction;
 use App\Repository\LaverieRepository;
+use App\Service\Professionnel\ProfessionnelLaverieFormatterService;
 use Doctrine\ORM\EntityManagerInterface;
 use Pagerfanta\Doctrine\ORM\QueryAdapter;
 use Pagerfanta\Pagerfanta;
@@ -18,6 +19,55 @@ use Psr\Log\LoggerInterface;
 
 class ApiLaverieController extends AbstractController
 {
+    #[Route('/api/laveries/{id}', name: 'api_public_laverie_detail', methods: ['GET'], requirements: ['id' => '\\d+'])]
+    public function getPublicLaverieDetail(
+        int $id,
+        Request $request,
+        LaverieRepository $laverieRepository,
+        ProfessionnelLaverieFormatterService $formatter,
+    ): JsonResponse {
+        $laverie = $laverieRepository->find($id);
+
+        if (!$laverie || $laverie->getSupprimee_le() !== null || $laverie->getStatut()->value !== 'Validée') {
+            return $this->json(['message' => 'Laverie introuvable'], 404);
+        }
+
+        $adresse = $laverie->getAdresse();
+        $gallery = $formatter->buildGalleryResponse($laverie, $request);
+        $equipements = $formatter->buildEquipementsResponse($laverie);
+        $horaires = $formatter->buildHorairesResponse($laverie);
+        $mainImage = $gallery[0]['image'] ?? null;
+
+        if ($mainImage === null && $laverie->getLogo() !== null && $formatter->isProjectManagedMediaPath($laverie->getLogo()->getEmplacement())) {
+            $mainImage = $formatter->toPublicMediaUrl($laverie->getLogo()->getEmplacement(), $request);
+        }
+
+        return $this->json([
+            'id' => $laverie->getId(),
+            'nom' => $laverie->getNomEtablissement(),
+            'statut' => 'Validée',
+            'description' => $laverie->getDescription(),
+            'adresse' => $adresse?->getAdresse(),
+            'codePostal' => $adresse?->getCodePostal(),
+            'ville' => $adresse?->getVille(),
+            'latitude' => $adresse?->getLatitude(),
+            'longitude' => $adresse?->getLongitude(),
+            'distance' => null,
+            'wiLineReference' => $laverie->getWiLineReference(),
+            'image' => $mainImage,
+            'images' => $gallery,
+            'equipements' => $equipements,
+            'horaires' => $horaires,
+            'commentairesCount' => $formatter->countLaverieCommentaires($laverie),
+            'noteMoyenne' => $formatter->getLaverieNoteMoyenne($laverie),
+            'professionnel' => [
+                'id' => $laverie->getProfessionnel()?->getId(),
+                'nom' => $laverie->getProfessionnel()?->getUtilisateur()?->getNom(),
+                'prenom' => $laverie->getProfessionnel()?->getUtilisateur()?->getPrenom(),
+            ],
+        ]);
+    }
+
     #[Route('/api/admin/laveries', name: 'api_admin_laveries_liste', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN')]
     public function getLaveries(

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import API_BASE_URL from '../services/api';
+import { useNavigate } from 'react-router';
+import API_BASE_URL, { uploadPath, resolveUrl } from '../services/api';
+import Notification from '../components/Notification';
 import { getMesFavoris, supprimerFavori, type FavoriLaverie } from '../services/request';
 
-const fallbackLaverieImage = `${API_BASE_URL}/uploads/laveries/01-lave-linge-blanc-1.jpg`;
+const fallbackLaverieImage = uploadPath('/uploads/laveries/default-laundry.jpg');
 
 function HeartIcon({ className = '' }: { className?: string }) {
 	return (
@@ -15,10 +17,12 @@ function HeartIcon({ className = '' }: { className?: string }) {
 
 export default function MesFavoris() {
 	const { t } = useTranslation();
+	const navigate = useNavigate();
 	const [favoris, setFavoris] = useState<FavoriLaverie[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [removingId, setRemovingId] = useState<number | null>(null);
+	const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
 	useEffect(() => {
 		getMesFavoris()
@@ -28,20 +32,22 @@ export default function MesFavoris() {
 	}, [t]);
 
 	const handleSupprimerFavori = async (laverie: FavoriLaverie) => {
-		const confirmation = window.confirm(t('main.mes_favoris.retirer_confirm', { nom: laverie.nom }));
-		if (!confirmation) {
-			return;
-		}
+		// Remove favorite without confirmation
 
 		try {
 			setRemovingId(laverie.id);
 			await supprimerFavori(laverie.id);
 			setFavoris((prev) => prev.filter((item) => item.id !== laverie.id));
+			setNotification({ type: 'error', message: 'Laverie retirée des favoris' });
 		} catch (err: any) {
 			setError(err?.message || t('main.mes_favoris.erreur_suppression'));
 		} finally {
 			setRemovingId(null);
 		}
+	};
+
+	const ouvrirFicheLaverie = (laverieId: number) => {
+		navigate(`/laveries/${laverieId}`);
 	};
 
 	if (loading) {
@@ -57,7 +63,15 @@ export default function MesFavoris() {
 	}
 
 	return (
-		<div className="w-full bg-slate-50 pt-24 pb-16 px-5 lg:px-0">
+		<>
+			{notification && (
+				<Notification
+					type={notification.type}
+					message={notification.message}
+					onClose={() => setNotification(null)}
+				/>
+			)}
+		<div className="bg-slate-50 pt-24 pb-16 px-5 lg:px-0">
 			<main className="mx-auto max-w-[1280px]">
 				<section className="overflow-hidden rounded-[28px] bg-gradient-to-b from-cyan-500 to-cyan-600 text-white shadow-md">
 					<div className="flex flex-col items-center gap-3 px-6 py-8 text-center">
@@ -81,10 +95,21 @@ export default function MesFavoris() {
 					) : (
 						<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 							{favoris.map((laverie) => (
-								<article key={laverie.id} className="overflow-hidden rounded-2xl bg-white text-left shadow-sm transition hover:shadow-md">
+								<article
+									key={laverie.id}
+									onClick={() => ouvrirFicheLaverie(laverie.id)}
+									onKeyDown={(e) => e.key === 'Enter' && ouvrirFicheLaverie(laverie.id)}
+									role="link"
+									tabIndex={0}
+									aria-label={t('main.mes_favoris.voir_detail_aria', {
+										nom: laverie.nom,
+										defaultValue: `Voir la fiche de ${laverie.nom}`,
+									})}
+									className="group overflow-hidden rounded-2xl bg-white text-left shadow-sm transition hover:cursor-pointer hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+								>
 									<div className="relative h-40 w-full bg-slate-200">
 										<img
-											src={laverie.image || fallbackLaverieImage}
+											src={resolveUrl(laverie.image || fallbackLaverieImage)}
 											alt={laverie.imageAlt || laverie.nom}
 											loading="lazy"
 											decoding="async"
@@ -92,7 +117,10 @@ export default function MesFavoris() {
 										/>
 										<button
 											type="button"
-											onClick={() => handleSupprimerFavori(laverie)}
+											onClick={(e) => {
+												e.stopPropagation();
+												handleSupprimerFavori(laverie);
+											}}
 											disabled={removingId === laverie.id}
 											className="absolute left-4 top-4 z-10 inline-flex items-center gap-1 rounded-full bg-rose-500/90 px-3 py-1.5 text-xs font-semibold text-white shadow-lg backdrop-blur-sm transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-60"
 											aria-label={t('main.mes_favoris.retirer_aria', { nom: laverie.nom })}
@@ -127,5 +155,6 @@ export default function MesFavoris() {
 				</section>
 			</main>
 		</div>
+		</>
 	);
 }

@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router';
-import API_BASE_URL from '../../services/api';
+import API_BASE_URL, { uploadPath, resolveUrl } from '../../services/api';
 
 const statusStyles = {
   'Validée': 'bg-emerald-500 text-white',
@@ -14,7 +14,7 @@ const statusLabels = {
   'Refusée': 'Refusée',
 };
 
-const fallbackLaverieImage = `${API_BASE_URL}/uploads/laveries/default-laundry.jpg`;
+const fallbackLaverieImage = uploadPath('/uploads/laveries/default-laundry.jpg');
 
 function MessageCircleIcon({ className = '' }) {
   return (
@@ -275,8 +275,7 @@ export default function TableauDeBordPro() {
 
   const getImageUrl = (relativePath) => {
     if (!relativePath) return fallbackLaverieImage;
-    if (relativePath.startsWith('http')) return relativePath;
-    return `${API_BASE_URL}${relativePath}`;
+    return resolveUrl(relativePath);
   };
 
   const getLaverieImage = (laverie) => getImageUrl(laverie?.image || laverie?.logo?.emplacement);
