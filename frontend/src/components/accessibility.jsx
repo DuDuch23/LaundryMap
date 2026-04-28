@@ -96,18 +96,61 @@ export function AccessibleInput({
 }) {
   const isCheckbox = type === 'checkbox';
 
-  return (
-    <div role="group" className={className}>
-      {label && (
-        <label htmlFor={id}
-          className={`w-auto max-w-fit px-4 bg-white text-black rounded-lg relative ${!isCheckbox ? 'top-2 -right-3' : ''}`}
-        >
-          {label}
-          {required && (
-            <span aria-hidden="true" style={{ color: 'red' }}>
-              {' '}*
+  // Submit — className goes directly on the input element
+  if (type === 'submit') {
+    return (
+      <input
+        id={id}
+        name={name || id}
+        type="submit"
+        value={value ?? ''}
+        disabled={disabled}
+        className={`py-3 px-6 text-white ${className ?? ''}`}
+      />
+    );
+  }
+
+  // Checkbox — layout horizontal : case à gauche, label à droite
+  if (isCheckbox) {
+    return (
+      <div className={`flex items-start gap-2.5 ${className ?? ''}`}>
+        <input
+          id={id}
+          name={name || id}
+          type="checkbox"
+          checked={!!value}
+          onChange={onChange || undefined}
+          disabled={disabled}
+          required={required || undefined}
+          aria-required={required}
+          aria-describedby={error ? `${id}-error` : undefined}
+          aria-invalid={error ? 'true' : 'false'}
+          className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded accent-[#22ACE2]"
+        />
+        <div className="flex min-w-0 flex-col gap-0.5">
+          {label && (
+            <label htmlFor={id} className="cursor-pointer select-none text-sm leading-snug text-gray-700">
+              {label}
+              {required && <span aria-hidden="true" className="ml-0.5 text-red-600"> *</span>}
+            </label>
+          )}
+          {error && (
+            <span id={`${id}-error`} role="alert" aria-live="polite" className="text-xs text-red-600">
+              {error}
             </span>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  // Champ texte standard (text, email, password, number…)
+  return (
+    <div className={`flex flex-col gap-1.5 ${className ?? ''}`}>
+      {label && (
+        <label htmlFor={id} className="text-sm font-medium text-gray-700">
+          {label}
+          {required && <span aria-hidden="true" className="ml-0.5 text-red-600"> *</span>}
         </label>
       )}
 
@@ -115,31 +158,29 @@ export function AccessibleInput({
         id={id}
         name={name || id}
         type={type}
-        {...(isCheckbox ? { checked: !!value } : { value: value ?? '' })}
-        className={`
-          ${type === 'checkbox' ? 'w-4 h-4 accent-[#22ACE2]' : ''}
-          ${type !== 'submit' && type !== 'checkbox' ? 'border border-solid rounded-lg bg-white p-4 w-full' : ''}
-          ${type === 'submit' ? 'text-white font-bold py-3 px-4 rounded-lg transition-colors cursor-pointer' : ''}
-          ${error ? 'bg-[#FADED7]! border-[#E3634C]' : ''}
-          ${disabled && !isCheckbox ? 'opacity-60 cursor-not-allowed' : ''}
-        max-w-[stretch]`}
+        value={value ?? ''}
         onChange={onChange || undefined}
         placeholder={placeholder || undefined}
         required={required || undefined}
         disabled={disabled}
+        maxLength={maxLength}
         readOnly={!onChange && !isCheckbox}
         aria-required={required}
         aria-describedby={error ? `${id}-error` : undefined}
         aria-invalid={error ? 'true' : 'false'}
+        className={[
+          'w-full max-w-[stretch] rounded-lg border bg-white px-3 py-2.5',
+          'text-sm text-gray-900 placeholder:text-gray-400',
+          'outline-none transition-all',
+          error
+            ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-200'
+            : 'border-gray-300 focus:border-[#22ACE2] focus:ring-2 focus:ring-[#22ACE2]/25',
+          disabled ? 'cursor-not-allowed bg-gray-50 text-gray-400 opacity-70' : '',
+        ].filter(Boolean).join(' ')}
       />
 
       {error && (
-        <span
-          id={`${id}-error`}
-          role="alert"
-          aria-live="polite"
-          style={{ color: 'red', fontSize: '0.875rem' }}
-        >
+        <span id={`${id}-error`} role="alert" aria-live="polite" className="text-sm text-red-600">
           {error}
         </span>
       )}

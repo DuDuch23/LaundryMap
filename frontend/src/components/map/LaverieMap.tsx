@@ -62,7 +62,7 @@ export default function LaverieMap({
 
     return (
         <div
-            className="relative w-full h-[260px] md:h-[380px] lg:h-[800px] max-h-[65vh]"
+            className="mt-5 relative w-full h-[260px] md:h-[380px] lg:h-[800px] max-h-[65vh]"
             role="region"
             aria-label={t('main.laverie_map.aria_label')}
         >
