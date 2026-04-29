@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\LaverieFavori;
+use App\Entity\Utilisateur;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -14,6 +15,22 @@ class LaverieFavoriRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, LaverieFavori::class);
+    }
+
+    /**
+     * @return LaverieFavori[]
+     */
+    public function findVisibleFavorisByUtilisateur(Utilisateur $utilisateur): array
+    {
+        return $this->createQueryBuilder('favori')
+            ->innerJoin('favori.laverie', 'laverie')
+            ->addSelect('laverie')
+            ->andWhere('favori.utilisateur = :utilisateur')
+            ->andWhere('laverie.supprimee_le IS NULL')
+            ->setParameter('utilisateur', $utilisateur)
+            ->orderBy('laverie.dateAjout', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 
     //    /**
