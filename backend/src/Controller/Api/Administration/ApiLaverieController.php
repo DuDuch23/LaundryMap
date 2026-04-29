@@ -5,6 +5,7 @@ namespace App\Controller\Api\Administration;
 use App\Entity\LaverieHistoriqueInteraction;
 use App\Repository\LaverieRepository;
 use App\Service\Professionnel\ProfessionnelLaverieFormatterService;
+use App\Enum\StatutLaverieEnum;
 use Doctrine\ORM\EntityManagerInterface;
 use Pagerfanta\Doctrine\ORM\QueryAdapter;
 use Pagerfanta\Pagerfanta;
@@ -264,11 +265,11 @@ class ApiLaverieController extends AbstractController
         $historique->setDate(new \DateTime());
 
         if ($action === 'accepter') {
-            $laverie->setStatut(\App\Enum\StatutLaverieEnum::STATUT_VALIDEE);
+            $laverie->setStatut(StatutLaverieEnum::STATUT_VALIDEE);
             $historique->setAction('Validation de la laverie');
             $historique->setMotifAction($motif ?: 'Laverie vérifiée et validée.');
         } else {
-            $laverie->setStatut(\App\Enum\StatutLaverieEnum::STATUT_REFUSEE);
+            $laverie->setStatut(StatutLaverieEnum::STATUT_REFUSEE);
             $historique->setAction('Refus de la laverie');
             $historique->setMotifAction($motif ?: 'Laverie refusée par l\'administration.');
         }
