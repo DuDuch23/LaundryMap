@@ -77,6 +77,10 @@
       "non_renseignee": "Not provided",
       "erreur": "An error occurred."
     },
+    "page_loader": {
+      "titre": "Loading...",
+      "description": "Please wait while we load the content."
+    },
     "laverie_grid": {
       "aucune_laverie": "No laundromats found",
       "aucune_laverie_desc": "Try expanding your search area or adjusting your filters.",

@@ -5,6 +5,8 @@ import { Link } from "react-router";
 import { AccessibleInput, AccessibleButton } from "../components/accessibility";
 import { connexion } from "../services/request";
 import API_BASE_URL from "../services/api";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import { OctagonX } from 'lucide-react';
 
 // Fonction utilitaire pour décoder le token JWT et récupérer les rôles
 function getRolesFromToken(token: string): string[] {
@@ -142,12 +144,10 @@ export default function PageConnexion() {
       </h1>
 
       {erreurGenerale && (
-        <div
-          role="alert"
-          className="bg-red-100 text-red-800 p-4 rounded-lg mb-6 text-center font-medium w-full"
-        >
-          {erreurGenerale}
-        </div>
+        <Alert variant="destructive" className="mb-6">
+          <OctagonX className="h-4 w-4" />
+          <AlertDescription>{erreurGenerale}</AlertDescription>
+        </Alert>
       )}
 
       <form

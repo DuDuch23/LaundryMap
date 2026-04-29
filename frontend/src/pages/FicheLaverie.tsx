@@ -14,7 +14,8 @@ import {
 } from 'lucide-react';
 import { AccessibleButton, SkipLink } from '../components/accessibility';
 import API_BASE_URL, { uploadPath, resolveUrl } from '../services/api';
-import Notification from '../components/Notification';
+import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
 import { fetchPublicLaverieDetail, ajouterFavori, supprimerFavori, type LaveriePublicDetail } from '../services/request';
 
 const fallbackLaverieImage = uploadPath('/uploads/laveries/default-laundry.jpg');
@@ -99,7 +100,6 @@ export default function FicheLaverie() {
 	const [shareFeedback, setShareFeedback] = useState<string | null>(null);
 	const [isFavorite, setIsFavorite] = useState(false);
 	const [favoritePending, setFavoritePending] = useState(false);
-	const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
 	const isProfessionnel = useMemo(() => {
 		const token = localStorage.getItem('token');
@@ -228,14 +228,13 @@ export default function FicheLaverie() {
 			setFavoritePending(true);
 
 			if (isFavorite) {
-				// Retirer des favoris sans confirmation
 				await supprimerFavori(laverie.id);
 				setIsFavorite(false);
-				setNotification({ type: 'error', message: 'Retiré des favoris' });
+				toast.info('Retiré des favoris');
 			} else {
 				await ajouterFavori(laverie.id);
 				setIsFavorite(true);
-				setNotification({ type: 'success', message: 'Ajouté aux favoris' });
+				toast.success('Ajouté aux favoris');
 			}
 		} catch (err: any) {
 			setShareFeedback(err?.message || 'Erreur');
@@ -285,9 +284,6 @@ export default function FicheLaverie() {
 
 	return (
 		<>
-			{notification && (
-				<Notification type={notification.type} message={notification.message} onClose={() => setNotification(null)} />
-			)}
 		<div className="bg-slate-50 px-5 pb-16 pt-16 sm:pt-20 lg:px-0 lg:pt-24">
 			<SkipLink />
 			<main id="main-content" role="main" tabIndex={-1} className="mx-auto max-w-[1280px]">
@@ -479,9 +475,7 @@ export default function FicheLaverie() {
 							<h3 className="text-sm font-bold text-slate-900 mb-3">Autres services proposés</h3>
 							<div className="flex flex-wrap gap-2">
 								{laverie.services && laverie.services.length > 0 ? laverie.services.map((service) => (
-									<span key={service.id} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-										{service.nom}
-									</span>
+									<Badge key={service.id} variant="secondary">{service.nom}</Badge>
 								)) : (
 									<span className="text-xs text-slate-500">Aucun service renseigné.</span>
 								)}
@@ -492,9 +486,7 @@ export default function FicheLaverie() {
 							<h3 className="text-sm font-bold text-slate-900 mb-3">Moyens de paiement acceptés</h3>
 							<div className="flex flex-wrap gap-2">
 								{laverie.paiements && laverie.paiements.length > 0 ? laverie.paiements.map((paiement) => (
-									<span key={paiement.id} className="rounded-full bg-cyan-50 px-3 py-1 text-xs font-medium text-cyan-700 border border-cyan-100">
-										{paiement.nom}
-									</span>
+									<Badge key={paiement.id} variant="outline" className="border-cyan-200 text-cyan-700 bg-cyan-50">{paiement.nom}</Badge>
 								)) : (
 									<span className="text-xs text-slate-500">Aucun moyen de paiement renseigné.</span>
 								)}
