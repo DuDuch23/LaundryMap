@@ -158,22 +158,13 @@ export function AccessibleInput({
         id={id}
         name={name || id}
         type={type}
-        {...(isCheckbox
-          ? { checked: value === true || value === 'true' }
-          : { value: value ?? '' })}
-        className={`
-          ${type === 'checkbox' ? 'w-4 h-4 accent-[#22ACE2]' : ''}
-          ${type !== 'submit' && type !== 'checkbox' ? 'border border-solid rounded-lg bg-white p-4 w-full' : ''}
-          ${type === 'submit' ? 'text-white font-bold py-3 px-4 rounded-lg transition-colors cursor-pointer' : ''}
-          ${error ? 'bg-[#FADED7]! border-[#E3634C]' : ''}
-          ${disabled && !isCheckbox ? 'opacity-60 cursor-not-allowed' : ''}
-        max-w-[stretch]`}
+        value={value ?? ''}
         onChange={onChange || undefined}
         placeholder={placeholder || undefined}
         required={required || undefined}
         disabled={disabled}
         maxLength={maxLength}
-        readOnly={!onChange && !isCheckbox}
+        readOnly={!onChange}
         aria-required={required}
         aria-describedby={error ? `${id}-error` : undefined}
         aria-invalid={error ? 'true' : 'false'}

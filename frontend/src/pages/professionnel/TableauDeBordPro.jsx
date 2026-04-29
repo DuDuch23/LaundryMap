@@ -483,7 +483,7 @@ export default function TableauDeBordPro() {
 
             <div className="mt-6 flex flex-col items-center gap-3">
               <Link
-                to="/nouvelle-laverie"
+                to="/professionnel/nouvelle-laverie"
                 className="block w-full max-w-xl rounded-xl border-2 border-cyan-500 px-4 py-3 text-center text-sm font-semibold text-cyan-600 transition hover:bg-cyan-50"
               >
                 Ajouter une laverie

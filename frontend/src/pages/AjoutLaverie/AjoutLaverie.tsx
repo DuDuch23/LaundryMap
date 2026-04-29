@@ -534,26 +534,6 @@ export default function AjoutLaverie() {
                             <Field label="Pays" required error={errors.pays}>
                                 <input type="text" value={form.pays} onChange={(e) => set('pays', e.target.value)} placeholder="France" className={inputClass(errors.pays)} />
                             </Field>
-
-                            {/* Statut géocodage */}
-                            {geoStatus === 'found' && (
-                                <p className="text-xs text-green-600 flex items-center gap-1">
-                                    <CheckCircle2 className="size-3.5" />
-                                    Coordonnées trouvées ({form.latitude?.toFixed(5)}, {form.longitude?.toFixed(5)})
-                                </p>
-                            )}
-                            {geoStatus === 'loading' && (
-                                <p className="text-xs text-gray-400 flex items-center gap-1">
-                                    <span className="w-3 h-3 border border-gray-300 border-t-transparent rounded-full animate-spin inline-block" />
-                                    Géocodage en cours…
-                                </p>
-                            )}
-                            {geoStatus === 'not_found' && (
-                                <p className="text-xs text-amber-600 flex items-center gap-1">
-                                    <AlertCircle className="size-3.5" />
-                                    Adresse introuvable — vérifiez les champs
-                                </p>
-                            )}
                         </div>
                     </Card>
 

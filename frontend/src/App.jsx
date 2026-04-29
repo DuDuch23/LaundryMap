@@ -94,7 +94,6 @@ function App() {
               <Route path="/inscription-pro" element={<InscriptionPro />} />
               <Route path="/connexion" element={<Connexion />} />
               <Route path="/email-verifie" element={<EmailVerification />} />
-              <Route path="/nouvelle-laverie" element={<AjoutLaverie />} />
 
               <Route path="/laveries/:id" element={<FicheLaverie />} />
               <Route path="/cgu" element={<TermsOfUse />} />
@@ -117,6 +116,7 @@ function App() {
             <Route element={<ProRoute />}>
               <Route path="/professionnel/tableau-de-bord" element={<TableauDeBordPro />} />
               <Route path="/professionnel/laveries/:id/modifier" element={<ModifierLaveriePro />} />
+              <Route path="/professionnel/nouvelle-laverie" element={<AjoutLaverie />} />
             </Route>
           </Routes>
         </Suspense>

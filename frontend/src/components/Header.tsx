@@ -88,7 +88,7 @@ export default function Header() {
                                 {isPro && (
                                     <>
                                         <li><NavLink to="/professionnel/tableau-de-bord" className={navLinkClass}>{t('main.header.tableau_de_bord')}</NavLink></li>
-                                        <li><NavLink to="/nouvelle-laverie" className={navLinkClass}>{t('main.header.ajouter_laverie')}</NavLink></li>
+                                        <li><NavLink to="/professionnel/nouvelle-laverie" className={navLinkClass}>{t('main.header.ajouter_laverie')}</NavLink></li>
 
                                     </>
                                 )}
@@ -171,7 +171,7 @@ export default function Header() {
                                         {isPro && (
                                             <>
                                                 <li className="border-b border-gray-100">
-                                                    <NavLink to="/nouvelle-laverie" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>{t('main.header.ajouter_laverie')}</NavLink>
+                                                    <NavLink to="/professionnel/nouvelle-laverie" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>{t('main.header.ajouter_laverie')}</NavLink>
                                                 </li>
 
                                             </>
