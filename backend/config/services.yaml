@@ -5,7 +5,7 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     app.frontend_url: '%env(FRONTEND_URL)%'
-    mailer_from: '%env(MAILER_FROM)%'
+    mailer_from: '%env(BREVO_FROM)%'
 
 services:
     _defaults:

@@ -282,33 +282,32 @@ class ApiLaverieController extends AbstractController
             return $this->json(['message' => 'Erreur lors de la mise à jour en base de données.'], 500);
         }
 
-        if ($action === 'accepter') {
-            $frontendBaseUrl = $this->getParameter('app.frontend_url');
-            $email = (new TemplatedEmail())
-                ->from($this->getParameter('mailer_from'))
-                ->to($user->getEmail())
-                ->subject('Votre laverie "' . $laverie->getNomEtablissement() . '" a été validée !')
-                ->htmlTemplate('emails/validation_laverie.html.twig')
-                ->context([
-                    'user' => $user,
-                    'laverie' => $laverie,
-                    'motif' => $motif,
-                    'loginUrl' => $frontendBaseUrl . '/connexion',
-                ]);
-        } else {
-            $email = (new TemplatedEmail())
-                ->from($this->getParameter('mailer_from'))
-                ->to($user->getEmail())
-                ->subject('Information concernant votre laverie "' . $laverie->getNomEtablissement() . '"')
-                ->htmlTemplate('emails/refus_laverie.html.twig')
-                ->context([
-                    'user' => $user,
-                    'laverie' => $laverie,
-                    'motif' => $motif,
-                ]);
-        }
-
         try {
+            if ($action === 'accepter') {
+                $frontendBaseUrl = $this->getParameter('app.frontend_url');
+                $email = (new TemplatedEmail())
+                    ->from($this->getParameter('mailer_from'))
+                    ->to($user->getEmail())
+                    ->subject('Votre laverie "' . $laverie->getNomEtablissement() . '" a été validée !')
+                    ->htmlTemplate('emails/validation_laverie.html.twig')
+                    ->context([
+                        'user' => $user,
+                        'laverie' => $laverie,
+                        'motif' => $motif,
+                        'loginUrl' => $frontendBaseUrl . '/connexion',
+                    ]);
+            } else {
+                $email = (new TemplatedEmail())
+                    ->from($this->getParameter('mailer_from'))
+                    ->to($user->getEmail())
+                    ->subject('Information concernant votre laverie "' . $laverie->getNomEtablissement() . '"')
+                    ->htmlTemplate('emails/refus_laverie.html.twig')
+                    ->context([
+                        'user' => $user,
+                        'laverie' => $laverie,
+                        'motif' => $motif,
+                    ]);
+            }
             $mailer->send($email);
         } catch (\Throwable $e) {
             $logger->error('Echec envoi mail statut laverie', ['laverieId' => $id, 'action' => $action, 'exception' => $e]);
