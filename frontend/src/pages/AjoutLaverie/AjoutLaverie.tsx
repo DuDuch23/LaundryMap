@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { ArrowLeft, Plus, AlertCircle, CheckCircle2 } from 'lucide-react';
 import Uppy from '@uppy/core';
 import API_BASE_URL from '../../services/api';
 import { geocodeSuggestions, getMethodesPaiement, getServices } from '../../services/request';
@@ -11,9 +12,14 @@ import { WiLineCentrale } from '../../types/wiline/WiLineCentrale';
 import type { GeoSuggestion, MethodePaiementOption, ServiceOption } from '../../types/Laverie';
 import { LogoUpload } from '../../components/laverie/LogoUpload';
 import { PhotosUpload } from '../../components/laverie/PhotosUpload';
+import { CheckboxGroup } from '../../components/laverie/CheckboxGroup';
+import { MachineRow } from '../../components/laverie/MachineRow';
 import { Card } from '../../components/ui/Card';
 import { SectionTitle } from '../../components/ui/SectionTitle';
 import { Field, inputClass } from '../../components/ui/Field';
+import { ToggleSwitch } from '../../components/ui/ToggleSwitch';
+import { Button } from '../../components/ui/button';
+import { Alert, AlertDescription } from '../../components/ui/alert';
 
 const RESTRICTIONS_IMAGE = {
     maxFileSize: 5 * 1024 * 1024,
@@ -79,15 +85,14 @@ export default function AjoutLaverie() {
     const [wiLineSelectedSerial, setWiLineSelectedSerial] = useState<string>('');
 
     // ── Formulaire ────────────────────────────────────────────────────────────
-    // serviceIds / paiementIds contiennent les IDs sélectionnés (pas les noms)
     const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'found' | 'not_found'>('idle');
 
-    const [adresseQuery, setAdresseQuery]                   = useState('');
-    const [adresseSuggestions, setAdresseSuggestions]       = useState<GeoSuggestion[]>([]);
+    const [adresseQuery, setAdresseQuery]                     = useState('');
+    const [adresseSuggestions, setAdresseSuggestions]         = useState<GeoSuggestion[]>([]);
     const [showAdresseSuggestions, setShowAdresseSuggestions] = useState(false);
-    const [adresseGeocoding, setAdresseGeocoding]           = useState(false);
-    const suggestTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const skipNextGeo   = useRef(false);
+    const [adresseGeocoding, setAdresseGeocoding]             = useState(false);
+    const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const skipNextGeo  = useRef(false);
 
     const [form, setForm] = useState<FormDataAddLaverie>({
         nomEtablissement: '',
@@ -224,8 +229,6 @@ export default function AjoutLaverie() {
         setForm((f) => ({ ...f, machines: f.machines.filter((m) => m.id !== id) }));
     };
 
-    // ── Logo / photos — gérés dans les composants LogoUpload et PhotosUpload ──
-
     // ── WI-LINE ───────────────────────────────────────────────────────────────
 
     const connecterWiLine = async () => {
@@ -312,14 +315,12 @@ export default function AjoutLaverie() {
             if (form.longitude !== null) fd.append('longitude', String(form.longitude));
             if (form.wiLineCentraleId !== null) fd.append('wiLineCentraleId', String(form.wiLineCentraleId));
 
-            // Champs complexes JSON-encodés
             fd.append('horaires',    JSON.stringify(form.horaires));
             fd.append('machines',    JSON.stringify(form.machines));
             fd.append('equipements', JSON.stringify(form.equipements));
             fd.append('serviceIds',  JSON.stringify(form.serviceIds));
             fd.append('paiementIds', JSON.stringify(form.paiementIds));
 
-            // Fichiers depuis Uppy
             if (logoUppy) {
                 const logoFile = logoUppy.getFiles()[0];
                 if (logoFile) fd.append('logo', logoFile.data as File);
@@ -328,7 +329,6 @@ export default function AjoutLaverie() {
 
             const res = await fetch(`${API_BASE_URL}/api/laveries`, {
                 method: 'POST',
-                // Pas de Content-Type : le navigateur le définit avec le boundary multipart
                 headers: { Authorization: `Bearer ${token}` },
                 body: fd,
             });
@@ -349,10 +349,15 @@ export default function AjoutLaverie() {
             <div className="mx-auto px-4">
 
                 <div className="mb-8">
-                    <button type="button" onClick={() => navigate('/profil')} className="p-2 flex items-center gap-2 text-sm text-gray-500 hover:text-[#14A8DE] transition-colors mb-4">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 5l-7 7 7 7" /></svg>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => navigate('/profil')}
+                        className="mb-4 text-gray-500 hover:text-[#14A8DE] -ml-2"
+                    >
+                        <ArrowLeft className="size-4" />
                         Revenir en arrière
-                    </button>
+                    </Button>
                     <h1 className="text-3xl font-bold text-gray-900">Ajouter une laverie</h1>
                     <p className="text-gray-500 mt-1">Votre fiche sera soumise à validation avant publication.</p>
                 </div>
@@ -374,14 +379,14 @@ export default function AjoutLaverie() {
                                 />
                                 {errors.wiLineApiKey && <p className="text-xs text-red-500 mt-1">{errors.wiLineApiKey}</p>}
                             </div>
-                            <button
+                            <Button
                                 type="button"
                                 onClick={connecterWiLine}
                                 disabled={wiLineLoading || !form.wiLineApiKey.trim()}
-                                className="px-4 py-2.5 rounded-xl bg-[#14A8DE] text-white text-sm font-medium hover:bg-[#119ac8] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0"
+                                className="bg-[#14A8DE] hover:bg-[#119ac8] text-white border-0 shrink-0"
                             >
                                 {wiLineLoading ? 'Connexion...' : 'Connecter'}
-                            </button>
+                            </Button>
                         </div>
 
                         {wiLineConnecte && wiLineCentrales.length > 0 && (
@@ -400,7 +405,12 @@ export default function AjoutLaverie() {
                                         </label>
                                     ))}
                                 </div>
-                                {wiLineSelectedSerial && <p className="text-xs text-green-600 mt-2">✓ {form.machines.length} machine(s) importée(s) dans la section ci-dessous.</p>}
+                                {wiLineSelectedSerial && (
+                                    <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                                        <CheckCircle2 className="size-3.5" />
+                                        {form.machines.length} machine(s) importée(s) dans la section ci-dessous.
+                                    </p>
+                                )}
                             </div>
                         )}
                         {wiLineConnecte && wiLineCentrales.length === 0 && (
@@ -412,10 +422,15 @@ export default function AjoutLaverie() {
                     <Card>
                         <div className="flex items-start justify-between mb-6">
                             <SectionTitle step={2} title="Machines" subtitle="Ajoutez vos machines manuellement ou via WI-LINE" />
-                            <button type="button" onClick={addMachine} className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[#14A8DE] text-[#14A8DE] text-sm font-medium hover:bg-[#14A8DE]/5 transition-colors shrink-0">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={addMachine}
+                                className="border-[#14A8DE] text-[#14A8DE] hover:bg-[#14A8DE]/5 hover:text-[#14A8DE] shrink-0"
+                            >
+                                <Plus className="size-3.5" />
                                 Ajouter
-                            </button>
+                            </Button>
                         </div>
                         {form.machines.length === 0 ? (
                             <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-xl">
@@ -425,43 +440,13 @@ export default function AjoutLaverie() {
                         ) : (
                             <div className="space-y-3">
                                 {form.machines.map((machine, idx) => (
-                                    <div key={machine.id} className={`p-4 rounded-xl border ${machine.wiline_machine_id ? 'bg-blue-50 border-blue-100' : 'bg-gray-50 border-gray-100'}`}>
-                                        <div className="flex items-center justify-between mb-3">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Machine #{idx + 1}</span>
-                                                {machine.wiline_machine_id && <span className="text-xs bg-[#14A8DE]/10 text-[#14A8DE] px-2 py-0.5 rounded-full font-medium">WI-LINE</span>}
-                                            </div>
-                                            <button type="button" onClick={() => removeMachine(machine.id)} className="text-gray-400 hover:text-red-500 transition-colors">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
-                                            </button>
-                                        </div>
-                                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                                            <div className="sm:col-span-1">
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Nom</label>
-                                                <input type="text" value={machine.nom} onChange={(e) => updateMachine(machine.id, 'nom', e.target.value)} placeholder="Ex: Machine 1" className="w-full max-w-[stretch] px-2.5 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#14A8DE] focus:outline-none" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
-                                                <select value={machine.type} onChange={(e) => updateMachine(machine.id, 'type', e.target.value)} className="w-full max-w-[stretch] px-2.5 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#14A8DE] focus:outline-none">
-                                                    <option value="lave-linge">Lave-linge</option>
-                                                    <option value="sèche-linge">Sèche-linge</option>
-                                                    <option value="autre">Autre</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Capacité (kg)</label>
-                                                <input type="number" value={machine.capacite} onChange={(e) => updateMachine(machine.id, 'capacite', e.target.value)} placeholder="8" className="w-full max-w-[stretch] px-2.5 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#14A8DE] focus:outline-none" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Tarif (€)</label>
-                                                <input type="number" step="0.10" value={machine.tarif} onChange={(e) => updateMachine(machine.id, 'tarif', e.target.value)} placeholder="4.50" className="w-full max-w-[stretch] px-2.5 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#14A8DE] focus:outline-none" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Durée (min)</label>
-                                                <input type="number" value={machine.duree} onChange={(e) => updateMachine(machine.id, 'duree', e.target.value)} placeholder="45" className="w-full max-w-[stretch] px-2.5 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#14A8DE] focus:outline-none" />
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <MachineRow
+                                        key={machine.id}
+                                        machine={machine}
+                                        index={idx}
+                                        onUpdate={updateMachine}
+                                        onRemove={removeMachine}
+                                    />
                                 ))}
                             </div>
                         )}
@@ -550,10 +535,29 @@ export default function AjoutLaverie() {
                                 <input type="text" value={form.pays} onChange={(e) => set('pays', e.target.value)} placeholder="France" className={inputClass(errors.pays)} />
                             </Field>
 
+                            {/* Statut géocodage */}
+                            {geoStatus === 'found' && (
+                                <p className="text-xs text-green-600 flex items-center gap-1">
+                                    <CheckCircle2 className="size-3.5" />
+                                    Coordonnées trouvées ({form.latitude?.toFixed(5)}, {form.longitude?.toFixed(5)})
+                                </p>
+                            )}
+                            {geoStatus === 'loading' && (
+                                <p className="text-xs text-gray-400 flex items-center gap-1">
+                                    <span className="w-3 h-3 border border-gray-300 border-t-transparent rounded-full animate-spin inline-block" />
+                                    Géocodage en cours…
+                                </p>
+                            )}
+                            {geoStatus === 'not_found' && (
+                                <p className="text-xs text-amber-600 flex items-center gap-1">
+                                    <AlertCircle className="size-3.5" />
+                                    Adresse introuvable — vérifiez les champs
+                                </p>
+                            )}
                         </div>
                     </Card>
 
-                    {/* ── 5 Horaires ── */}
+                    {/* ── 5. Horaires ── */}
                     <Card>
                         <SectionTitle step={5} title="Horaires d'ouverture" subtitle="Au moins un jour obligatoire" />
                         {errors.horaires && <p className="text-xs text-red-500 mb-3">{errors.horaires}</p>}
@@ -562,11 +566,13 @@ export default function AjoutLaverie() {
                                 const h = form.horaires[jour];
                                 return (
                                     <div key={jour} className="flex items-center gap-3 flex-wrap justify-between">
-                                        <div className="flex">
+                                        <div className="flex items-center gap-3">
                                             <div className="w-24 text-sm font-medium text-gray-700 shrink-0">{jour}</div>
-                                            <div onClick={() => setHoraire(jour, 'ouvert', !h.ouvert)} className={`w-10 h-5 rounded-full transition-colors relative cursor-pointer shrink-0 ${h.ouvert ? 'bg-[#14A8DE]' : 'bg-gray-200'}`}>
-                                                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${h.ouvert ? 'translate-x-5' : 'translate-x-0.5'}`} />
-                                            </div>
+                                            <ToggleSwitch
+                                                checked={h.ouvert}
+                                                onChange={(val) => setHoraire(jour, 'ouvert', val)}
+                                                label={`${jour} ouvert`}
+                                            />
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <span className="text-xs text-gray-500 w-12 shrink-0">{h.ouvert ? 'Ouvert' : 'Fermé'}</span>
@@ -588,61 +594,28 @@ export default function AjoutLaverie() {
                     <Card>
                         <SectionTitle step={6} title="Équipements & services" />
                         <div className="space-y-6">
-
-                            {/* Équipements — statiques */}
-                            <div>
-                                <p className="text-sm font-medium text-gray-700 mb-2">Équipements</p>
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                    {EQUIPEMENTS_OPTIONS.map((item) => (
-                                        <label key={item} className="flex items-center gap-2 cursor-pointer group">
-                                            <input type="checkbox" checked={form.equipements.includes(item)} onChange={() => toggleEquipement(item)} className="w-4 h-4 rounded border-gray-300 accent-[#14A8DE]" />
-                                            <span className="text-sm text-gray-600 group-hover:text-gray-900">{item}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Services — depuis l'API */}
-                            <div>
-                                <p className="text-sm font-medium text-gray-700 mb-2">Services proposés</p>
-                                {loadingRef ? (
-                                    <div className="flex gap-2">
-                                        {[...Array(4)].map((_, i) => <div key={i} className="h-6 w-28 bg-gray-100 rounded animate-pulse" />)}
-                                    </div>
-                                ) : servicesDisponibles.length === 0 ? (
-                                    <p className="text-sm text-gray-400">Aucun service disponible.</p>
-                                ) : (
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                        {servicesDisponibles.map((s) => (
-                                            <label key={s.id} className="flex items-center gap-2 cursor-pointer group">
-                                                <input type="checkbox" checked={form.serviceIds.includes(s.id)} onChange={() => toggleServiceId(s.id)} className="w-4 h-4 rounded border-gray-300 accent-[#14A8DE]" />
-                                                <span className="text-sm text-gray-600 group-hover:text-gray-900">{s.nom}</span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Paiements — depuis l'API */}
-                            <div>
-                                <p className="text-sm font-medium text-gray-700 mb-2">Moyens de paiement</p>
-                                {loadingRef ? (
-                                    <div className="flex gap-2">
-                                        {[...Array(4)].map((_, i) => <div key={i} className="h-6 w-28 bg-gray-100 rounded animate-pulse" />)}
-                                    </div>
-                                ) : paiementsDisponibles.length === 0 ? (
-                                    <p className="text-sm text-gray-400">Aucun moyen de paiement disponible.</p>
-                                ) : (
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                        {paiementsDisponibles.map((p) => (
-                                            <label key={p.id} className="flex items-center gap-2 cursor-pointer group">
-                                                <input type="checkbox" checked={form.paiementIds.includes(p.id)} onChange={() => togglePaiementId(p.id)} className="w-4 h-4 rounded border-gray-300 accent-[#14A8DE]" />
-                                                <span className="text-sm text-gray-600 group-hover:text-gray-900">{p.nom}</span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
+                            <CheckboxGroup
+                                title="Équipements"
+                                items={EQUIPEMENTS_OPTIONS.map((e) => ({ id: e, label: e }))}
+                                isChecked={(id) => form.equipements.includes(id as string)}
+                                onToggle={(id) => toggleEquipement(id as string)}
+                            />
+                            <CheckboxGroup
+                                title="Services proposés"
+                                items={servicesDisponibles.map((s) => ({ id: s.id, label: s.nom }))}
+                                isChecked={(id) => form.serviceIds.includes(id as number)}
+                                onToggle={(id) => toggleServiceId(id as number)}
+                                loading={loadingRef}
+                                emptyMessage="Aucun service disponible."
+                            />
+                            <CheckboxGroup
+                                title="Moyens de paiement"
+                                items={paiementsDisponibles.map((p) => ({ id: p.id, label: p.nom }))}
+                                isChecked={(id) => form.paiementIds.includes(id as number)}
+                                onToggle={(id) => togglePaiementId(id as number)}
+                                loading={loadingRef}
+                                emptyMessage="Aucun moyen de paiement disponible."
+                            />
                         </div>
                     </Card>
 
@@ -662,19 +635,27 @@ export default function AjoutLaverie() {
 
                     {/* ── Erreur globale & submit ── */}
                     {submitError && (
-                        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>
-                            <span>{submitError}</span>
-                        </div>
+                        <Alert variant="destructive" className="border-red-200 bg-red-50">
+                            <AlertCircle className="size-4 text-red-600" />
+                            <AlertDescription className="text-red-700">{submitError}</AlertDescription>
+                        </Alert>
                     )}
 
                     <div className="flex items-center justify-end gap-3 pt-2">
-                        <button type="button" onClick={() => navigate('/profil')} className="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => navigate('/profil')}
+                        >
                             Annuler
-                        </button>
-                        <button type="submit" disabled={isSubmitting} className="px-6 py-2.5 rounded-xl bg-[#14A8DE] text-white text-sm font-semibold hover:bg-[#119ac8] disabled:opacity-60 disabled:cursor-not-allowed transition-colors">
+                        </Button>
+                        <Button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="bg-[#14A8DE] hover:bg-[#119ac8] text-white border-0"
+                        >
                             {isSubmitting ? 'Envoi en cours...' : 'Soumettre pour validation'}
-                        </button>
+                        </Button>
                     </div>
 
                 </div>

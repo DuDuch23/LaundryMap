@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import API_BASE_URL, { uploadPath, resolveUrl } from '../../services/api';
+import Notification from '../../components/Notification';
 
 const statusStyles = {
   'Validée': 'bg-emerald-500 text-white',
@@ -35,6 +36,7 @@ function StarIcon({ className = '' }) {
 
 export default function TableauDeBordPro() {
   const profilePhotoInputRef = useRef(null);
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -78,10 +80,6 @@ export default function TableauDeBordPro() {
   }, []);
 
   const handleDeleteLaverie = async (laverieId) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette laverie ?')) {
-      return;
-    }
-
     setDeleting(laverieId);
     try {
       const token = localStorage.getItem('token');
@@ -99,19 +97,22 @@ export default function TableauDeBordPro() {
           message: 'Laverie supprimée avec succès',
         });
         
-        // Rafraîchir les données
-        const token = localStorage.getItem('token');
-        const fetchResponse = await fetch(`${API_BASE_URL}/api/professionnel/tableau-bord`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+        // Mise à jour immédiate de l'état local pour retirer la laverie
+        setData(prev => {
+          if (!prev) return prev;
+          const removedLaverie = prev.laveries.find(l => l.id === laverieId);
+          return {
+            ...prev,
+            laveries: prev.laveries.filter(l => l.id !== laverieId),
+            stats: {
+              ...prev.stats,
+              total: Math.max(0, prev.stats.total - 1),
+              validees: removedLaverie?.statut === 'Validée' ? Math.max(0, prev.stats.validees - 1) : prev.stats.validees,
+              en_attente: removedLaverie?.statut === 'En attente' ? Math.max(0, prev.stats.en_attente - 1) : prev.stats.en_attente,
+              refusees: removedLaverie?.statut === 'Refusée' ? Math.max(0, prev.stats.refusees - 1) : prev.stats.refusees,
+            }
+          };
         });
-        
-        if (fetchResponse.ok) {
-          const result = await fetchResponse.json();
-          setData(result);
-        }
 
         // Masquer la notification après 3 secondes
         setTimeout(() => setNotification(null), 3000);
@@ -303,24 +304,11 @@ export default function TableauDeBordPro() {
     <div className="flex w-full flex-col bg-slate-50 pt-24">
       {/* Toast Notification */}
       {notification && (
-        <div
-          className={`fixed top-4 right-4 z-50 rounded-lg shadow-lg px-6 py-4 text-white font-semibold flex items-center gap-3 ${
-            notification.type === 'success'
-              ? 'bg-emerald-500'
-              : 'bg-rose-500'
-          }`}
-        >
-          {notification.type === 'success' ? (
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-          )}
-          <span>{notification.message}</span>
-        </div>
+        <Notification
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
       )}
 
       <main className="flex-1 px-4 sm:px-6 lg:px-8">
@@ -423,7 +411,8 @@ export default function TableauDeBordPro() {
               {laveries && laveries.map((laundry) => (
                 <article
                   key={laundry.id}
-                  className="w-full overflow-hidden rounded-2xl bg-white text-left shadow-sm transition hover:shadow-md"
+                  onClick={() => navigate(`/laveries/${laundry.id}`)}
+                  className="w-full overflow-hidden rounded-2xl bg-white text-left shadow-sm transition hover:shadow-md cursor-pointer"
                 >
                   <div className="relative h-40 w-full bg-slate-200">
                     <img
@@ -464,15 +453,19 @@ export default function TableauDeBordPro() {
                     <div className="mt-4 flex gap-2">
                       <Link
                         to={`/professionnel/laveries/${laundry.id}/modifier`}
+                        onClick={(e) => e.stopPropagation()}
                         className="flex-1 rounded-xl bg-cyan-500 px-3 py-2.5 text-center text-xs font-semibold text-white transition hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed sm:text-sm"
                       >
                         Modifier
                       </Link>
                       <button
                         type="button"
-                        onClick={() => handleDeleteLaverie(laundry.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteLaverie(laundry.id);
+                        }}
                         disabled={deleting === laundry.id}
-                        className="flex-1 rounded-xl bg-rose-50 px-3 py-2.5 text-xs font-semibold text-rose-600 transition hover:bg-rose-100 disabled:opacity-50 disabled:cursor-not-allowed sm:text-sm"
+                        className="flex-1 rounded-xl bg-rose-50 px-3 py-2.5 text-xs font-semibold text-rose-600 transition hover:bg-rose-100 disabled:opacity-50 disabled:cursor-not-allowed sm:text-sm cursor-pointer"
                       >
                         {deleting === laundry.id ? 'Suppression...' : 'Supprimer'}
                       </button>
@@ -490,13 +483,7 @@ export default function TableauDeBordPro() {
 
             <div className="mt-6 flex flex-col items-center gap-3">
               <Link
-                to="/professionnel/laveries"
-                className="block w-full max-w-xl rounded-xl bg-cyan-500 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-cyan-600"
-              >
-                Voir toutes les laveries
-              </Link>
-              <Link
-                to="/professionnel/laveries/ajouter"
+                to="/nouvelle-laverie"
                 className="block w-full max-w-xl rounded-xl border-2 border-cyan-500 px-4 py-3 text-center text-sm font-semibold text-cyan-600 transition hover:bg-cyan-50"
               >
                 Ajouter une laverie

@@ -116,6 +116,58 @@ class ProfessionnelLaverieFormatterService
         return $equipements;
     }
 
+    public function buildServicesResponse(Laverie $laverie): array
+    {
+        $services = [];
+        foreach ($laverie->getServices() as $laverieService) {
+            $service = $laverieService->getService();
+            $services[] = [
+                'id' => $service->getId(),
+                'nom' => $service->getNom(),
+            ];
+        }
+        return $services;
+    }
+
+    public function buildPaiementsResponse(Laverie $laverie): array
+    {
+        $paiements = [];
+        foreach ($laverie->getPaiements() as $laveriePaiement) {
+            $paiement = $laveriePaiement->getPaiement();
+            $paiements[] = [
+                'id' => $paiement->getId(),
+                'nom' => $paiement->getNom(),
+            ];
+        }
+        return $paiements;
+    }
+
+    public function buildCommentairesResponse(Laverie $laverie): array
+    {
+        $commentaires = [];
+        foreach ($laverie->getNotes() as $laverieNote) {
+            if ($laverieNote->getCommentaireSupprimeeLe() !== null || empty($laverieNote->getCommentaire())) {
+                continue;
+            }
+            
+            $utilisateur = $laverieNote->getUtilisateur();
+            $nom = $utilisateur->getNom();
+            $nomAbrege = $nom ? mb_substr($nom, 0, 1) . '.' : '';
+            
+            $commentaires[] = [
+                'id' => $laverieNote->getId(),
+                'note' => $laverieNote->getNote(),
+                'commentaire' => $laverieNote->getCommentaire(),
+                'date' => $laverieNote->getCommenteLe() ? $laverieNote->getCommenteLe()->format('c') : ($laverieNote->getNoteLe() ? $laverieNote->getNoteLe()->format('c') : null),
+                'utilisateur' => [
+                    'prenom' => $utilisateur->getPrenom(),
+                    'nom' => $nomAbrege,
+                ]
+            ];
+        }
+        return $commentaires;
+    }
+
     public function countLaverieCommentaires(Laverie $laverie): int
     {
         return $this->laverieNoteRepository->countCommentairesByLaverie($laverie);

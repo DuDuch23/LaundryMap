@@ -62,7 +62,7 @@ const FILTER_SECTIONS: FilterSection[] = [
         label: 'Propriétaire',
         key: 'proprietaire',
         options: [
-            { label: 'Aléatoire', value: '' },
+            { label: 'Tous', value: '' },
             { label: 'Oui', value: 'oui' },
             { label: 'Non', value: 'non' },
         ],
@@ -71,7 +71,7 @@ const FILTER_SECTIONS: FilterSection[] = [
         label: 'Trie',
         key: 'ordre',
         options: [
-            { label: 'Aléatoire', value: '' },
+            { label: 'Par défaut', value: '' },
             { label: 'De A à Z', value: 'croissant' },
             { label: 'De Z à A', value: 'decroissant' },
         ],
@@ -122,17 +122,7 @@ export default function GestionUtilisateurs() {
             if (filtresActifs.ordre) filtresApi.ordre = filtresActifs.ordre;
 
             const data = await fetchAdminUtilisateurs(page, filtresApi);
-
-            const utilisateursTries = data.utilisateurs.sort((a: Utilisateur, b: Utilisateur) => {
-                const aEnAttente = a.professionnel?.statut === 'En attente' || (!a.professionnel && a.statut === 'En attente');
-                const bEnAttente = b.professionnel?.statut === 'En attente' || (!b.professionnel && b.statut === 'En attente');
-                
-                if (aEnAttente && !bEnAttente) return -1;
-                if (!aEnAttente && bEnAttente) return 1;
-                return 0;
-            });
-
-            setUtilisateurs(utilisateursTries);
+            setUtilisateurs(data.utilisateurs);
             setEnAttenteCount(data.totalEnAttente);
             setPagination(data.pagination);
         } catch {
@@ -221,7 +211,7 @@ export default function GestionUtilisateurs() {
             {/* HEADER */}
             <div className="bg-white flex items-center justify-between p-4 shadow-sm mb-6">
                 <div className="flex items-center gap-3">
-                    <Link to="/admin/tableau-de-bord" className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition block" aria-label="Retour">
+                    <Link to="/admin/tableau-de-bord" className="bg-[#14A8DE] text-white p-1.5 rounded-md hover:bg-[#1296c8] transition block" aria-label="Retour">
                         <ChevronLeft size={20} />
                     </Link>
                     <h1 className="text-lg font-bold">Gestion des utilisateurs</h1>
@@ -239,7 +229,7 @@ export default function GestionUtilisateurs() {
                             </button>
                             <button
                                 onClick={ouvrirFiltres}
-                                className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition cursor-pointer"
+                                className="bg-[#14A8DE] text-white p-1.5 rounded-md hover:bg-[#1296c8] transition cursor-pointer"
                                 aria-label="Ouvrir les filtres (Filtres actifs)"
                             >
                                 <ListX size={20} />
@@ -248,7 +238,7 @@ export default function GestionUtilisateurs() {
                     ) : (
                         <button
                             onClick={ouvrirFiltres}
-                            className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition cursor-pointer"
+                            className="bg-[#14A8DE] text-white p-1.5 rounded-md hover:bg-[#1296c8] transition cursor-pointer"
                             aria-label="Ouvrir les filtres"
                         >
                             <SlidersHorizontal size={20} />
@@ -262,7 +252,7 @@ export default function GestionUtilisateurs() {
                 <div className="bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm mb-8 mx-4">
                     <h2 className="font-bold mb-4">Utilisateurs en attentes</h2>
                     <UserRound size={40} className="mx-auto mb-2 text-black" />
-                    <p className="text-green-500 font-bold text-xl">+{enAttenteCount}</p>
+                    <p className="text-green-500 font-bold text-xl">{enAttenteCount}</p>
                 </div>
 
                 {/* INDICATEUR DE CHARGEMENT */}

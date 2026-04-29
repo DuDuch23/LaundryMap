@@ -56,15 +56,17 @@ class ApiLaverieController extends ApiProfilController
 
     #[Route('/api/laveries', name: 'api_laveries_liste', methods: ['GET'])]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    public function mesLaveries(): JsonResponse
+    public function mesLaveries(LaverieRepository $laverieRepository): JsonResponse
     {
         $professionnel = $this->getProfessionnelValide();
         if ($professionnel instanceof JsonResponse) {
             return $professionnel;
         }
 
+        $laveries = $laverieRepository->findByProfessionnel($professionnel);
+
         return $this->json(
-            ['laveries' => $professionnel->getLaveries()->toArray()],
+            ['laveries' => $laveries],
             200,
             [],
             ['groups' => ['laverie:public', 'laverie:private']]

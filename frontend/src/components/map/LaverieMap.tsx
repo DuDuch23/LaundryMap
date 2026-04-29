@@ -130,9 +130,9 @@ export default function LaverieMap({
                     onClick={onGeoClick}
                     disabled={geoLoading}
                     aria-busy={geoLoading}
-                    className="absolute bottom-12 right-3 z-[400] flex items-center gap-3 px-4 py-3 rounded-full bg-black border border-white/20 shadow-lg hover:bg-white hover:border-white active:scale-[.99] transition-all group disabled:opacity-60 disabled:cursor-wait"
+                    className="absolute bottom-7 right-3 z-[400] flex items-center gap-3 px-4 py-3 rounded-full bg-[#14A8DE] shadow-lg hover:bg-[#119ac8] active:scale-[.99] transition-all group disabled:opacity-60 disabled:cursor-wait"
                 >
-                    <span className="shrink-0 w-9 h-9 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-black transition-colors" aria-hidden="true">
+                    <span className="shrink-0 w-9 h-9 rounded-full bg-white/10 flex items-center justify-center  transition-colors" aria-hidden="true">
                         {geoLoading ? (
                             <div className="w-4 h-4 border-2 border-[#14A8DE] border-t-transparent rounded-full animate-spin" />
                         ) : (
@@ -141,7 +141,7 @@ export default function LaverieMap({
                             </svg>
                         )}
                     </span>
-                    <span className="text-sm font-semibold text-white group-hover:text-black transition-colors">
+                    <span className="text-sm font-semibold text-white transition-colors">
                         {geoLoading ? t('main.home.geo_chargement') : t('main.home.utiliser_position')}
                     </span>
                 </button>

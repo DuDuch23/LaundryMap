@@ -14,7 +14,8 @@ import {
 } from 'lucide-react';
 import { AccessibleButton, SkipLink } from '../components/accessibility';
 import API_BASE_URL, { uploadPath, resolveUrl } from '../services/api';
-import Notification from '../components/Notification';
+import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
 import { fetchPublicLaverieDetail, ajouterFavori, supprimerFavori, type LaveriePublicDetail } from '../services/request';
 
 const fallbackLaverieImage = uploadPath('/uploads/laveries/default-laundry.jpg');
@@ -99,7 +100,22 @@ export default function FicheLaverie() {
 	const [shareFeedback, setShareFeedback] = useState<string | null>(null);
 	const [isFavorite, setIsFavorite] = useState(false);
 	const [favoritePending, setFavoritePending] = useState(false);
-	const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+	const isProfessionnel = useMemo(() => {
+		const token = localStorage.getItem('token');
+		if (!token) return false;
+		try {
+			const base64Url = token.split('.')[1];
+			const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+			const jsonPayload = decodeURIComponent(
+				window.atob(base64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
+			);
+			const roles = JSON.parse(jsonPayload).roles || [];
+			return roles.some((r: string) => r.includes('PROFESSIONNEL'));
+		} catch (e) {
+			return false;
+		}
+	}, []);
 
 	useEffect(() => {
 		let active = true;
@@ -212,14 +228,13 @@ export default function FicheLaverie() {
 			setFavoritePending(true);
 
 			if (isFavorite) {
-				// Retirer des favoris sans confirmation
 				await supprimerFavori(laverie.id);
 				setIsFavorite(false);
-				setNotification({ type: 'error', message: 'Retiré des favoris' });
+				toast.info('Retiré des favoris');
 			} else {
 				await ajouterFavori(laverie.id);
 				setIsFavorite(true);
-				setNotification({ type: 'success', message: 'Ajouté aux favoris' });
+				toast.success('Ajouté aux favoris');
 			}
 		} catch (err: any) {
 			setShareFeedback(err?.message || 'Erreur');
@@ -269,9 +284,6 @@ export default function FicheLaverie() {
 
 	return (
 		<>
-			{notification && (
-				<Notification type={notification.type} message={notification.message} onClose={() => setNotification(null)} />
-			)}
 		<div className="bg-slate-50 px-5 pb-16 pt-16 sm:pt-20 lg:px-0 lg:pt-24">
 			<SkipLink />
 			<main id="main-content" role="main" tabIndex={-1} className="mx-auto max-w-[1280px]">
@@ -292,19 +304,21 @@ export default function FicheLaverie() {
 									>
 										<Share2 className="h-5 w-5" />
 									</button>
-									<button
-										type="button"
-										onClick={handleToggleFavorite}
-										disabled={favoritePending}
-										className={`cursor-pointer inline-flex h-11 w-11 items-center justify-center rounded-full backdrop-blur-sm transition disabled:opacity-60 shadow-lg ${
-											isFavorite
-												? 'bg-rose-500 text-white ring-1 ring-rose-300/60 hover:bg-rose-600 hover:scale-105'
-												: 'bg-white/90 text-rose-500 hover:bg-rose-50 hover:scale-105'
-										}`}
-										aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-									>
-										<Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : 'stroke-[2.25]'}`} />
-									</button>
+									{!isProfessionnel && (
+										<button
+											type="button"
+											onClick={handleToggleFavorite}
+											disabled={favoritePending}
+											className={`cursor-pointer inline-flex h-11 w-11 items-center justify-center rounded-full backdrop-blur-sm transition disabled:opacity-60 shadow-lg ${
+												isFavorite
+													? 'bg-rose-500 text-white ring-1 ring-rose-300/60 hover:bg-rose-600 hover:scale-105'
+													: 'bg-white/90 text-rose-500 hover:bg-rose-50 hover:scale-105'
+											}`}
+											aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+										>
+											<Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : 'stroke-[2.25]'}`} />
+										</button>
+									)}
 								</div>
 							</div>
 
@@ -360,8 +374,8 @@ export default function FicheLaverie() {
 									<div className="rounded-2xl bg-white p-4 shadow-sm">
 										<p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Statut</p>
 										<p className="mt-2 inline-flex items-center gap-1 text-base font-bold text-slate-900">
-											<CheckCircle2 className="h-4 w-4 text-emerald-500" />
-											Ouverte
+											<CheckCircle2 className={`h-4 w-4 ${isOpenNow(laverie) ? 'text-emerald-500' : 'text-rose-500'}`} />
+											{openLabel}
 										</p>
 									</div>
 								</div>
@@ -456,6 +470,28 @@ export default function FicheLaverie() {
 								</div>
 							)}
 						</div>
+
+						<div className="mt-8">
+							<h3 className="text-sm font-bold text-slate-900 mb-3">Autres services proposés</h3>
+							<div className="flex flex-wrap gap-2">
+								{laverie.services && laverie.services.length > 0 ? laverie.services.map((service) => (
+									<Badge key={service.id} variant="secondary">{service.nom}</Badge>
+								)) : (
+									<span className="text-xs text-slate-500">Aucun service renseigné.</span>
+								)}
+							</div>
+						</div>
+
+						<div className="mt-6">
+							<h3 className="text-sm font-bold text-slate-900 mb-3">Moyens de paiement acceptés</h3>
+							<div className="flex flex-wrap gap-2">
+								{laverie.paiements && laverie.paiements.length > 0 ? laverie.paiements.map((paiement) => (
+									<Badge key={paiement.id} variant="outline" className="border-cyan-200 text-cyan-700 bg-cyan-50">{paiement.nom}</Badge>
+								)) : (
+									<span className="text-xs text-slate-500">Aucun moyen de paiement renseigné.</span>
+								)}
+							</div>
+						</div>
 					</div>
 				</section>
 
@@ -490,26 +526,42 @@ export default function FicheLaverie() {
 						</div>
 
 						<div className="space-y-4">
-							<div className="rounded-2xl border border-slate-100 p-4" role="status" aria-live="polite">
-								<div className="flex items-start justify-between gap-3">
+							<div className="space-y-4" role="status" aria-live="polite">
+								<div className="flex items-start justify-between gap-3 px-2">
 									<div>
 										<p className="text-sm font-semibold text-slate-900">Avis clients</p>
 										<p className="mt-1 text-xs text-slate-500">{laverie.commentairesCount} commentaire{laverie.commentairesCount > 1 ? 's' : ''}</p>
 									</div>
 									<MessageSquare className="h-4 w-4 text-slate-400" aria-hidden="true" />
 								</div>
-								<p className="mt-4 text-sm leading-6 text-slate-600">
-									Les avis détaillés seront bientôt affichés ici. La note moyenne et le volume de commentaires sont déjà disponibles.
-								</p>
+								
+								{laverie.commentaires && laverie.commentaires.length > 0 ? (
+									<div className="space-y-3">
+										{laverie.commentaires.map((commentaire) => (
+											<div key={commentaire.id} className="rounded-2xl border border-slate-100 p-4 bg-white shadow-sm">
+												<div className="flex justify-between items-start mb-2">
+													<div>
+														<p className="text-sm font-semibold text-slate-900">{commentaire.utilisateur.prenom} {commentaire.utilisateur.nom}</p>
+														<p className="text-xs text-slate-500">{new Date(commentaire.date).toLocaleDateString('fr-FR')}</p>
+													</div>
+													<div className="flex gap-0.5 text-amber-500">
+														{Array.from({ length: 5 }).map((_, index) => (
+															<Star key={index} className={`h-3.5 w-3.5 ${index < commentaire.note ? 'fill-current' : 'text-slate-200'}`} aria-hidden="true" />
+														))}
+													</div>
+												</div>
+												<p className="text-sm text-slate-600 leading-relaxed">{commentaire.commentaire}</p>
+											</div>
+										))}
+									</div>
+								) : (
+									<div className="rounded-2xl border border-slate-100 p-4">
+										<p className="text-sm leading-6 text-slate-600">Aucun avis détaillé n'est encore disponible pour cette laverie.</p>
+									</div>
+								)}
 							</div>
 
-							<div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
-								<div className="flex items-center gap-2 font-semibold text-slate-900">
-									<Clock3 className="h-4 w-4 text-cyan-600" aria-hidden="true" />
-									Horaires et disponibilité
-								</div>
-								<p className="mt-2 leading-6">La fiche est optimisée pour l’affichage mobile, tablette et ordinateur. Les horaires détaillés sont présentés dans le bloc dédié au-dessus.</p>
-							</div>
+
 						</div>
 					</div>
 				</section>

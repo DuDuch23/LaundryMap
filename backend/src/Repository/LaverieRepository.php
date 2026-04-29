@@ -40,7 +40,20 @@ class LaverieRepository extends ServiceEntityRepository
             }
         }
 
-        $qb->orderBy('l.id', $ordre === 'decroissant' ? 'DESC' : 'ASC');
+        if (!$statut) {
+            $qb->addSelect("CASE WHEN l.statut = :statutEnAttente THEN 0 ELSE 1 END AS HIDDEN priorite_statut")
+               ->setParameter('statutEnAttente', StatutLaverieEnum::STATUT_EN_ATTENTE)
+               ->orderBy('priorite_statut', 'ASC');
+        }
+
+        if ($ordre === 'croissant') {
+            $qb->addOrderBy('l.nomEtablissement', 'ASC');
+        } elseif ($ordre === 'decroissant') {
+            $qb->addOrderBy('l.nomEtablissement', 'DESC');
+        } else {
+            $qb->addOrderBy('l.id', 'DESC');
+        }
+
         return $qb;
     }
 

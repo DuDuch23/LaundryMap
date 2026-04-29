@@ -77,6 +77,10 @@
       "non_renseignee": "Non renseignée",
       "erreur": "Une erreur est survenue."
     },
+    "page_loader": {
+      "titre": "Chargement...",
+      "description": "Veuillez patienter pendant que nous chargeons le contenu."
+    },
     "laverie_grid": {
       "aucune_laverie": "Aucune laverie trouvée",
       "aucune_laverie_desc": "Essayez d'élargir votre zone de recherche ou de modifier vos filtres.",

@@ -43,7 +43,7 @@ const FILTER_SECTIONS: FilterSection[] = [
         label: 'Trie',
         key: 'ordre',
         options: [
-            { label: 'Aléatoire', value: '' },
+            { label: 'Par défaut', value: '' },
             { label: 'De A à Z', value: 'croissant' },
             { label: 'De Z à A', value: 'decroissant' },
         ],
@@ -89,16 +89,7 @@ export default function GestionLaveries() {
 
             const data = await fetchAdminLaveries(page, filtresApi);
 
-            const laveriesTriees = data.laveries.sort((a: LaverieItem, b: LaverieItem) => {
-                const aEnAttente = a.statut === 'En attente';
-                const bEnAttente = b.statut === 'En attente';
-
-                if (aEnAttente && !bEnAttente) return -1;
-                if (!aEnAttente && bEnAttente) return 1;
-                return 0;
-            });
-
-            setLaveries(laveriesTriees);
+            setLaveries(data.laveries);
             setEnAttenteCount(data.totalEnAttente);
             setPagination(data.pagination);
         } catch {
@@ -175,7 +166,7 @@ export default function GestionLaveries() {
             {/* HEADER */}
             <div className="bg-white flex items-center justify-between p-4 shadow-sm mb-6">
                 <div className="flex items-center gap-3">
-                    <Link to="/admin/tableau-de-bord" className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition block" aria-label="Retour">
+                    <Link to="/admin/tableau-de-bord" className="bg-[#14A8DE] text-white p-1.5 rounded-md hover:bg-[#1296c8] transition block" aria-label="Retour">
                         <ChevronLeft size={20} />
                     </Link>
                     <h1 className="text-lg font-bold">Gestion des laveries</h1>
@@ -193,7 +184,7 @@ export default function GestionLaveries() {
                             </button>
                             <button
                                 onClick={ouvrirFiltres}
-                                className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition cursor-pointer"
+                                className="bg-[#14A8DE] text-white p-1.5 rounded-md hover:bg-[#1296c8] transition cursor-pointer"
                                 aria-label="Ouvrir les filtres (Filtres actifs)"
                             >
                                 <ListX size={20} />
@@ -202,7 +193,7 @@ export default function GestionLaveries() {
                     ) : (
                         <button
                             onClick={ouvrirFiltres}
-                            className="bg-black text-white p-1.5 rounded-md hover:bg-gray-800 transition cursor-pointer"
+                            className="bg-[#14A8DE] text-white p-1.5 rounded-md hover:bg-[#1296c8] transition cursor-pointer"
                             aria-label="Ouvrir les filtres"
                         >
                             <SlidersHorizontal size={20} />
@@ -221,7 +212,7 @@ export default function GestionLaveries() {
                         <line x1="8" y1="7" x2="8" y2="7.01" />
                         <line x1="12" y1="7" x2="12" y2="7.01" />
                     </svg>
-                    <p className="text-green-500 font-bold text-xl">+{enAttenteCount}</p>
+                    <p className="text-green-500 font-bold text-xl">{enAttenteCount}</p>
                 </div>
 
                 {/* INDICATEUR DE CHARGEMENT */}
