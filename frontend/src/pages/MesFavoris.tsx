@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import API_BASE_URL, { uploadPath, resolveUrl } from '../services/api';
+import { uploadPath, resolveUrl } from '../services/api';
 import Notification from '../components/Notification';
-import { getMesFavoris, supprimerFavori, type FavoriLaverie } from '../services/request';
+import { useFavorites } from '../hooks/useFavorites';
+import type { FavoriLaverie } from '../services/request';
 
 const fallbackLaverieImage = uploadPath('/uploads/laveries/default-laundry.jpg');
 
@@ -18,31 +19,15 @@ function HeartIcon({ className = '' }: { className?: string }) {
 export default function MesFavoris() {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
-	const [favoris, setFavoris] = useState<FavoriLaverie[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
-	const [removingId, setRemovingId] = useState<number | null>(null);
+	const { favoris, loading, error, pendingIds, removeFavorite } = useFavorites();
 	const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-	useEffect(() => {
-		getMesFavoris()
-			.then((data) => setFavoris(Array.isArray(data.favoris) ? data.favoris : []))
-			.catch((err: any) => setError(err?.message || t('main.mes_favoris.erreur')))
-			.finally(() => setLoading(false));
-	}, [t]);
-
 	const handleSupprimerFavori = async (laverie: FavoriLaverie) => {
-		// Remove favorite without confirmation
-
 		try {
-			setRemovingId(laverie.id);
-			await supprimerFavori(laverie.id);
-			setFavoris((prev) => prev.filter((item) => item.id !== laverie.id));
+			await removeFavorite(laverie.id);
 			setNotification({ type: 'error', message: 'Laverie retirée des favoris' });
 		} catch (err: any) {
-			setError(err?.message || t('main.mes_favoris.erreur_suppression'));
-		} finally {
-			setRemovingId(null);
+			setNotification({ type: 'error', message: err?.message || t('main.mes_favoris.erreur_suppression') });
 		}
 	};
 
@@ -121,13 +106,13 @@ export default function MesFavoris() {
 												e.stopPropagation();
 												handleSupprimerFavori(laverie);
 											}}
-											disabled={removingId === laverie.id}
+												disabled={pendingIds.includes(laverie.id)}
 											className="absolute left-4 top-4 z-10 inline-flex items-center gap-1 rounded-full bg-rose-500/90 px-3 py-1.5 text-xs font-semibold text-white shadow-lg backdrop-blur-sm transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-60"
 											aria-label={t('main.mes_favoris.retirer_aria', { nom: laverie.nom })}
-											aria-busy={removingId === laverie.id}
+												aria-busy={pendingIds.includes(laverie.id)}
 										>
 											<HeartIcon className="h-3.5 w-3.5" />
-											{removingId === laverie.id ? t('main.mes_favoris.suppression_en_cours') : t('main.mes_favoris.favori')}
+												{pendingIds.includes(laverie.id) ? t('main.mes_favoris.suppression_en_cours') : t('main.mes_favoris.favori')}
 										</button>
 									</div>
 

@@ -11,11 +11,13 @@ use App\Entity\UtilisateurPreference;
 use App\Enum\StatutUtilisateurEnum;
 use App\Enum\ThemePreferenceEnum;
 use App\Repository\LangueRepository;
+use App\Repository\LaverieFavoriRepository;
 use App\Entity\Professionnel;
 use App\Enum\StatutProfessionnelEnum;
 use App\Repository\ProfessionnelRepository;
 use App\Service\Professionnel\ProfessionnelLaverieFormatterService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -193,7 +195,7 @@ class ApiProfilController extends AbstractController
     
     #[Route('/api/profil/favoris', name: 'api_profil_favoris', methods: ['GET'])]
     #[IsGranted('ROLE_USER')]
-    public function getFavoris(Request $request): JsonResponse
+    public function getFavoris(Request $request, LaverieFavoriRepository $favoriRepository): JsonResponse
     {
         $utilisateur = $this->getUser();
 
@@ -205,10 +207,8 @@ class ApiProfilController extends AbstractController
             return $this->json(['message' => 'Accès réservé aux utilisateurs non professionnels.'], 403);
         }
 
-        $favoris = $utilisateur
-            ->getFavoris()
-            ->filter(fn (LaverieFavori $favori) => $favori->getLaverie()->getSupprimee_le() === null)
-            ->map(function (LaverieFavori $favori) use ($request): array {
+        $favoris = array_map(
+            function (LaverieFavori $favori) use ($request): array {
                 $laverie = $favori->getLaverie();
                 $logo = $laverie->getLogo();
                 $logoEmplacement = $logo?->getEmplacement();
@@ -229,8 +229,9 @@ class ApiProfilController extends AbstractController
                     'image' => $image,
                     'imageAlt' => $laverie->getNomEtablissement(),
                 ];
-            })
-            ->toArray();
+            },
+            $favoriRepository->findVisibleFavorisByUtilisateur($utilisateur)
+        );
 
         return $this->json([
             'favoris' => $favoris,
@@ -266,6 +267,13 @@ class ApiProfilController extends AbstractController
             return $this->json(['message' => 'Ce favori est introuvable.'], 404);
         }
 
+        if (method_exists($utilisateur, 'removeFavori')) {
+            $utilisateur->removeFavori($favori);
+        }
+        if (method_exists($laverie, 'removeFavori')) {
+            $laverie->removeFavori($favori);
+        }
+
         $entityManager->remove($favori);
         $entityManager->flush();
 
@@ -274,7 +282,7 @@ class ApiProfilController extends AbstractController
 
     #[Route('/api/profil/favoris/{laverieId}', name: 'api_profil_favoris_add', methods: ['POST'])]
     #[IsGranted('ROLE_USER')]
-    public function addFavori(int $laverieId, EntityManagerInterface $entityManager): JsonResponse
+    public function addFavori(int $laverieId, EntityManagerInterface $entityManager, LoggerInterface $logger): JsonResponse
     {
         $utilisateur = $this->getUser();
 
@@ -308,13 +316,29 @@ class ApiProfilController extends AbstractController
 
         // Ajouter aux favoris
         $favori = new LaverieFavori();
-        $favori->setUtilisateur($utilisateur);
-        $favori->setLaverie($laverie);
+        $utilisateur->addFavori($favori);
+        $laverie->addFavori($favori);
 
         $entityManager->persist($favori);
         $entityManager->flush();
 
-        return $this->json(['message' => 'Favori ajouté avec succès.'], 201);
+        // Log creation for debugging sync issues
+        try {
+            $logger->info('Favori ajouté', [
+                'utilisateur_id' => $utilisateur->getId(),
+                'laverie_id' => $laverie->getId(),
+            ]);
+        } catch (\Throwable $e) {
+            // ne pas empêcher la réponse en cas d'erreur de logging
+        }
+
+        return $this->json([
+            'message' => 'Favori ajouté avec succès.',
+            'favori' => [
+                'utilisateur_id' => $utilisateur->getId(),
+                'laverie_id' => $laverie->getId(),
+            ],
+        ], 201);
     }
 
     #[Route('/api/profil', name: 'api_profil', methods: ['GET'])]
