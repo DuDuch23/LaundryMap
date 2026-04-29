@@ -249,72 +249,70 @@ class ApiLaverieController extends AbstractController
             return $this->json(['message' => 'Un motif de refus est obligatoire.'], 400);
         }
 
+        $pro = $laverie->getProfessionnel();
+        if (!$pro) {
+            return $this->json(['message' => 'La laverie n\'a pas de professionnel rattaché.'], 500);
+        }
+        $user = $pro->getUtilisateur();
+        if (!$user) {
+            return $this->json(['message' => 'Le professionnel n\'a pas d\'utilisateur rattaché.'], 500);
+        }
+
+        $historique = new LaverieHistoriqueInteraction();
+        $historique->setAdministrateur($administrateur);
+        $historique->setLaverie($laverie);
+        $historique->setDate(new \DateTime());
+
+        if ($action === 'accepter') {
+            $laverie->setStatut(\App\Enum\StatutLaverieEnum::STATUT_VALIDEE);
+            $historique->setAction('Validation de la laverie');
+            $historique->setMotifAction($motif ?: 'Laverie vérifiée et validée.');
+        } else {
+            $laverie->setStatut(\App\Enum\StatutLaverieEnum::STATUT_REFUSEE);
+            $historique->setAction('Refus de la laverie');
+            $historique->setMotifAction($motif ?: 'Laverie refusée par l\'administration.');
+        }
+
         try {
-            $historique = new LaverieHistoriqueInteraction();
-            $historique->setAdministrateur($administrateur);
-            $historique->setLaverie($laverie);
-            $historique->setDate(new \DateTime());
-
-            $pro = $laverie->getProfessionnel();
-            if (!$pro) {
-                throw new \RuntimeException('La laverie n\'a pas de professionnel rattache (laverie.professionnel == null)');
-            }
-            $user = $pro->getUtilisateur();
-            if (!$user) {
-                throw new \RuntimeException('Le professionnel n\'a pas d\'utilisateur rattache (pro.utilisateur == null)');
-            }
-
-            if ($action === 'accepter') {
-                $laverie->setStatut(\App\Enum\StatutLaverieEnum::STATUT_VALIDEE);
-                $historique->setAction('Validation de la laverie');
-                $historique->setMotifAction($motif ?: 'Laverie vérifiée et validée.');
-
-                $frontendBaseUrl = $this->getParameter('app.frontend_url');
-                $email = (new TemplatedEmail())
-                    ->from($this->getParameter('mailer_from'))
-                    ->to($user->getEmail())
-                    ->subject('Votre laverie "' . $laverie->getNomEtablissement() . '" a été validée !')
-                    ->htmlTemplate('emails/validation_laverie.html.twig')
-                    ->context([
-                        'user' => $user,
-                        'laverie' => $laverie,
-                        'motif' => $motif,
-                        'loginUrl' => $frontendBaseUrl . '/connexion',
-                    ]);
-
-                $mailer->send($email);
-            } else {
-                $laverie->setStatut(\App\Enum\StatutLaverieEnum::STATUT_REFUSEE);
-                $historique->setAction('Refus de la laverie');
-                $historique->setMotifAction($motif ?: 'Laverie refusée par l\'administration.');
-
-                $email = (new TemplatedEmail())
-                    ->from($this->getParameter('mailer_from'))
-                    ->to($user->getEmail())
-                    ->subject('Information concernant votre laverie "' . $laverie->getNomEtablissement() . '"')
-                    ->htmlTemplate('emails/refus_laverie.html.twig')
-                    ->context([
-                        'user' => $user,
-                        'laverie' => $laverie,
-                        'motif' => $motif,
-                    ]);
-
-                $mailer->send($email);
-            }
-
             $em->persist($historique);
             $em->flush();
-
-            return $this->json(['message' => 'Statut de la laverie mis à jour avec succès']);
         } catch (\Throwable $e) {
-            // ⚠️ TEMPORAIRE — diagnostic prod, à retirer une fois la cause identifiee
-            return $this->json([
-                'debug_class'   => get_class($e),
-                'debug_message' => $e->getMessage(),
-                'debug_file'    => $e->getFile() . ':' . $e->getLine(),
-                'debug_previous'=> $e->getPrevious()?->getMessage(),
-                'debug_trace'   => array_slice(explode("\n", $e->getTraceAsString()), 0, 8),
-            ], 500);
+            $logger->error('Echec flush statut laverie', ['laverieId' => $id, 'exception' => $e]);
+            return $this->json(['message' => 'Erreur lors de la mise à jour en base de données.'], 500);
         }
+
+        if ($action === 'accepter') {
+            $frontendBaseUrl = $this->getParameter('app.frontend_url');
+            $email = (new TemplatedEmail())
+                ->from($this->getParameter('mailer_from'))
+                ->to($user->getEmail())
+                ->subject('Votre laverie "' . $laverie->getNomEtablissement() . '" a été validée !')
+                ->htmlTemplate('emails/validation_laverie.html.twig')
+                ->context([
+                    'user' => $user,
+                    'laverie' => $laverie,
+                    'motif' => $motif,
+                    'loginUrl' => $frontendBaseUrl . '/connexion',
+                ]);
+        } else {
+            $email = (new TemplatedEmail())
+                ->from($this->getParameter('mailer_from'))
+                ->to($user->getEmail())
+                ->subject('Information concernant votre laverie "' . $laverie->getNomEtablissement() . '"')
+                ->htmlTemplate('emails/refus_laverie.html.twig')
+                ->context([
+                    'user' => $user,
+                    'laverie' => $laverie,
+                    'motif' => $motif,
+                ]);
+        }
+
+        try {
+            $mailer->send($email);
+        } catch (\Throwable $e) {
+            $logger->error('Echec envoi mail statut laverie', ['laverieId' => $id, 'action' => $action, 'exception' => $e]);
+        }
+
+        return $this->json(['message' => 'Statut de la laverie mis à jour avec succès']);
     }
 }
