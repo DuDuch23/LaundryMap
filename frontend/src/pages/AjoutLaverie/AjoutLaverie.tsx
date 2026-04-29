@@ -332,8 +332,13 @@ export default function AjoutLaverie() {
                 headers: { Authorization: `Bearer ${token}` },
                 body: fd,
             });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message ?? 'Erreur lors de la création.');
+            let data: any = null;
+            try {
+                data = await res.json();
+            } catch {
+                throw new Error(`Erreur serveur (HTTP ${res.status}). Contactez l'administrateur.`);
+            }
+            if (!res.ok) throw new Error(data?.message ?? 'Erreur lors de la création.');
             navigate('/professionnel/tableau-de-bord');
         } catch (err: any) {
             setSubmitError(err.message);
