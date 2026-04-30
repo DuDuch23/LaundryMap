@@ -69,7 +69,7 @@ export default function LaverieCard({
             )}
 
             {/* Image carrée */}
-            <div className="w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden bg-slate-100">
+            <div className="w-25 h-25 flex-shrink-0 rounded-xl overflow-hidden bg-slate-100">
                 <img
                     src={resolveUrl(l.image || FALLBACK_IMG)}
                     alt={l.nom}
@@ -91,13 +91,13 @@ export default function LaverieCard({
             <div className="flex flex-col flex-1 min-w-0 justify-between pr-10">
                 {/* Nom */}
                 <div>
-                    <h3 className="font-bold text-slate-900 text-sm leading-tight line-clamp-2">
+                    <h3 className="font-bold text-slate-900 text-lg leading-tight line-clamp-2">
                         {l.nom}
                     </h3>
                 </div>
 
                 {/* Adresse */}
-                <p className="text-xs text-slate-400 truncate">{l.adresse}</p>
+                <p className="text-md text-slate-400 truncate">{l.adresse}</p>
 
                 {/* Badge statut + distance + lien */}
                 <div className="flex items-center justify-between mt-5">

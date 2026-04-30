@@ -315,22 +315,27 @@ class ApiProfilController extends AbstractController
         }
 
         // Ajouter aux favoris
-        $favori = new LaverieFavori();
-        $utilisateur->addFavori($favori);
-        $laverie->addFavori($favori);
-
-        $entityManager->persist($favori);
-        $entityManager->flush();
-
-        // Log creation for debugging sync issues
         try {
-            $logger->info('Favori ajouté', [
+            $favori = new LaverieFavori();
+            $utilisateur->addFavori($favori);
+            $laverie->addFavori($favori);
+
+            $entityManager->persist($favori);
+            $entityManager->flush();
+        } catch (\Throwable $e) {
+            $logger->error('Echec ajout favori', [
                 'utilisateur_id' => $utilisateur->getId(),
                 'laverie_id' => $laverie->getId(),
+                'error' => $e->getMessage(),
+                'class' => get_class($e),
             ]);
-        } catch (\Throwable $e) {
-            // ne pas empêcher la réponse en cas d'erreur de logging
+            return $this->json(['message' => 'Erreur lors de l\'ajout aux favoris : ' . $e->getMessage()], 500);
         }
+
+        $logger->info('Favori ajouté', [
+            'utilisateur_id' => $utilisateur->getId(),
+            'laverie_id' => $laverie->getId(),
+        ]);
 
         return $this->json([
             'message' => 'Favori ajouté avec succès.',

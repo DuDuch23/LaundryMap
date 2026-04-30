@@ -67,7 +67,9 @@
       "itineraire": "Directions",
       "ouvrir_waze": "Open directions in Waze",
       "ouvrir_maps": "Open directions in Google Maps",
-      "annuler": "Cancel"
+      "annuler": "Cancel",
+      "deux_doigts": "Use 2 fingers to move the map",
+      "shift_zoom": "Shift + scroll to zoom"
     },
     "mes_favoris": {
       "titre": "My favourites",

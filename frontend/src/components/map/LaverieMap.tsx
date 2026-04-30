@@ -1,6 +1,7 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { useTranslation } from 'react-i18next';
-import { Circle, MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import { Circle, MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import type { Laverie, Position } from '../../types/Laverie';
 import RecenterMap from './RecenterMap';
 import ItineraireButton from './ItineraireButton';
@@ -42,6 +43,63 @@ const userIcon = L.divIcon({
     iconAnchor: [8, 8],
 });
 
+// ─── Contrôleur d'interaction ─────────────────────────────────────────────────
+
+function MapInteractionController({ onSingleTouch }: { onSingleTouch: () => void }) {
+    const map = useMap();
+
+    useEffect(() => {
+        const container = map.getContainer();
+        const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        if (isTouch) {
+            // Permet au navigateur de gérer le scroll page (1 doigt)
+            // en remplaçant le touch-action:none de Leaflet
+            container.style.touchAction = 'pan-y';
+            map.dragging.disable();
+
+            const onTouchStart = (e: TouchEvent) => {
+                if (e.touches.length >= 2) {
+                    // Empêche le scroll natif du navigateur pour ce geste à 2 doigts
+                    e.preventDefault();
+                    map.dragging.enable();
+                } else {
+                    onSingleTouch();
+                }
+            };
+
+            const onTouchEnd = (e: TouchEvent) => {
+                if (e.touches.length < 2) map.dragging.disable();
+            };
+
+            // capture: true pour s'exécuter avant les handlers Leaflet (bubble phase)
+            container.addEventListener('touchstart', onTouchStart, { passive: false, capture: true });
+            container.addEventListener('touchend', onTouchEnd, { passive: true });
+            container.addEventListener('touchcancel', onTouchEnd, { passive: true });
+
+            return () => {
+                container.removeEventListener('touchstart', onTouchStart, true);
+                container.removeEventListener('touchend', onTouchEnd);
+                container.removeEventListener('touchcancel', onTouchEnd);
+                container.style.touchAction = '';
+                map.dragging.enable();
+            };
+        } else {
+            // Desktop : Shift+molette (souris) ou pincement trackpad (ctrlKey+wheel)
+            const onWheel = (e: WheelEvent) => {
+                if (!e.shiftKey && !e.ctrlKey) return;
+                e.preventDefault();
+                map.setZoom(map.getZoom() + (e.deltaY < 0 ? 1 : -1));
+            };
+
+            container.addEventListener('wheel', onWheel, { passive: false });
+            return () => container.removeEventListener('wheel', onWheel);
+        }
+    }, [map, onSingleTouch]);
+
+    return null;
+}
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -63,6 +121,19 @@ export default function LaverieMap({
     showGeoCta = false, geoLoading = false, onGeoClick,
 }: Props) {
     const { t } = useTranslation();
+    const [touchHint, setTouchHint] = useState(false);
+    const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const handleSingleTouch = useCallback(() => {
+        setTouchHint(true);
+        if (hintTimer.current) clearTimeout(hintTimer.current);
+        hintTimer.current = setTimeout(() => setTouchHint(false), 2000);
+    }, []);
+
+    useEffect(() => () => {
+        if (hintTimer.current) clearTimeout(hintTimer.current);
+    }, []);
+
     const laveriesAvecCoords = laveries.filter((l) => l.latitude && l.longitude);
 
     return (
@@ -76,7 +147,9 @@ export default function LaverieMap({
                 zoom={zoom}
                 className="h-full w-full z-0"
                 zoomControl={false}
+                scrollWheelZoom={false}
             >
+                <MapInteractionController onSingleTouch={handleSingleTouch} />
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -110,9 +183,9 @@ export default function LaverieMap({
                         eventHandlers={{ click: () => onMarkerClick(l) }}
                     >
                         <Popup>
-                            <p className="text-sm font-semibold">{l.nom}</p>
-                            <p className="text-xs text-slate-500 mt-0.5">{l.adresse}</p>
-                            <p className={`text-xs font-medium mt-1 ${l.estOuvert ? 'text-emerald-600' : 'text-rose-500'}`}>
+                            <p className="font-bold text-slate-900 text-lg leading-tight line-clamp-2">{l.nom}</p>
+                            <p className="text-md text-slate-400 truncate">{l.adresse}</p>
+                            <p className={`text-sm font-medium mt-1 ${l.estOuvert ? 'text-emerald-600' : 'text-rose-500'}`}>
                                 {l.estOuvert ? t('main.laverie_map.ouvert') : t('main.laverie_map.ferme')}
                             </p>
                             {l.latitude !== null && l.longitude !== null && (
@@ -122,6 +195,15 @@ export default function LaverieMap({
                     </Marker>
                 ))}
             </MapContainer>
+
+            {/* Hint tactile : 2 doigts pour déplacer (mobile/tablette) */}
+            {touchHint && (
+                <div className="absolute inset-0 z-[450] flex items-center justify-center pointer-events-none">
+                    <div className="bg-black/60 text-white text-sm font-medium rounded-xl px-4 py-2.5 backdrop-blur-sm shadow-lg">
+                        {t('main.laverie_map.deux_doigts')}
+                    </div>
+                </div>
+            )}
 
             {/* Bouton CTA géolocalisation — superposé sur la carte */}
             {showGeoCta && (

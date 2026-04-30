@@ -148,7 +148,7 @@ export function AccessibleInput({
   return (
     <div className={`flex flex-col gap-1.5 ${className ?? ''}`}>
       {label && (
-        <label htmlFor={id} className="text-sm font-medium text-gray-700">
+        <label htmlFor={id} className="text-md font-medium text-gray-700">
           {label}
           {required && <span aria-hidden="true" className="ml-0.5 text-red-600"> *</span>}
         </label>

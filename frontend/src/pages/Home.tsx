@@ -131,7 +131,7 @@ export default function Home() {
                     onClose={() => setNotification(null)}
                 />
             )}
-            <div className="w-full max-w-[1280px] mx-auto">
+            <div className="w-full max-w-[1280px] mx-auto flex flex-row justify-between">
 
                 {flashMessageKey && (
                     <div className="mx-5 mt-4 p-3 rounded-xl bg-green-100 text-green-800 text-sm font-medium" role="status" aria-live="polite">
@@ -147,61 +147,62 @@ export default function Home() {
                         <p>{t('main.home.geo_refuse')}</p>
                     </div>
                 )}
+                <div className="mt-5 rounded-xl overflow-hidden relative w-full">
+                    <div className="mt-5 relative z-10">
+                        <SearchBar
+                            value={searchQuery} onChange={handleSearchInput}
+                            onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim()) rechercherParTexte(searchQuery); }}
+                            onGeoClick={() => { if (userPos) { setCenterPos(userPos); setMapZoom(14); lancerRecherche(userPos); } }}
+                            showGeo={!!userPos && !geoRefused}
+                            geocoding={geocoding} suggestions={suggestions} showSuggestions={showSuggestions}
+                            onSuggestionPick={handleSuggestionPick}
+                            onSuggestionBlur={() => setShowSuggestions(false)}
+                        />
 
-                <div className="mt-5 relative z-10 px-5">
-                    <SearchBar
-                        value={searchQuery} onChange={handleSearchInput}
-                        onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim()) rechercherParTexte(searchQuery); }}
-                        onGeoClick={() => { if (userPos) { setCenterPos(userPos); setMapZoom(14); lancerRecherche(userPos); } }}
-                        showGeo={!!userPos && !geoRefused}
-                        geocoding={geocoding} suggestions={suggestions} showSuggestions={showSuggestions}
-                        onSuggestionPick={handleSuggestionPick}
-                        onSuggestionBlur={() => setShowSuggestions(false)}
-                    />
+                        <div className="flex items-center justify-between mt-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowFilters((v) => !v)}
+                                aria-expanded={showFilters}
+                                aria-label={t('main.home.filtres')}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${nbFiltresActifs > 0 ? 'bg-[#14A8DE] text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                            >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                                    <line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/>
+                                </svg>
+                                {t('main.home.filtres')}
+                                {nbFiltresActifs > 0 && <span className="bg-white/30 text-white rounded-full px-1.5 py-0.5 text-xs font-bold leading-none" aria-label={`${nbFiltresActifs}`}>{nbFiltresActifs}</span>}
+                            </button>
+                            {searched && <p className="text-xs text-slate-500" role="status" aria-live="polite">{loading ? t('main.home.recherche_en_cours') : t('main.home.resultats', { count: laveries.length })}</p>}
+                        </div>
 
-                    <div className="flex items-center justify-between mt-3">
-                        <button
-                            type="button"
-                            onClick={() => setShowFilters((v) => !v)}
-                            aria-expanded={showFilters}
-                            aria-label={t('main.home.filtres')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${nbFiltresActifs > 0 ? 'bg-[#14A8DE] text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-                        >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                                <line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/>
-                            </svg>
-                            {t('main.home.filtres')}
-                            {nbFiltresActifs > 0 && <span className="bg-white/30 text-white rounded-full px-1.5 py-0.5 text-xs font-bold leading-none" aria-label={`${nbFiltresActifs}`}>{nbFiltresActifs}</span>}
-                        </button>
-                        {searched && <p className="text-xs text-slate-500" role="status" aria-live="polite">{loading ? t('main.home.recherche_en_cours') : t('main.home.resultats', { count: laveries.length })}</p>}
+                        {showFilters && (
+                            <FilterPanel
+                                filtres={filtres}
+                                onHoraireChange={setFiltreHoraire}
+                                onToggleServiceId={toggleServiceId}
+                                onTogglePaiementId={togglePaiementId}
+                                onRayonChange={setFiltreRayon}
+                                onReinitialiser={reinitialiserFiltres}
+                                onAppliquer={() => { setShowFilters(false); lancerRecherche(userPos ?? undefined); }}
+                                nbActifs={nbFiltresActifs}
+                            />
+                        )}
                     </div>
 
-                    {showFilters && (
-                        <FilterPanel
-                            filtres={filtres}
-                            onHoraireChange={setFiltreHoraire}
-                            onToggleServiceId={toggleServiceId}
-                            onTogglePaiementId={togglePaiementId}
-                            onRayonChange={setFiltreRayon}
-                            onReinitialiser={reinitialiserFiltres}
-                            onAppliquer={() => { setShowFilters(false); lancerRecherche(userPos ?? undefined); }}
-                            nbActifs={nbFiltresActifs}
-                        />
-                    )}
+                    {/* Carte — le bouton "se localiser" est géré à l'intérieur */}
+                    <LaverieMap
+                        centerPos={centerPos} zoom={mapZoom} userPos={userPos}
+                        laveries={laveries} activeLaverieId={activeLaverieId}
+                        onMarkerClick={handleLaverieSelect}
+                        showGeoCta={showGeoCta}
+                        geoLoading={geoLoading}
+                        onGeoClick={requestGeolocation}
+                    />
                 </div>
 
-                {/* Carte — le bouton "se localiser" est géré à l'intérieur */}
-                <LaverieMap
-                    centerPos={centerPos} zoom={mapZoom} userPos={userPos}
-                    laveries={laveries} activeLaverieId={activeLaverieId}
-                    onMarkerClick={handleLaverieSelect}
-                    showGeoCta={showGeoCta}
-                    geoLoading={geoLoading}
-                    onGeoClick={requestGeolocation}
-                />
-
                 {/* Résultats */}
-                <div className="px-5 mt-6 pb-20">
+                <div className="px-5 mt-6 pb-20 w-1/2">
                     <div className="flex items-center justify-between mb-4">
                         <h2>{t('main.home.a_proximite')}</h2>
                         <Link to="/laveries">{t('main.home.voir_tout')}</Link>

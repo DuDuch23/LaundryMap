@@ -90,7 +90,7 @@ export default function LaverieGrid({
 }: Props) {
     if (loading) {
         return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" aria-busy="true" aria-label="Chargement…">
+            <div className="grid gap-4" aria-busy="true" aria-label="Chargement…">
                 {[...Array(4)].map((_, i) => <LaverieCardSkeleton key={i} />)}
             </div>
         );
@@ -103,7 +103,7 @@ export default function LaverieGrid({
     }
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid gap-4">
             {laveries.map((l) => (
                 <div
                     key={l.id}
