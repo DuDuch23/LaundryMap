@@ -100,7 +100,7 @@ export default function LaverieCard({
                 <p className="text-xs text-slate-400 truncate">{l.adresse}</p>
 
                 {/* Badge statut + distance + lien */}
-                <div className="flex items-center justify-between mt-1">
+                <div className="flex items-center justify-between mt-5">
                     <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
                         l.estOuvert
                             ? 'bg-emerald-100 text-emerald-700'

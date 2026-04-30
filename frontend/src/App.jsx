@@ -20,6 +20,7 @@ const GestionLaveries = React.lazy(() => import('./pages/administration/GestionL
 const DetailLaverie = React.lazy(() => import('./pages/administration/DetailLaverie'));
 const EmailVerification = React.lazy(() => import('./pages/EmailVerification'));
 const AjoutLaverie = React.lazy(() => import('./pages/AjoutLaverie/AjoutLaverie'));
+const Laveries = React.lazy(() => import('./pages/Laveries'));
 
 const MesFavoris = React.lazy(() => import('./pages/MesFavoris'));
 const FicheLaverie = React.lazy(() => import('./pages/FicheLaverie'));
@@ -93,6 +94,7 @@ function App() {
               <Route path="/inscription-utilisateur" element={<InscriptionUtilisateur />} />
               <Route path="/inscription-pro" element={<InscriptionPro />} />
               <Route path="/connexion" element={<Connexion />} />
+              <Route path="/laveries" element={<Laveries />} />
               <Route path="/email-verifie" element={<EmailVerification />} />
 
               <Route path="/laveries/:id" element={<FicheLaverie />} />
