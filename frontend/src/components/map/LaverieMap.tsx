@@ -52,15 +52,23 @@ function MapInteractionController({ onSingleTouch }: { onSingleTouch: () => void
         const container = map.getContainer();
         const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
+        // Toujours actif : Shift+molette ou pincement trackpad (ctrlKey+wheel)
+        // Doit être en dehors du if/else car certains PC Windows rapportent maxTouchPoints > 0
+        // même sans écran tactile (drivers, moniteurs hybrides), ce qui faisait entrer dans
+        // la branche touch et ne jamais attacher ce handler.
+        const onWheel = (e: WheelEvent) => {
+            if (!e.shiftKey && !e.ctrlKey) return;
+            e.preventDefault();
+            map.setZoom(map.getZoom() + (e.deltaY < 0 ? 1 : -1));
+        };
+        container.addEventListener('wheel', onWheel, { passive: false });
+
         if (isTouch) {
-            // Permet au navigateur de gérer le scroll page (1 doigt)
-            // en remplaçant le touch-action:none de Leaflet
             container.style.touchAction = 'pan-y';
             map.dragging.disable();
 
             const onTouchStart = (e: TouchEvent) => {
                 if (e.touches.length >= 2) {
-                    // Empêche le scroll natif du navigateur pour ce geste à 2 doigts
                     e.preventDefault();
                     map.dragging.enable();
                 } else {
@@ -72,29 +80,29 @@ function MapInteractionController({ onSingleTouch }: { onSingleTouch: () => void
                 if (e.touches.length < 2) map.dragging.disable();
             };
 
-            // capture: true pour s'exécuter avant les handlers Leaflet (bubble phase)
+            // Sur les appareils hybrides (PC tactile), map.dragging.disable() bloque aussi
+            // le drag souris. On le réactive dès qu'un vrai clic souris est détecté.
+            const onMouseDown = () => {
+                if (!map.dragging.enabled()) map.dragging.enable();
+            };
+
             container.addEventListener('touchstart', onTouchStart, { passive: false, capture: true });
             container.addEventListener('touchend', onTouchEnd, { passive: true });
             container.addEventListener('touchcancel', onTouchEnd, { passive: true });
+            container.addEventListener('mousedown', onMouseDown, { capture: true });
 
             return () => {
+                container.removeEventListener('wheel', onWheel);
                 container.removeEventListener('touchstart', onTouchStart, true);
                 container.removeEventListener('touchend', onTouchEnd);
                 container.removeEventListener('touchcancel', onTouchEnd);
+                container.removeEventListener('mousedown', onMouseDown, true);
                 container.style.touchAction = '';
                 map.dragging.enable();
             };
-        } else {
-            // Desktop : Shift+molette (souris) ou pincement trackpad (ctrlKey+wheel)
-            const onWheel = (e: WheelEvent) => {
-                if (!e.shiftKey && !e.ctrlKey) return;
-                e.preventDefault();
-                map.setZoom(map.getZoom() + (e.deltaY < 0 ? 1 : -1));
-            };
-
-            container.addEventListener('wheel', onWheel, { passive: false });
-            return () => container.removeEventListener('wheel', onWheel);
         }
+
+        return () => container.removeEventListener('wheel', onWheel);
     }, [map, onSingleTouch]);
 
     return null;
