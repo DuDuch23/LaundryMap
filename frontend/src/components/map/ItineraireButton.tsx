@@ -28,33 +28,46 @@ function WazeLogo({ className }: { className?: string }) {
 export default function ItineraireButton({ lat, lng }: Props) {
     const { t } = useTranslation();
 
-    const ouvrirGoogleMaps = () => {
-        window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank', 'noopener,noreferrer');
-    };
-
-    const ouvrirWaze = () => {
-        window.open(`https://waze.com/ul?ll=${lat}%2C${lng}&navigate=yes`, '_blank', 'noopener,noreferrer');
-    };
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+    const wazeUrl = `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
 
     return (
         <div className="mt-2 w-full">
             <DropdownMenu>
                 <DropdownMenuTrigger
-                    className="w-full inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold rounded-lg border border-slate-200 py-2 shadow-sm transition-colors cursor-pointer leading-none outline-none"
+                    className="w-full inline-flex items-center justify-center gap-1.5 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold rounded-xl border border-slate-200 shadow-sm transition-colors cursor-pointer leading-none outline-none h-[34px]"
                     aria-label={t('main.laverie_map.itineraire')}
                 >
                     <Navigation size={14} className="text-[#14A8DE] flex-shrink-0" aria-hidden="true" />
                     <span>{t('main.laverie_map.itineraire')}</span>
                 </DropdownMenuTrigger>
+                
                 <DropdownMenuContent align="start" className="min-w-[160px]">
-                    <DropdownMenuItem className="gap-3 px-3 py-2.5 cursor-pointer" onSelect={ouvrirWaze}>
-                        <WazeLogo className="w-5 h-5 flex-shrink-0" />
-                        Waze
+                    {/* asChild permet de transformer l'Item en balise <a> */}
+                    <DropdownMenuItem asChild>
+                        <a 
+                            href={wazeUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 px-3 py-2.5 cursor-pointer w-full"
+                        >
+                            <WazeLogo className="w-5 h-5 flex-shrink-0" />
+                            Waze
+                        </a>
                     </DropdownMenuItem>
+                    
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="gap-3 px-3 py-2.5 cursor-pointer" onSelect={ouvrirGoogleMaps}>
-                        <Map size={18} className="text-[#EA4335] flex-shrink-0" aria-hidden="true" />
-                        Google Maps
+                    
+                    <DropdownMenuItem asChild>
+                        <a 
+                            href={googleMapsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 px-3 py-2.5 cursor-pointer w-full"
+                        >
+                            <Map size={18} className="text-[#EA4335] flex-shrink-0" aria-hidden="true" />
+                            Google Maps
+                        </a>
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
