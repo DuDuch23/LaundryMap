@@ -4,6 +4,9 @@ import { ArrowLeft, Timer, Euro, Weight, ChevronLeft, Key, LayoutGrid, User } fr
 import { fetchLaverieDetail, updateLaverieStatut } from '../../services/request';
 import { AccessibleModal, AccessibleInput } from '../../components/accessibility';
 import ItineraireButton from '../../components/map/ItineraireButton';
+import { resolveUrl } from '../../services/api';
+
+const IMAGE_LAVERIE_PAR_DEFAUT = '/uploads/laveries/default-laundry.jpg';
 
 interface ImageDetail {
     url: string;
@@ -165,13 +168,17 @@ export default function DetailLaverie() {
 
             {/* HEADER IMAGE */}
             <div className="relative h-64 bg-slate-800 w-full overflow-hidden">
-                {laverie.images?.[0]?.url && (
-                    <img
-                        src={laverie.images[0].url}
-                        alt={laverie.images[0].description || laverie.nom}
-                        className="absolute inset-0 w-full h-full object-cover opacity-80"
-                    />
-                )}
+                <img
+                    src={resolveUrl(laverie.images?.[0]?.url || IMAGE_LAVERIE_PAR_DEFAUT)}
+                    alt={laverie.images?.[0]?.description || laverie.nom}
+                    className="absolute inset-0 w-full h-full object-cover opacity-80"
+                    onError={(e) => {
+                        const target = e.currentTarget;
+                        if (!target.src.endsWith(IMAGE_LAVERIE_PAR_DEFAUT)) {
+                            target.src = resolveUrl(IMAGE_LAVERIE_PAR_DEFAUT);
+                        }
+                    }}
+                />
                 <button
                     onClick={() => navigate(-1)}
                     className="absolute top-20 left-4 w-8 h-8 rounded-xl shadow-md z-10 transition-colors cursor-pointer flex items-center justify-center bg-[#14A8DE]"

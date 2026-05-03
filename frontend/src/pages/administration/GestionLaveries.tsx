@@ -3,6 +3,9 @@ import { Link } from 'react-router';
 import { ChevronLeft, ListX, SlidersHorizontal, MoreHorizontal } from 'lucide-react';
 import { fetchAdminLaveries, type FiltresLaveries } from '../../services/request';
 import FilterModal, { type FilterSection, type FilterValues } from '../../components/FilterModal';
+import { resolveUrl } from '../../services/api';
+
+const IMAGE_LAVERIE_PAR_DEFAUT = '/uploads/laveries/default-laundry.jpg';
 
 interface LaveriePro {
     id: number;
@@ -226,11 +229,21 @@ export default function GestionLaveries() {
                         <div key={laverie.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm relative">
 
                             <div className="w-full h-40 bg-gray-200 relative">
-                                {laverie.image ? (
-                                    <img src={laverie.image} alt={laverie.nom} className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">Aucune image</div>
-                                )}
+                                <img
+                                    src={resolveUrl(laverie.image || IMAGE_LAVERIE_PAR_DEFAUT)}
+                                    alt={laverie.nom}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        // Si l'image de la laverie est cassee/introuvable,
+                                        // on bascule sur l'image par defaut.
+                                        const target = e.currentTarget;
+                                        if (!target.src.endsWith(IMAGE_LAVERIE_PAR_DEFAUT)) {
+                                            target.src = resolveUrl(IMAGE_LAVERIE_PAR_DEFAUT);
+                                        }
+                                    }}
+                                />
+                                <div className="absolute inset-0 bg-black/15" aria-hidden="true" />
+
 
                                 <div className="absolute top-3 left-3 right-3 flex justify-between items-center">
                                     <span className={`px-3 py-1 text-xs rounded-full border font-medium shadow-sm ${getBadgeStyle(laverie.statut)}`}>
