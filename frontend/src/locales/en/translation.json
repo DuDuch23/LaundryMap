@@ -363,6 +363,7 @@
     "email_verification": {
       "titre_succes": "Verification successful!",
       "message_succes": "Your account has been successfully validated. You can now log in.",
+      "message_succes_pro": "Your email address has been verified. Your professional account must now be manually approved by an administrator before you can log in. You will receive an email as soon as this approval is complete.",
       "bouton_connexion": "Go to login page",
       "titre_erreur": "An error occurred",
       "erreur_invalid_token": "This verification link is invalid. Make sure you clicked on the most recent link received by email, or request a new link.",

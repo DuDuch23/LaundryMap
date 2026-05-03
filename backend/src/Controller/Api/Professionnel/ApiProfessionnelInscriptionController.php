@@ -161,6 +161,7 @@ class ApiProfessionnelInscriptionController extends AbstractController
                     'user'            => $utilisateur,
                     'verificationUrl' => $verificationUrl,
                     'expiresAt'       => $expiresAt,
+                    'isPro'           => true,
                 ]);
 
             try {

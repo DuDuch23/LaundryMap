@@ -50,9 +50,10 @@ export default function EmailVerification() {
         }
 
         if (success) {
+            const isPro = searchParams.get('pro') === '1';
             setStatus('success');
             setTitle(t('main.email_verification.titre_succes'));
-            setMessage(t('main.email_verification.message_succes'));
+            setMessage(t(isPro ? 'main.email_verification.message_succes_pro' : 'main.email_verification.message_succes'));
         } else if (error) {
             setStatus('error');
             setTitle(t('main.email_verification.titre_erreur'));

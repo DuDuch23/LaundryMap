@@ -361,6 +361,7 @@
     "email_verification": {
       "titre_succes": "Vérification réussie !",
       "message_succes": "Votre compte a été validé avec succès. Vous pouvez maintenant vous connecter.",
+      "message_succes_pro": "Votre adresse e-mail a bien été vérifiée. Votre compte professionnel doit maintenant être validé manuellement par un administrateur avant que vous puissiez vous connecter. Vous recevrez un e-mail dès que cette validation aura été effectuée.",
       "bouton_connexion": "Aller à la page de connexion",
       "titre_erreur": "Une erreur est survenue",
       "erreur_invalid_token": "Ce lien de vérification est invalide. Assurez-vous d'avoir cliqué sur le lien le plus récent reçu par e-mail, ou demandez un nouveau lien.",
