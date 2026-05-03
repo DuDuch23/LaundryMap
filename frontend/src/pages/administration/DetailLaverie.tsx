@@ -5,6 +5,7 @@ import { fetchLaverieDetail, updateLaverieStatut } from '../../services/request'
 import { AccessibleModal, AccessibleInput } from '../../components/accessibility';
 import ItineraireButton from '../../components/map/ItineraireButton';
 import { resolveUrl } from '../../services/api';
+import { LaverieAdminDetailSkeleton } from '../../components/administration/AdminSkeletons';
 
 const IMAGE_LAVERIE_PAR_DEFAUT = '/uploads/laveries/default-laundry.jpg';
 
@@ -130,7 +131,7 @@ export default function DetailLaverie() {
     };
 
     if (loading) {
-        return <div className="text-center mt-20 font-bold text-[#22ACE2]">Chargement des détails...</div>;
+        return <LaverieAdminDetailSkeleton />;
     }
 
     if (!laverie) {

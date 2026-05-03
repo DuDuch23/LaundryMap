@@ -4,6 +4,7 @@ import { ChevronLeft, ListX, SlidersHorizontal, MoreHorizontal } from 'lucide-re
 import { fetchAdminLaveries, type FiltresLaveries } from '../../services/request';
 import FilterModal, { type FilterSection, type FilterValues } from '../../components/FilterModal';
 import { resolveUrl } from '../../services/api';
+import { LaverieAdminListSkeleton } from '../../components/administration/AdminSkeletons';
 
 const IMAGE_LAVERIE_PAR_DEFAUT = '/uploads/laveries/default-laundry.jpg';
 
@@ -155,13 +156,14 @@ export default function GestionLaveries() {
         setFiltreModalOuverte(false);
     };
 
-    if (chargement && page === 1 && !aDesFiltresActifs) {
-        return <div className="text-center mt-20 font-bold text-[#22ACE2]">Chargement des données...</div>;
-    }
-
     if (erreur) {
         return <div className="text-center mt-20 font-bold text-red-500">{erreur}</div>;
     }
+
+    // Chargement initial : liste vide ET en cours de chargement = on affiche
+    // les skeletons à la place de la liste (mais on garde le header + filtres
+    // pour éviter l'effet "page qui saute")
+    const chargementInitial = chargement && laveries.length === 0;
 
     return (
         <div className="w-full pt-24 px-4 pb-16 font-sans max-w-[stretch]">
@@ -218,12 +220,10 @@ export default function GestionLaveries() {
                     <p className="text-green-500 font-bold text-xl">{enAttenteCount}</p>
                 </div>
 
-                {/* INDICATEUR DE CHARGEMENT */}
-                {chargement && (
-                    <div className="text-center py-4 text-[#22ACE2] font-medium">Chargement...</div>
-                )}
-
                 {/* LISTE DES LAVERIES */}
+                {chargementInitial ? (
+                    <LaverieAdminListSkeleton count={4} />
+                ) : (
                 <div className={`space-y-6 ${chargement ? 'opacity-50' : 'opacity-100'} transition-opacity`}>
                     {laveries.map((laverie) => (
                         <div key={laverie.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm relative">
@@ -274,6 +274,7 @@ export default function GestionLaveries() {
                         </div>
                     ))}
                 </div>
+                )}
 
                 {/* PAGINATION */}
                 {pagination && (
