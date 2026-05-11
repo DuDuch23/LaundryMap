@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 
@@ -45,8 +45,10 @@ export default function Home() {
         if (flashMessageKey) sessionStorage.removeItem('flashMessageKey');
     }, [flashMessageKey, location.pathname, location.state, navigate]);
 
-    const token = localStorage.getItem('token');
-    const isStandardUser = !!token && isStandardUserToken(token);
+    const isStandardUser = useMemo(() => {
+        const token = localStorage.getItem('token');
+        return !!token && isStandardUserToken(token);
+    }, []);
 
     // ── Géolocalisation à la demande ──────────────────────────────────────────
     const { userPos, centerPos, setCenterPos, geoRefused, geoLoading, requestGeolocation } = useGeolocation();
@@ -56,7 +58,6 @@ export default function Home() {
     const {
         favoriteIds,
         pendingIds: favoritePendingIds,
-        refresh: syncFavoriteIdsFromDb,
         toggleFavorite,
         error: favoriteError,
     } = useFavorites();
@@ -107,7 +108,7 @@ export default function Home() {
             const isAlreadyFavorite = favoriteIds.includes(laverie.id);
             const action = await toggleFavorite(laverie.id, !isAlreadyFavorite);
             setNotification({
-                type: action === 'added' ? 'success' : 'error',
+                type: 'success',
                 message: action === 'added'
                     ? t('main.home.favori_ajoute', { nom: laverie.nom })
                     : t('main.home.favori_retire', { nom: laverie.nom }),

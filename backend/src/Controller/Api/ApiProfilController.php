@@ -267,12 +267,8 @@ class ApiProfilController extends AbstractController
             return $this->json(['message' => 'Ce favori est introuvable.'], 404);
         }
 
-        if (method_exists($utilisateur, 'removeFavori')) {
-            $utilisateur->removeFavori($favori);
-        }
-        if (method_exists($laverie, 'removeFavori')) {
-            $laverie->removeFavori($favori);
-        }
+        $utilisateur->removeFavori($favori);
+        $laverie->removeFavori($favori);
 
         $entityManager->remove($favori);
         $entityManager->flush();
