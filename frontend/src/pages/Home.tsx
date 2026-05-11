@@ -131,7 +131,7 @@ export default function Home() {
                     onClose={() => setNotification(null)}
                 />
             )}
-            <div className="w-full max-w-[1280px] mx-auto flex flex-row justify-between">
+            <div className="w-full max-w-[1280px] mx-auto flex flex-col xl:flex-row justify-between">
 
                 {flashMessageKey && (
                     <div className="mx-5 mt-4 p-3 rounded-xl bg-green-100 text-green-800 text-sm font-medium" role="status" aria-live="polite">
@@ -202,7 +202,7 @@ export default function Home() {
                 </div>
 
                 {/* Résultats */}
-                <div className="px-5 mt-6 pb-20 w-1/2">
+                <div className="mt-6 pb-20 w-full xl:w-1/2">
                     <div className="flex items-center justify-between mb-4">
                         <h2>{t('main.home.a_proximite')}</h2>
                         <Link to="/laveries">{t('main.home.voir_tout')}</Link>
