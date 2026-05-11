@@ -28,12 +28,19 @@
       "a_proximite": "Nearby",
       "voir_tout": "See all",
       "utiliser_position": "Locate me",
-      "geo_chargement": "Locating…"
+      "geo_chargement": "Locating…",
+      "favoris_connexion_requise": "Sign in to add favourites.",
+      "favori_ajoute": "“{{nom}}” added to favourites.",
+      "favori_retire": "“{{nom}}” removed from favourites.",
+      "favoris_erreur": "Unable to update this favourite.",
+      "favoris_erreur_chargement": "Unable to load your favourites."
     },
     "laverie_card": {
       "disponible": "Open",
       "ferme": "Closed",
-      "voir_detail": "View details for {{nom}}"
+      "voir_detail": "View details for {{nom}}",
+      "ajouter_favori": "Add {{nom}} to favourites",
+      "retirer_favori": "Remove {{nom}} from favourites"
     },
     "search_bar": {
       "placeholder": "Search by city, postcode, address…",
@@ -69,6 +76,7 @@
       "pas_encore": "You haven't added any laundromats to your favourites yet.",
       "retirer_confirm": "Remove « {{nom}} » from your favourites?",
       "erreur_suppression": "Unable to remove this favourite.",
+      "retirer_succes": "Laundromat removed from favourites.",
       "suppression_en_cours": "Removing...",
       "favori": "Favourite",
       "retirer_aria": "Remove {{nom}} from favourites",

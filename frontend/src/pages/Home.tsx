@@ -8,8 +8,28 @@ import LaverieMap  from '../components/map/LaverieMap';
 import SearchBar   from '../components/search/SearchBar';
 import FilterPanel from '../components/search/FilterPanel';
 import LaverieGrid from '../components/laverie/LaverieGrid';
+import Notification from '../components/Notification';
+import { useFavorites } from '../hooks/useFavorites';
 
 import type { GeoSuggestion, Laverie } from '../types/Laverie';
+
+function getRolesFromToken(token: string): string[] {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+            window.atob(base64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
+        );
+        return JSON.parse(jsonPayload).roles || [];
+    } catch {
+        return [];
+    }
+}
+
+function isStandardUserToken(token: string): boolean {
+    const roles = getRolesFromToken(token);
+    return !roles.some((role) => role.includes('PROFESSIONNEL') || role.includes('ADMIN'));
+}
 
 export default function Home() {
     const { t } = useTranslation();
@@ -25,9 +45,21 @@ export default function Home() {
         if (flashMessageKey) sessionStorage.removeItem('flashMessageKey');
     }, [flashMessageKey, location.pathname, location.state, navigate]);
 
+    const token = localStorage.getItem('token');
+    const isStandardUser = !!token && isStandardUserToken(token);
+
     // ── Géolocalisation à la demande ──────────────────────────────────────────
     const { userPos, centerPos, setCenterPos, geoRefused, geoLoading, requestGeolocation } = useGeolocation();
     const [mapZoom, setMapZoom] = useState(12);
+
+    const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+    const {
+        favoriteIds,
+        pendingIds: favoritePendingIds,
+        refresh: syncFavoriteIdsFromDb,
+        toggleFavorite,
+        error: favoriteError,
+    } = useFavorites();
 
     // ── Recherche ─────────────────────────────────────────────────────────────
     const {
@@ -36,6 +68,11 @@ export default function Home() {
         searchQuery, setSearchQuery, suggestions, showSuggestions, setShowSuggestions, geocoding,
         handleSearchInput, lancerRecherche, rechercherParTexte,
     } = useLaverieSearch();
+
+    useEffect(() => {
+        if (!favoriteError || !isStandardUser) return;
+        setNotification({ type: 'error', message: favoriteError });
+    }, [favoriteError, isStandardUser]);
 
     useEffect(() => {
         if (userPos) { setMapZoom(14); lancerRecherche(userPos); }
@@ -60,10 +97,40 @@ export default function Home() {
         lancerRecherche(pos);
     };
 
+    const handleFavoriteToggle = async (laverie: Laverie) => {
+        if (!isStandardUser) {
+            setNotification({ type: 'error', message: t('main.home.favoris_connexion_requise') });
+            return;
+        }
+
+        try {
+            const isAlreadyFavorite = favoriteIds.includes(laverie.id);
+            const action = await toggleFavorite(laverie.id, !isAlreadyFavorite);
+            setNotification({
+                type: action === 'added' ? 'success' : 'error',
+                message: action === 'added'
+                    ? t('main.home.favori_ajoute', { nom: laverie.nom })
+                    : t('main.home.favori_retire', { nom: laverie.nom }),
+            });
+        } catch (err: any) {
+            setNotification({
+                type: 'error',
+                message: err?.message || t('main.home.favoris_erreur'),
+            });
+        }
+    };
+
     const showGeoCta = !searched && !userPos && !geoRefused;
 
     return (
         <div className="flex flex-col bg-slate-50 min-h-screen pt-20 w-full">
+            {notification && (
+                <Notification
+                    type={notification.type}
+                    message={notification.message}
+                    onClose={() => setNotification(null)}
+                />
+            )}
             <div className="w-full max-w-[1280px] mx-auto">
 
                 {flashMessageKey && (
@@ -144,6 +211,10 @@ export default function Home() {
                         activeLaverieId={activeLaverieId} onCardClick={handleLaverieSelect}
                         cardRefs={cardRefs} nbFiltresActifs={nbFiltresActifs}
                         onClearFilters={() => { reinitialiserFiltres(); lancerRecherche(userPos ?? undefined); }}
+                        showFavoriteButton={isStandardUser}
+                        favoriteIds={favoriteIds}
+                        favoritePendingIds={favoritePendingIds}
+                        onFavoriteToggle={handleFavoriteToggle}
                     />
                 </div>
 

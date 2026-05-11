@@ -12,6 +12,10 @@ interface Props {
     cardRefs: RefObject<Record<number, HTMLDivElement | null>>;
     nbFiltresActifs: number;
     onClearFilters: () => void;
+    showFavoriteButton?: boolean;
+    favoriteIds?: number[];
+    favoritePendingIds?: number[];
+    onFavoriteToggle?: (l: Laverie) => void;
 }
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
@@ -82,6 +86,7 @@ function InitialState() {
 export default function LaverieGrid({
     laveries, loading, searched, activeLaverieId,
     onCardClick, cardRefs, nbFiltresActifs, onClearFilters,
+    showFavoriteButton = false, favoriteIds = [], favoritePendingIds = [], onFavoriteToggle,
 }: Props) {
     if (loading) {
         return (
@@ -108,6 +113,10 @@ export default function LaverieGrid({
                         laverie={l}
                         active={activeLaverieId === l.id}
                         onClick={onCardClick}
+                        showFavoriteButton={showFavoriteButton}
+                        isFavorite={favoriteIds.includes(l.id)}
+                        favoritePending={favoritePendingIds.includes(l.id)}
+                        onFavoriteToggle={onFavoriteToggle}
                     />
                 </div>
             ))}

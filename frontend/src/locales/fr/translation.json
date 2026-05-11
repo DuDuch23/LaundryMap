@@ -28,12 +28,19 @@
       "a_proximite": "À proximité",
       "voir_tout": "Voir tout",
       "utiliser_position": "Me localiser",
-      "geo_chargement": "Localisation en cours…"
+      "geo_chargement": "Localisation en cours…",
+      "favoris_connexion_requise": "Connectez-vous pour ajouter des favoris.",
+      "favori_ajoute": "« {{nom}} » ajoutée aux favoris.",
+      "favori_retire": "« {{nom}} » retirée des favoris.",
+      "favoris_erreur": "Impossible de mettre à jour ce favori.",
+      "favoris_erreur_chargement": "Impossible de charger vos favoris."
     },
     "laverie_card": {
       "disponible": "Disponible",
       "ferme": "Fermé",
-      "voir_detail": "Voir le détail de {{nom}}"
+      "voir_detail": "Voir le détail de {{nom}}",
+      "ajouter_favori": "Ajouter {{nom}} aux favoris",
+      "retirer_favori": "Retirer {{nom}} des favoris"
     },
     "search_bar": {
       "placeholder": "Rechercher par ville, code postal, adresse…",
@@ -69,6 +76,7 @@
       "pas_encore": "Vous n'avez pas encore ajouté de laverie en favoris.",
       "retirer_confirm": "Retirer « {{nom}} » de vos favoris ?",
       "erreur_suppression": "Impossible de supprimer ce favori.",
+      "retirer_succes": "Laverie retirée des favoris.",
       "suppression_en_cours": "Suppression...",
       "favori": "Favori",
       "retirer_aria": "Retirer {{nom}} des favoris",

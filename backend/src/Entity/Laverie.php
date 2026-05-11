@@ -255,6 +255,23 @@ class Laverie
         return $this->favoris;
     }
 
+    public function addFavori(LaverieFavori $favori): static
+    {
+        if (!$this->favoris->contains($favori)) {
+            $this->favoris->add($favori);
+            $favori->setLaverie($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFavori(LaverieFavori $favori): static
+    {
+        $this->favoris->removeElement($favori);
+
+        return $this;
+    }
+
     public function setFavoris(Collection $favoris): static
     {
         $this->favoris = $favoris;

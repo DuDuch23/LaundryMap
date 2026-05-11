@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { Heart, Loader2 } from 'lucide-react';
 import type { Laverie } from '../../types/Laverie';
 import API_BASE_URL, { resolveUrl, uploadPath } from '../../services/api';
 
@@ -9,13 +10,25 @@ interface Props {
     laverie: Laverie;
     active: boolean;
     onClick: (l: Laverie) => void;
+    showFavoriteButton?: boolean;
+    isFavorite?: boolean;
+    favoritePending?: boolean;
+    onFavoriteToggle?: (l: Laverie) => void;
 }
 
 function formatDistance(km: number): string {
     return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
 }
 
-export default function LaverieCard({ laverie: l, active, onClick }: Props) {
+export default function LaverieCard({
+    laverie: l,
+    active,
+    onClick,
+    showFavoriteButton = false,
+    isFavorite = false,
+    favoritePending = false,
+    onFavoriteToggle,
+}: Props) {
     const navigate = useNavigate();
     const { t } = useTranslation();
 
@@ -30,6 +43,31 @@ export default function LaverieCard({ laverie: l, active, onClick }: Props) {
                 active ? 'ring-2 ring-[#14A8DE] shadow-md' : 'border border-slate-100 shadow-sm'
             }`}
         >
+            {showFavoriteButton && onFavoriteToggle && (
+                <button
+                    type="button"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onFavoriteToggle(l);
+                    }}
+                    disabled={favoritePending}
+                    className={`absolute left-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full shadow-sm ring-1 ring-black/5 backdrop-blur-sm transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60 ${
+                        isFavorite
+                            ? 'bg-rose-500 text-white hover:bg-rose-600'
+                            : 'bg-white/95 text-rose-500 hover:bg-rose-50'
+                    }`}
+                    aria-label={isFavorite ? t('main.laverie_card.retirer_favori', { nom: l.nom }) : t('main.laverie_card.ajouter_favori', { nom: l.nom })}
+                    aria-busy={favoritePending}
+                    title={isFavorite ? t('main.laverie_card.retirer_favori', { nom: l.nom }) : t('main.laverie_card.ajouter_favori', { nom: l.nom })}
+                >
+                    {favoritePending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    ) : (
+                        <Heart className={`h-4 w-4 ${isFavorite ? 'fill-current' : 'stroke-[2.25]'}`} aria-hidden="true" />
+                    )}
+                </button>
+            )}
+
             {/* Image carrée */}
             <div className="w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden bg-slate-100">
                 <img
