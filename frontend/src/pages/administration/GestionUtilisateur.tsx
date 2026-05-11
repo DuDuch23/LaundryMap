@@ -4,6 +4,7 @@ import { ChevronLeft, ListX, SlidersHorizontal, UserRound, MoreHorizontal } from
 import { fetchAdminUtilisateurs, type FiltresUtilisateurs } from '../../services/request';
 import { AccessibleModal } from '../../components/accessibility';
 import FilterModal, { type FilterSection, type FilterValues } from '../../components/FilterModal';
+import { UtilisateurAdminListSkeleton } from '../../components/administration/AdminSkeletons';
 
 interface Laverie {
     id: number;
@@ -197,13 +198,14 @@ export default function GestionUtilisateurs() {
 
     const navigate = useNavigate();
 
-    if (chargement && page === 1 && !aDesFiltresActifs) {
-        return <div className="text-center mt-20 font-bold text-[#22ACE2]">Chargement des données...</div>;
-    }
-
     if (erreur) {
         return <div className="text-center mt-20 font-bold text-red-500">{erreur}</div>;
     }
+
+    // Chargement initial : liste vide ET en cours de chargement = on affiche
+    // les skeletons à la place de la liste (mais on garde le header + filtres
+    // pour éviter l'effet "page qui saute")
+    const chargementInitial = chargement && utilisateurs.length === 0;
 
     return (
         <div className="w-full pt-24 px-4 pb-16 font-sans max-w-[stretch]">
@@ -255,12 +257,10 @@ export default function GestionUtilisateurs() {
                     <p className="text-green-500 font-bold text-xl">{enAttenteCount}</p>
                 </div>
 
-                {/* INDICATEUR DE CHARGEMENT */}
-                {chargement && (
-                    <div className="text-center py-4 text-[#22ACE2] font-medium">Chargement...</div>
-                )}
-
                 {/* LISTE DES UTILISATEURS */}
+                {chargementInitial ? (
+                    <UtilisateurAdminListSkeleton count={4} />
+                ) : (
                 <div className={`space-y-6 ${chargement ? 'opacity-50' : 'opacity-100'} transition-opacity`}>
                     {utilisateurs.map((user) => (
                         <div key={user.id} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm relative">
@@ -347,6 +347,7 @@ export default function GestionUtilisateurs() {
                         </div>
                     ))}
                 </div>
+                )}
 
                 {/* PAGINATION */}
                 {pagination && (

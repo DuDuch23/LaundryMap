@@ -212,7 +212,7 @@
       "ou": "ou",
       "erreur_reseau": "Une erreur réseau est survenue. Veuillez vérifier votre connexion et réessayer.",
       "erreur_generique": "Une erreur est survenue. Veuillez réessayer.",
-      "erreur_compte_en_attente": "Votre compte est en attente de validation. Veuillez vérifier votre e-mail pour valider votre compte avant de vous connecter.",
+      "erreur_compte_en_attente": "Connexion impossible. Veuillez réessayer plus tard ou contacter l'administrateur.",
       "erreur_compte_banni": "Votre compte a été banni. Veuillez contacter l'administrateur pour plus d'informations.",
       "erreur_compte_refuse": "Votre compte a été refusé par l'administration. Veuillez contacter l'administrateur pour plus d'informations."
     },
@@ -361,6 +361,7 @@
     "email_verification": {
       "titre_succes": "Vérification réussie !",
       "message_succes": "Votre compte a été validé avec succès. Vous pouvez maintenant vous connecter.",
+      "message_succes_pro": "Votre adresse e-mail a bien été vérifiée. Votre compte professionnel doit maintenant être validé manuellement par un administrateur avant que vous puissiez vous connecter. Vous recevrez un e-mail dès que cette validation aura été effectuée.",
       "bouton_connexion": "Aller à la page de connexion",
       "titre_erreur": "Une erreur est survenue",
       "erreur_invalid_token": "Ce lien de vérification est invalide. Assurez-vous d'avoir cliqué sur le lien le plus récent reçu par e-mail, ou demandez un nouveau lien.",

@@ -3,6 +3,11 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { ArrowLeft, Timer, Euro, Weight, ChevronLeft, Key, LayoutGrid, User } from 'lucide-react';
 import { fetchLaverieDetail, updateLaverieStatut } from '../../services/request';
 import { AccessibleModal, AccessibleInput } from '../../components/accessibility';
+import ItineraireButton from '../../components/map/ItineraireButton';
+import { resolveUrl } from '../../services/api';
+import { LaverieAdminDetailSkeleton } from '../../components/administration/AdminSkeletons';
+
+const IMAGE_LAVERIE_PAR_DEFAUT = '/uploads/laveries/default-laundry.jpg';
 
 interface ImageDetail {
     url: string;
@@ -30,6 +35,8 @@ interface LaverieDetailData {
     statut: string;
     description?: string;
     adresse: string;
+    latitude?: number;
+    longitude?: number;
     wiLineReference?: number;
     images: ImageDetail[];
     equipements: Equipement[];
@@ -124,7 +131,7 @@ export default function DetailLaverie() {
     };
 
     if (loading) {
-        return <div className="text-center mt-20 font-bold text-[#22ACE2]">Chargement des détails...</div>;
+        return <LaverieAdminDetailSkeleton />;
     }
 
     if (!laverie) {
@@ -162,13 +169,17 @@ export default function DetailLaverie() {
 
             {/* HEADER IMAGE */}
             <div className="relative h-64 bg-slate-800 w-full overflow-hidden">
-                {laverie.images?.[0]?.url && (
-                    <img
-                        src={laverie.images[0].url}
-                        alt={laverie.images[0].description || laverie.nom}
-                        className="absolute inset-0 w-full h-full object-cover opacity-80"
-                    />
-                )}
+                <img
+                    src={resolveUrl(laverie.images?.[0]?.url || IMAGE_LAVERIE_PAR_DEFAUT)}
+                    alt={laverie.images?.[0]?.description || laverie.nom}
+                    className="absolute inset-0 w-full h-full object-cover opacity-80"
+                    onError={(e) => {
+                        const target = e.currentTarget;
+                        if (!target.src.endsWith(IMAGE_LAVERIE_PAR_DEFAUT)) {
+                            target.src = resolveUrl(IMAGE_LAVERIE_PAR_DEFAUT);
+                        }
+                    }}
+                />
                 <button
                     onClick={() => navigate(-1)}
                     className="absolute top-20 left-4 w-8 h-8 rounded-xl shadow-md z-10 transition-colors cursor-pointer flex items-center justify-center bg-[#14A8DE]"
@@ -180,7 +191,7 @@ export default function DetailLaverie() {
 
             {/* CONTENU PRINCIPAL */}
             <div className="relative bg-white rounded-t-[2.5rem] px-6 pt-12 pb-8 -mt-10 shadow-lg min-h-screen">
-                
+
                 {/* Icône machine (À cheval) */}
                 <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-100">
                     <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-black">
@@ -229,11 +240,11 @@ export default function DetailLaverie() {
 
                 {/* EQUIPEMENTS + HORAIRES (2 COLONNES) */}
                 <div className="grid grid-cols-2 gap-6 mb-8">
-                    
+
                     {/* Colonne de gauche : Equipements */}
                     <div className="flex flex-col">
                         <h2 className="font-bold text-base underline decoration-[1.5px] decoration-black underline-offset-4 mb-4">Services proposés :</h2>
-                        
+
                         <div className="space-y-4 mb-4">
                             {equipementsAffichage.map((eq) => (
                                 <div key={eq.id}>
@@ -271,13 +282,28 @@ export default function DetailLaverie() {
                             ))}
                         </div>
 
-                        <Link
-                            to={`/admin/utilisateurs/${laverie.professionnel.utilisateurId}`}
-                            className="bg-[#14A8DE] text-white hover:bg-[#1296c8] font-bold py-2 px-3 rounded-xl text-xs transition-colors cursor-pointer flex items-center justify-center gap-2 w-max mt-auto"
-                        >
-                            <User size={14} />
-                            Voir propriétaire
-                        </Link>
+                        <div className="flex flex-col sm:flex-row items-center gap-2 mt-auto w-full">
+                            
+                            <Link
+                                to={`/admin/utilisateurs/${laverie.professionnel.utilisateurId}`}
+                                className="w-full sm:flex-1 bg-white border border-slate-200 text-slate-800 hover:bg-slate-50 font-bold rounded-xl text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5 h-[34px] shadow-sm"
+                            >
+                                <User size={14} className="flex-shrink-0 text-[#14A8DE]" />
+                                <span className="truncate">Propriétaire</span>
+                            </Link>
+
+                            {/* On n'utilise -mt-2 que sur grand écran (sm:-mt-2) car sur mobile ils sont l'un sous l'autre ! */}
+                            {laverie.latitude && laverie.longitude ? (
+                                <div className="w-full sm:flex-1 sm:-mt-2">
+                                    <ItineraireButton lat={laverie.latitude} lng={laverie.longitude} nom={laverie.nom} />
+                                </div>
+                            ) : (
+                                <div className="w-full sm:flex-1 text-center text-[10px] italic text-gray-400">
+                                    Coordonnées manquantes
+                                </div>
+                            )}
+
+                        </div>
                     </div>
                 </div>
 

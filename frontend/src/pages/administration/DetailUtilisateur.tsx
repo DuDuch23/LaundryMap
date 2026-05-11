@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { ArrowLeft, UserRound, MoreHorizontal } from 'lucide-react';
 import { fetchUtilisateurDetail, updateUtilisateurStatut } from '../../services/request';
+import { UtilisateurAdminDetailSkeleton } from '../../components/administration/AdminSkeletons';
+import { resolveUrl } from '../../services/api';
+
+const IMAGE_LAVERIE_PAR_DEFAUT = '/uploads/laveries/default-laundry.jpg';
 
 interface LaverieDetail {
     id: number;
@@ -68,7 +72,7 @@ export default function DetailUtilisateur() {
     };
 
     if (loading) {
-        return <div className="text-center mt-20 font-bold text-[#22ACE2]">Chargement des détails...</div>;
+        return <UtilisateurAdminDetailSkeleton />;
     }
 
     if (!user) {
@@ -103,13 +107,19 @@ export default function DetailUtilisateur() {
     return (
         <div className="w-full mx-auto bg-gray-50 min-h-screen font-sans relative pb-10">
 
-            {/* HEADER BACKGROUND (Placeholder pour l'image de fond) */}
+            {/* HEADER BACKGROUND : image de la 1ère laverie ou image par défaut */}
             <div className="relative h-56 bg-slate-800 w-full overflow-hidden">
-                {user.professionnel?.laveries?.[0]?.image && (
+                {user.professionnel && (
                     <img
-                        src={user.professionnel.laveries[0].image}
-                        alt={user.professionnel.laveries[0].imageAlt || user.professionnel.laveries[0].nom}
+                        src={resolveUrl(user.professionnel.laveries?.[0]?.image || IMAGE_LAVERIE_PAR_DEFAUT)}
+                        alt={user.professionnel.laveries?.[0]?.imageAlt || user.professionnel.laveries?.[0]?.nom || ''}
                         className="absolute inset-0 w-full h-full object-cover opacity-80"
+                        onError={(e) => {
+                            const target = e.currentTarget;
+                            if (!target.src.endsWith(IMAGE_LAVERIE_PAR_DEFAUT)) {
+                                target.src = resolveUrl(IMAGE_LAVERIE_PAR_DEFAUT);
+                            }
+                        }}
                     />
                 )}
                 <button
@@ -158,13 +168,19 @@ export default function DetailUtilisateur() {
                         <div className="space-y-4">
                             {user.professionnel.laveries.map((laverie) => (
                                 <div key={laverie.id} className="flex gap-4 items-center">
-                                    {/* Image de la laverie */}
+                                    {/* Image de la laverie (avec fallback sur l'image par défaut) */}
                                     <div className="w-24 h-20 rounded-xl overflow-hidden bg-gray-200 shrink-0 shadow-sm">
-                                        {laverie.image ? (
-                                            <img src={laverie.image} alt={laverie.imageAlt || laverie.nom} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">Image</div>
-                                        )}
+                                        <img
+                                            src={resolveUrl(laverie.image || IMAGE_LAVERIE_PAR_DEFAUT)}
+                                            alt={laverie.imageAlt || laverie.nom}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                const target = e.currentTarget;
+                                                if (!target.src.endsWith(IMAGE_LAVERIE_PAR_DEFAUT)) {
+                                                    target.src = resolveUrl(IMAGE_LAVERIE_PAR_DEFAUT);
+                                                }
+                                            }}
+                                        />
                                     </div>
 
                                     {/* Infos de la laverie */}

@@ -18,6 +18,16 @@
         </div>
         
         <p>Ce lien de confirmation expirera dans 2 heures (le {{ expiresAt|date('d/m/Y à H:i') }}).</p>
+
+        {% if isPro is defined and isPro %}
+            <div style="margin: 25px 0; padding: 15px 20px; background-color: #fff8e1; border-left: 4px solid #f5a623; border-radius: 5px;">
+                <p style="margin: 0;"><strong>Information importante :</strong></p>
+                <p style="margin: 8px 0 0 0;">
+                    Une fois votre adresse e-mail confirmée, votre compte professionnel devra encore être <strong>validé manuellement par un administrateur</strong> avant que vous puissiez vous connecter et accéder à votre espace pro. Vous recevrez un e-mail dès que cette validation aura été effectuée.
+                </p>
+            </div>
+        {% endif %}
+
         <p>Si vous n'êtes pas à l'origine de cette inscription, veuillez simplement ignorer cet e-mail.</p>
         <p>Cordialement,<br>L'équipe LaundryMap</p>
     </div>
