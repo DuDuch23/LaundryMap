@@ -31,6 +31,9 @@ export interface Laverie {
     distance: number | null;
     image: string | null;
     estOuvert: boolean;
+    prochaineFermeture?: string | null;
+    prochaineOuverture?: string | null;
+    horairesAujourdhui?: string[];
     noteMoyenne: number;
     commentairesCount: number;
     description: string | null;

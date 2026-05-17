@@ -185,14 +185,21 @@ class ApiLaverieController extends ApiProfilController
             $jourEnum = $jourMapping[$jourLabel] ?? null;
             if ($jourEnum === null) continue;
 
-            $fermeture = new LaverieFermeture();
-            $fermeture->setLaverie($laverie);
-            $fermeture->setJour($jourEnum);
-            $fermeture->setHeureDebut(new \DateTime($horaire['ouverture']));
-            $fermeture->setHeureFin(new \DateTime($horaire['fermeture']));
-            $fermeture->setDateAjout(new \DateTime());
-            $fermeture->setDateModification(new \DateTime());
-            $em->persist($fermeture);
+            // Support both old format (ouverture/fermeture) and new format (plages array)
+            $plages = isset($horaire['plages']) && \is_array($horaire['plages'])
+                ? $horaire['plages']
+                : [['ouverture' => $horaire['ouverture'] ?? '07:00', 'fermeture' => $horaire['fermeture'] ?? '22:00']];
+
+            foreach ($plages as $plage) {
+                $fermeture = new LaverieFermeture();
+                $fermeture->setLaverie($laverie);
+                $fermeture->setJour($jourEnum);
+                $fermeture->setHeureDebut(new \DateTime($plage['ouverture']));
+                $fermeture->setHeureFin(new \DateTime($plage['fermeture']));
+                $fermeture->setDateAjout(new \DateTime());
+                $fermeture->setDateModification(new \DateTime());
+                $em->persist($fermeture);
+            }
         }
 
         // ── Machines ──────────────────────────────────────────────────────────

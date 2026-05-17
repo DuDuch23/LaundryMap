@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Heart, Loader2 } from 'lucide-react';
 import type { Laverie } from '../../types/Laverie';
-import API_BASE_URL, { resolveUrl, uploadPath } from '../../services/api';
+import { resolveUrl, uploadPath } from '../../services/api';
 
 const FALLBACK_IMG = uploadPath('/uploads/laveries/default-laundry.jpg');
 
@@ -88,7 +88,7 @@ export default function LaverieCard({
             </div>
 
             {/* Contenu */}
-            <div className="flex flex-col flex-1 min-w-0 justify-between pr-10">
+            <div className="flex flex-col flex-1 min-w-0 justify-between pr-10 gap-1">
                 {/* Nom */}
                 <div>
                     <h3 className="font-bold text-slate-900 text-sm leading-tight line-clamp-2">
@@ -101,16 +101,23 @@ export default function LaverieCard({
 
                 {/* Badge statut + distance + lien */}
                 <div className="flex items-center justify-between mt-1">
-                    <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                    <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${
                         l.estOuvert
                             ? 'bg-emerald-100 text-emerald-700'
                             : 'bg-slate-100 text-slate-500'
                     }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${l.estOuvert ? 'bg-emerald-500' : 'bg-slate-400'}`} aria-hidden="true" />
-                        {l.estOuvert ? t('main.laverie_card.disponible') : t('main.laverie_card.ferme')}
+                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${l.estOuvert ? 'bg-emerald-500' : 'bg-slate-400'}`} aria-hidden="true" />
+                        {l.estOuvert
+                            ? l.prochaineFermeture
+                                ? `${t('main.laverie_card.disponible')} · ${t('main.laverie_card.ferme_a', { heure: l.prochaineFermeture })}`
+                                : t('main.laverie_card.disponible')
+                            : l.prochaineOuverture
+                                ? `${t('main.laverie_card.ferme')} · ${t('main.laverie_card.ouvre_a', { heure: l.prochaineOuverture })}`
+                                : t('main.laverie_card.ferme')
+                        }
                     </span>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                         {l.distance !== null && (
                             <span className="text-xs text-slate-400 font-medium">
                                 {formatDistance(l.distance)}
@@ -126,6 +133,13 @@ export default function LaverieCard({
                         </button>
                     </div>
                 </div>
+
+                {/* Horaires d'aujourd'hui */}
+                {l.horairesAujourdhui && l.horairesAujourdhui.length > 0 && (
+                    <p className="mt-1 text-xs text-slate-400">
+                        {l.horairesAujourdhui.join(' · ')}
+                    </p>
+                )}
             </div>
         </div>
     );

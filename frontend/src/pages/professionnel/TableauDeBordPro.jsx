@@ -405,7 +405,15 @@ export default function TableauDeBordPro() {
 
           {/* Section laveries */}
           <section className="mt-8 text-center">
-            <h2 className="mb-4 text-lg font-bold text-slate-900 sm:text-xl">Vos laveries</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-slate-900 sm:text-xl">Vos laveries</h2>
+              <Link
+                to="/professionnel/nouvelle-laverie"
+                className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-600"
+              >
+                + Ajouter
+              </Link>
+            </div>
 
             <div className="grid w-full w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {laveries && laveries.map((laundry) => (

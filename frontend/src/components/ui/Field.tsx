@@ -24,6 +24,6 @@ export function inputClass(error?: string) {
     return `w-full max-w-[stretch] px-3.5 py-2.5 rounded-xl border text-sm transition-all outline-none ${
         error
             ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-200'
-            : 'border-gray-200 bg-gray-50 focus:border-[#14A8DE] focus:bg-white focus:ring-2 focus:ring-[#14A8DE]/20'
+            : 'border-gray-300 bg-white focus:border-[#14A8DE] focus:ring-2 focus:ring-[#14A8DE]/20'
     }`;
 }

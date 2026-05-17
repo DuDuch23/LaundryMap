@@ -38,6 +38,8 @@
     "laverie_card": {
       "disponible": "Disponible",
       "ferme": "Fermé",
+      "ferme_a": "ferme à {{heure}}",
+      "ouvre_a": "ouvre à {{heure}}",
       "voir_detail": "Voir le détail de {{nom}}",
       "ajouter_favori": "Ajouter {{nom}} aux favoris",
       "retirer_favori": "Retirer {{nom}} des favoris"

@@ -19,5 +19,9 @@ final class LaverieRechercheResultat
         public readonly Laverie $laverie,
         public readonly ?float $distanceKm,
         public readonly bool $estOuvert,
+        public readonly ?string $prochaineFermeture,
+        public readonly ?string $prochaineOuverture,
+        /** @var string[] "HH:MM - HH:MM" pour chaque plage d'ouverture aujourd'hui */
+        public readonly array $horairesAujourdhui,
     ) {}
 }
