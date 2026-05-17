@@ -83,13 +83,13 @@ class ApiLaverieController extends ApiProfilController
         }
 
         $payload = json_decode($request->getContent(), true);
-        $apiKey  = trim($payload['apiKey'] ?? '');
+        $code    = trim($payload['code'] ?? '');
 
-        if ($apiKey === '') {
+        if ($code === '') {
             return $this->json(['message' => 'Le code client WI-LINE est requis.'], 400);
         }
 
-        $centrales = $wiLine->getMachinesParCodeClient($apiKey);
+        $centrales = $wiLine->getMachinesParCodeClient($code);
 
         if ($centrales === null) {
             return $this->json(['message' => 'Code client WI-LINE invalide ou service indisponible.'], 422);

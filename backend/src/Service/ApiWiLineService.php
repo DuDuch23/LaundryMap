@@ -107,7 +107,7 @@ class ApiWiLineService
             if ($details && isset($details['machines'])) {
                 foreach ($details['machines'] as $machine) {
                     // On ne garde que les machines de catégorie WASH (1) et DRY (2)
-                    if (!in_array($m['category'] ?? 0, [1, 2])) {
+                    if (!in_array($machine['category'] ?? 0, [1, 2])) {
                         continue;
                     }
 

@@ -79,13 +79,12 @@ export default function AjoutLaverie() {
     }, []);
 
     // WI-LINE
-    const [wiLineLoading, setWiLineLoading]               = useState(false);
-    const [wiLineCentrales, setWiLineCentrales]           = useState<WiLineCentrale[]>([]);
-    const [wiLineConnecte, setWiLineConnecte]             = useState(false);
+    const wiLineCentrales: WiLineCentrale[]               = [];
+    const wiLineConnecte                                  = false;
     const [wiLineSelectedSerial, setWiLineSelectedSerial] = useState<string>('');
 
     // ── Formulaire ────────────────────────────────────────────────────────────
-    const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'found' | 'not_found'>('idle');
+    const [, setGeoStatus] = useState<'idle' | 'loading' | 'found' | 'not_found'>('idle');
 
     const [adresseQuery, setAdresseQuery]                     = useState('');
     const [adresseSuggestions, setAdresseSuggestions]         = useState<GeoSuggestion[]>([]);
@@ -104,7 +103,7 @@ export default function AjoutLaverie() {
         pays: 'France',
         latitude: null,
         longitude: null,
-        wiLineApiKey: '',
+        wiLineCode: '',
         wiLineCentraleId: null,
         horaires: defaultHoraires(),
         machines: [],
@@ -264,30 +263,6 @@ export default function AjoutLaverie() {
 
     // ── WI-LINE ───────────────────────────────────────────────────────────────
 
-    const connecterWiLine = async () => {
-        if (!form.wiLineApiKey.trim()) return;
-        setWiLineLoading(true);
-        setWiLineConnecte(false);
-        setWiLineCentrales([]);
-        setErrors((e) => ({ ...e, wiLineApiKey: undefined }));
-        try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE_URL}/api/wiline/centrales`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ apiKey: form.wiLineApiKey }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message ?? 'Erreur WI-LINE');
-            setWiLineCentrales(data.centrales ?? []);
-            setWiLineConnecte(true);
-        } catch (err: any) {
-            setErrors((e) => ({ ...e, wiLineApiKey: err.message }));
-        } finally {
-            setWiLineLoading(false);
-        }
-    };
-
     const selectionnerCentrale = (serial: string) => {
         setWiLineSelectedSerial(serial);
         const centrale = wiLineCentrales.find((c) => c.serial === serial);
@@ -405,25 +380,33 @@ export default function AjoutLaverie() {
 
                     {/* ── 1. WI-LINE ── */}
                     <Card>
-                        <SectionTitle step={1} title="Centrale WI-LINE" subtitle="Optionnel — importe automatiquement les machines depuis votre centrale" />
+                        <div className="flex items-start justify-between gap-3 mb-4">
+                            <SectionTitle step={1} title="Centrale WI-LINE" subtitle="Optionnel — importe automatiquement les machines depuis votre centrale" />
+                            <span className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold border border-amber-200">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" aria-hidden="true" />
+                                En cours de développement
+                            </span>
+                        </div>
                         <div className="flex gap-3 mb-4 flex-wrap">
                             <div className="flex-1">
+                                <label className="block text-sm font-medium text-gray-400 mb-1.5">
+                                    Code client WI-LINE
+                                </label>
                                 <input
                                     type="text"
-                                    value={form.wiLineApiKey}
-                                    onChange={(e) => { set('wiLineApiKey', e.target.value); setWiLineConnecte(false); setWiLineCentrales([]); }}
-                                    placeholder="Code client WI-LINE (api_key)"
-                                    className={inputClass(errors.wiLineApiKey)}
+                                    value={form.wiLineCode}
+                                    disabled
+                                    placeholder="Bientôt disponible"
+                                    className={inputClass() + ' opacity-50 cursor-not-allowed'}
                                 />
-                                {errors.wiLineApiKey && <p className="text-xs text-red-500 mt-1">{errors.wiLineApiKey}</p>}
+                                <p className="text-xs text-amber-600 mt-1">Cette fonctionnalité sera disponible prochainement.</p>
                             </div>
                             <Button
                                 type="button"
-                                onClick={connecterWiLine}
-                                disabled={wiLineLoading || !form.wiLineApiKey.trim()}
-                                className="bg-[#14A8DE] hover:bg-[#119ac8] text-white border-0 shrink-0"
+                                disabled
+                                className="bg-[#14A8DE] text-white border-0 shrink-0 self-end mb-6 opacity-50 cursor-not-allowed"
                             >
-                                {wiLineLoading ? 'Connexion...' : 'Connecter'}
+                                Connecter
                             </Button>
                         </div>
 

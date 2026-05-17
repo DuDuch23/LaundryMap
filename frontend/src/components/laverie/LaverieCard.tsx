@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router';
+import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Heart, Loader2 } from 'lucide-react';
 import type { Laverie } from '../../types/Laverie';
@@ -29,7 +29,6 @@ export default function LaverieCard({
     favoritePending = false,
     onFavoriteToggle,
 }: Props) {
-    const navigate = useNavigate();
     const { t } = useTranslation();
 
     return (
@@ -88,7 +87,7 @@ export default function LaverieCard({
             </div>
 
             {/* Contenu */}
-            <div className="flex flex-col flex-1 min-w-0 justify-between pr-10 gap-1">
+            <div className="flex flex-col flex-1 min-w-0 justify-between pr-10 gap-3">
                 {/* Nom */}
                 <div>
                     <h3 className="font-bold text-slate-900 text-sm leading-tight line-clamp-2">
@@ -100,7 +99,7 @@ export default function LaverieCard({
                 <p className="text-xs text-slate-400 truncate">{l.adresse}</p>
 
                 {/* Badge statut + distance + lien */}
-                <div className="flex items-center justify-between mt-1">
+                <div className="flex items-center justify-between">
                     <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${
                         l.estOuvert
                             ? 'bg-emerald-100 text-emerald-700'
@@ -117,29 +116,22 @@ export default function LaverieCard({
                         }
                     </span>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                        {l.distance !== null && (
-                            <span className="text-xs text-slate-400 font-medium">
-                                {formatDistance(l.distance)}
-                            </span>
-                        )}
-                        <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); navigate(`/laveries/${l.id}`); }}
-                            aria-label={t('main.laverie_card.voir_detail', { nom: l.nom })}
-                            className="text-xs font-semibold text-[#14A8DE] hover:text-[#119ac8] transition-colors"
-                        >
-                            →
-                        </button>
-                    </div>
                 </div>
-
-                {/* Horaires d'aujourd'hui */}
-                {l.horairesAujourdhui && l.horairesAujourdhui.length > 0 && (
-                    <p className="mt-1 text-xs text-slate-400">
-                        {l.horairesAujourdhui.join(' · ')}
-                    </p>
-                )}
+                <div className="flex items-center gap-2 shrink-0">
+                    {l.distance !== null && (
+                        <span className="text-xs text-slate-400 font-medium">
+                            {formatDistance(l.distance)}
+                        </span>
+                    )}
+                    <Link
+                        to={`/laveries/${l.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        aria-label={t('main.laverie_card.voir_detail', { nom: l.nom })}
+                        className="text-xs font-semibold text-[#14A8DE] hover:text-[#119ac8] transition-colors"
+                    >
+                        Voir la fiche
+                    </Link>
+                </div>
             </div>
         </div>
     );
