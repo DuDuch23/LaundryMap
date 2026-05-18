@@ -542,10 +542,17 @@ export async function supprimerFavori(laverieId: number): Promise<void> {
 }
 
 export async function fetchPublicLaverieDetail(id: string): Promise<LaveriePublicDetail> {
+    const token = localStorage.getItem('token');
+    const headers: Record<string, string> = {
+        accept: 'application/json',
+    };
+    
+    if (token) {
+        headers.Authorization = `Bearer ${token}`;
+    }
+
     const response = await fetch(`${API_BASE_URL}/api/laveries/${id}`, {
-        headers: {
-            accept: 'application/json',
-        },
+        headers,
     });
 
     if (!response.ok) {

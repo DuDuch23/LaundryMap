@@ -20,6 +20,32 @@ import { fetchPublicLaverieDetail, ajouterFavori, supprimerFavori, type LaverieP
 
 const fallbackLaverieImage = uploadPath('/uploads/laveries/default-laundry.jpg');
 
+interface UserTokenPayload {
+	id: number;
+	roles: string[];
+	email?: string;
+}
+
+function getUserFromToken(): UserTokenPayload | null {
+	const token = localStorage.getItem('token');
+	if (!token) return null;
+	try {
+		const base64Url = token.split('.')[1];
+		const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+		const jsonPayload = decodeURIComponent(
+			window.atob(base64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
+		);
+		const decoded = JSON.parse(jsonPayload);
+		return {
+			id: decoded.id,
+			roles: decoded.roles || [],
+			email: decoded.email,
+		};
+	} catch (e) {
+		return null;
+	}
+}
+
 function formatDistance(distance: number | null): string {
 	if (distance === null) {
 		return 'Distance non disponible';
@@ -100,22 +126,13 @@ export default function FicheLaverie() {
 	const [shareFeedback, setShareFeedback] = useState<string | null>(null);
 	const [isFavorite, setIsFavorite] = useState(false);
 	const [favoritePending, setFavoritePending] = useState(false);
+	const [accessDeniedReason, setAccessDeniedReason] = useState<string | null>(null);
+
+	const userToken = useMemo(() => getUserFromToken(), []);
 
 	const isProfessionnel = useMemo(() => {
-		const token = localStorage.getItem('token');
-		if (!token) return false;
-		try {
-			const base64Url = token.split('.')[1];
-			const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-			const jsonPayload = decodeURIComponent(
-				window.atob(base64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
-			);
-			const roles = JSON.parse(jsonPayload).roles || [];
-			return roles.some((r: string) => r.includes('PROFESSIONNEL'));
-		} catch (e) {
-			return false;
-		}
-	}, []);
+		return userToken ? userToken.roles.some((r: string) => r.includes('PROFESSIONNEL')) : false;
+	}, [userToken]);
 
 	useEffect(() => {
 		let active = true;
@@ -124,6 +141,7 @@ export default function FicheLaverie() {
 			try {
 				setLoading(true);
 				setError(null);
+				setAccessDeniedReason(null);
 
 				if (!id) {
 					throw new Error('Identifiant de laverie manquant.');
@@ -157,7 +175,14 @@ export default function FicheLaverie() {
 				}
 			} catch (err: any) {
 				if (active) {
-					setError(err?.message || 'Impossible de charger la fiche de la laverie.');
+					// Déterminer la raison de l'erreur basée sur le statut de la réponse
+					if (err?.status === 404) {
+						// C'est une laverie non trouvée, probablement accès refusé
+						setAccessDeniedReason('accès_refusé');
+						setError('Vous n\'avez pas accès à cette fiche laverie.');
+					} else {
+						setError(err?.message || 'Impossible de charger la fiche de la laverie.');
+					}
 				}
 			} finally {
 				if (active) {
@@ -262,10 +287,24 @@ export default function FicheLaverie() {
 	}
 
 	if (error) {
+		const isAdmin = userToken?.roles.some((r: string) => r.includes('ADMIN'));
+		const isPro = userToken?.roles.some((r: string) => r.includes('PROFESSIONNEL'));
+
+		let fullMessage = error;
+		if (accessDeniedReason === 'accès_refusé') {
+			if (!userToken) {
+				fullMessage = 'Cette fiche laverie n\'est pas accessible au public. Connectez-vous en tant qu\'administrateur ou professionnel pour y accéder.';
+			} else if (!isAdmin && !isPro) {
+				fullMessage = 'Cette fiche laverie n\'est pas accessible avec votre compte utilisateur. Seuls les administrateurs et les professionnels peuvent la consulter.';
+			} else {
+				fullMessage = 'Vous n\'avez pas accès à cette fiche laverie. Vous devez être administrateur ou le professionnel propriétaire.';
+			}
+		}
+
 		return (
 			<div className="min-h-screen w-full bg-slate-50 px-5 pt-20 lg:px-0">
 				<div className="mx-auto max-w-[1280px] rounded-2xl bg-rose-100 px-4 py-3 text-rose-700" role="alert" aria-live="assertive">
-					{error}
+					{fullMessage}
 				</div>
 			</div>
 		);
