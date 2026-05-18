@@ -43,6 +43,10 @@ RUN composer dump-autoload --optimize
 RUN chown -R www-data:www-data /var/www/html/var \
     && chmod -R 775 /var/www/html/var
 
+# Augmenter les limites d'upload PHP (nginx est déjà à 64M)
+RUN printf "upload_max_filesize = 64M\npost_max_size = 128M\nmax_file_uploads = 20\n" \
+    > /usr/local/etc/php/conf.d/uploads.ini
+
 # PHP-FPM écoute sur le port 9000
 EXPOSE 9000
 

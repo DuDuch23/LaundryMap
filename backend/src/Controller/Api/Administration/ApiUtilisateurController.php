@@ -350,7 +350,10 @@ class ApiUtilisateurController extends AbstractController
 
         $em->flush();
 
-        return $this->redirect($frontendBaseUrl . '/email-verifie?success=true');
+        $isPro = $user->getProfessionnel() !== null;
+        $successUrl = $frontendBaseUrl . '/email-verifie?success=true' . ($isPro ? '&pro=1' : '');
+
+        return $this->redirect($successUrl);
     }
 
     #[IsGranted('PUBLIC_ACCESS')]
@@ -396,6 +399,7 @@ class ApiUtilisateurController extends AbstractController
                 'user' => $user,
                 'verificationUrl' => $verificationUrl,
                 'expiresAt' => $expiresAt,
+                'isPro' => $user->getProfessionnel() !== null,
             ]);
 
         $mailer->send($emailMessage);

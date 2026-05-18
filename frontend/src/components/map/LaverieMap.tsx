@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
+import { ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Circle, MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
+import { Link } from 'react-router';
+import { Circle, MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import type { Laverie, Position } from '../../types/Laverie';
 import RecenterMap from './RecenterMap';
 import ItineraireButton from './ItineraireButton';
@@ -196,9 +198,21 @@ export default function LaverieMap({
                             <p className={`text-sm font-medium mt-1 ${l.estOuvert ? 'text-emerald-600' : 'text-rose-500'}`}>
                                 {l.estOuvert ? t('main.laverie_map.ouvert') : t('main.laverie_map.ferme')}
                             </p>
+                            {l.horairesAujourdhui && l.horairesAujourdhui.length > 0 && (
+                                <p className="text-xs text-slate-400 mt-0.5">
+                                    {l.horairesAujourdhui.join(' · ')}
+                                </p>
+                            )}
                             {l.latitude !== null && l.longitude !== null && (
                                 <ItineraireButton lat={l.latitude} lng={l.longitude} nom={l.nom} />
                             )}
+                            <Link
+                                to={`/laveries/${l.id}`}
+                                aria-label={t('main.laverie_card.voir_detail', { nom: l.nom })}
+                                className="block mt-3 text-xs font-semibold text-[#14A8DE] hover:text-[#119ac8] transition-colors"
+                            >
+                                Voir la fiche
+                            </Link>
                         </Popup>
                     </Marker>
                 ))}

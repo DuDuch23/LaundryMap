@@ -6,7 +6,7 @@ import API_BASE_URL from '../../services/api';
 import { geocodeSuggestions, getMethodesPaiement, getServices } from '../../services/request';
 import { EQUIPEMENTS_OPTIONS } from '../../constants/Laverie';
 import { FormDataAddLaverie } from '../../types/FormDataAddLaverie';
-import { HorairesJour } from '../../types/HorairesJour';
+import { HorairesJour, PlageHoraire } from '../../types/HorairesJour';
 import { Machine } from '../../types/Machine';
 import { WiLineCentrale } from '../../types/wiline/WiLineCentrale';
 import type { GeoSuggestion, MethodePaiementOption, ServiceOption } from '../../types/Laverie';
@@ -29,7 +29,7 @@ const RESTRICTIONS_IMAGE = {
 const JOURS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
 
 const defaultHoraires = (): Record<string, HorairesJour> =>
-    Object.fromEntries(JOURS.map((j) => [j, { ouvert: true, ouverture: '07:00', fermeture: '22:00' }]));
+    Object.fromEntries(JOURS.map((j) => [j, { ouvert: true, plages: [{ ouverture: '07:00', fermeture: '22:00' }] }]));
 
 const newMachine = (): Machine => ({
     id: crypto.randomUUID(),
@@ -79,13 +79,12 @@ export default function AjoutLaverie() {
     }, []);
 
     // WI-LINE
-    const [wiLineLoading, setWiLineLoading]               = useState(false);
-    const [wiLineCentrales, setWiLineCentrales]           = useState<WiLineCentrale[]>([]);
-    const [wiLineConnecte, setWiLineConnecte]             = useState(false);
+    const wiLineCentrales: WiLineCentrale[]               = [];
+    const wiLineConnecte                                  = false;
     const [wiLineSelectedSerial, setWiLineSelectedSerial] = useState<string>('');
 
     // ── Formulaire ────────────────────────────────────────────────────────────
-    const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'found' | 'not_found'>('idle');
+    const [, setGeoStatus] = useState<'idle' | 'loading' | 'found' | 'not_found'>('idle');
 
     const [adresseQuery, setAdresseQuery]                     = useState('');
     const [adresseSuggestions, setAdresseSuggestions]         = useState<GeoSuggestion[]>([]);
@@ -104,7 +103,7 @@ export default function AjoutLaverie() {
         pays: 'France',
         latitude: null,
         longitude: null,
-        wiLineApiKey: '',
+        wiLineCode: '',
         wiLineCentraleId: null,
         horaires: defaultHoraires(),
         machines: [],
@@ -215,8 +214,41 @@ export default function AjoutLaverie() {
         }));
     };
 
-    const setHoraire = (jour: string, field: keyof HorairesJour, value: any) => {
-        setForm((f) => ({ ...f, horaires: { ...f.horaires, [jour]: { ...f.horaires[jour], [field]: value } } }));
+    const setHoraire = (jour: string, ouvert: boolean) => {
+        setForm((f) => ({ ...f, horaires: { ...f.horaires, [jour]: { ...f.horaires[jour], ouvert } } }));
+    };
+
+    const setHorairePlage = (jour: string, idx: number, field: keyof PlageHoraire, value: string) => {
+        setForm((f) => {
+            const plages = f.horaires[jour].plages.map((p, i) => i === idx ? { ...p, [field]: value } : p);
+            return { ...f, horaires: { ...f.horaires, [jour]: { ...f.horaires[jour], plages } } };
+        });
+    };
+
+    const addPlage = (jour: string) => {
+        setForm((f) => ({
+            ...f,
+            horaires: {
+                ...f.horaires,
+                [jour]: {
+                    ...f.horaires[jour],
+                    plages: [...f.horaires[jour].plages, { ouverture: '07:00', fermeture: '22:00' }],
+                },
+            },
+        }));
+    };
+
+    const removePlage = (jour: string, idx: number) => {
+        setForm((f) => ({
+            ...f,
+            horaires: {
+                ...f.horaires,
+                [jour]: {
+                    ...f.horaires[jour],
+                    plages: f.horaires[jour].plages.filter((_, i) => i !== idx),
+                },
+            },
+        }));
     };
 
     const addMachine = () => set('machines', [...form.machines, newMachine()]);
@@ -230,30 +262,6 @@ export default function AjoutLaverie() {
     };
 
     // ── WI-LINE ───────────────────────────────────────────────────────────────
-
-    const connecterWiLine = async () => {
-        if (!form.wiLineApiKey.trim()) return;
-        setWiLineLoading(true);
-        setWiLineConnecte(false);
-        setWiLineCentrales([]);
-        setErrors((e) => ({ ...e, wiLineApiKey: undefined }));
-        try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE_URL}/api/wiline/centrales`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ apiKey: form.wiLineApiKey }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message ?? 'Erreur WI-LINE');
-            setWiLineCentrales(data.centrales ?? []);
-            setWiLineConnecte(true);
-        } catch (err: any) {
-            setErrors((e) => ({ ...e, wiLineApiKey: err.message }));
-        } finally {
-            setWiLineLoading(false);
-        }
-    };
 
     const selectionnerCentrale = (serial: string) => {
         setWiLineSelectedSerial(serial);
@@ -286,7 +294,7 @@ export default function AjoutLaverie() {
         if (form.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.contactEmail)) {
             e.contactEmail = 'Email invalide.';
         }
-        if (!Object.values(form.horaires).some((h) => h.ouvert)) {
+        if (!Object.values(form.horaires).some((h) => h.ouvert && h.plages.length > 0)) {
             e.horaires = 'Au moins un jour doit être ouvert.';
         }
         setErrors(e);
@@ -372,25 +380,33 @@ export default function AjoutLaverie() {
 
                     {/* ── 1. WI-LINE ── */}
                     <Card>
-                        <SectionTitle step={1} title="Centrale WI-LINE" subtitle="Optionnel — importe automatiquement les machines depuis votre centrale" />
+                        <div className="flex items-start justify-between gap-3 mb-4">
+                            <SectionTitle step={1} title="Centrale WI-LINE" subtitle="Optionnel — importe automatiquement les machines depuis votre centrale" />
+                            <span className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold border border-amber-200">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" aria-hidden="true" />
+                                En cours de développement
+                            </span>
+                        </div>
                         <div className="flex gap-3 mb-4 flex-wrap">
                             <div className="flex-1">
+                                <label className="block text-sm font-medium text-gray-400 mb-1.5">
+                                    Code client WI-LINE
+                                </label>
                                 <input
                                     type="text"
-                                    value={form.wiLineApiKey}
-                                    onChange={(e) => { set('wiLineApiKey', e.target.value); setWiLineConnecte(false); setWiLineCentrales([]); }}
-                                    placeholder="Code client WI-LINE (api_key)"
-                                    className={inputClass(errors.wiLineApiKey)}
+                                    value={form.wiLineCode}
+                                    disabled
+                                    placeholder="Bientôt disponible"
+                                    className={inputClass() + ' opacity-50 cursor-not-allowed'}
                                 />
-                                {errors.wiLineApiKey && <p className="text-xs text-red-500 mt-1">{errors.wiLineApiKey}</p>}
+                                <p className="text-xs text-amber-600 mt-1">Cette fonctionnalité sera disponible prochainement.</p>
                             </div>
                             <Button
                                 type="button"
-                                onClick={connecterWiLine}
-                                disabled={wiLineLoading || !form.wiLineApiKey.trim()}
-                                className="bg-[#14A8DE] hover:bg-[#119ac8] text-white border-0 shrink-0"
+                                disabled
+                                className="bg-[#14A8DE] text-white border-0 shrink-0 self-end mb-6 opacity-50 cursor-not-allowed"
                             >
-                                {wiLineLoading ? 'Connexion...' : 'Connecter'}
+                                Connecter
                             </Button>
                         </div>
 
@@ -528,7 +544,7 @@ export default function AjoutLaverie() {
                             <Field label="Rue" required error={errors.rue}>
                                 <input type="text" value={form.rue} onChange={(e) => set('rue', e.target.value)} placeholder="12 rue des Fleurs" className={inputClass(errors.rue)} />
                             </Field>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <Field label="Code postal" required error={errors.codePostal}>
                                     <input type="text" value={form.codePostal} onChange={(e) => set('codePostal', e.target.value)} placeholder="68100" className={inputClass(errors.codePostal)} />
                                 </Field>
@@ -546,7 +562,7 @@ export default function AjoutLaverie() {
                     <Card>
                         <SectionTitle step={5} title="Horaires d'ouverture" subtitle="Au moins un jour obligatoire" />
                         {errors.horaires && <p className="text-xs text-red-500 mb-3">{errors.horaires}</p>}
-                        <div className="space-y-3 flex-wrap">
+                        <div className="divide-y divide-gray-100">
                             {JOURS.map((jour) => {
                                 const h = form.horaires[jour];
                                 return (
@@ -555,20 +571,49 @@ export default function AjoutLaverie() {
                                             <div className="w-24 text-md font-medium text-gray-700 shrink-0">{jour}</div>
                                             <ToggleSwitch
                                                 checked={h.ouvert}
-                                                onChange={(val) => setHoraire(jour, 'ouvert', val)}
+                                                onChange={(val) => setHoraire(jour, val)}
                                                 label={`${jour} ouvert`}
                                             />
+                                            <span className="text-xs text-gray-500">{h.ouvert ? 'Ouvert' : 'Fermé'}</span>
                                         </div>
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-xs text-gray-500 w-12 shrink-0">{h.ouvert ? 'Ouvert' : 'Fermé'}</span>
-                                            {h.ouvert && (
-                                                <>
-                                                    <input type="time" value={h.ouverture} onChange={(e) => setHoraire(jour, 'ouverture', e.target.value)} className="flex-1 px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:border-[#14A8DE] focus:outline-none" />
-                                                    <span className="text-gray-400 text-sm shrink-0">→</span>
-                                                    <input type="time" value={h.fermeture} onChange={(e) => setHoraire(jour, 'fermeture', e.target.value)} className="flex-1 px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:border-[#14A8DE] focus:outline-none" />
-                                                </>
-                                            )}
-                                        </div>
+                                        {h.ouvert && (
+                                            <div className="pl-0 sm:pl-28 space-y-2">
+                                                {h.plages.map((plage, idx) => (
+                                                    <div key={idx} className="flex items-center gap-2">
+                                                        <input
+                                                            type="time"
+                                                            value={plage.ouverture}
+                                                            onChange={(e) => setHorairePlage(jour, idx, 'ouverture', e.target.value)}
+                                                            className="flex-1 px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:border-[#14A8DE] focus:outline-none"
+                                                        />
+                                                        <span className="text-gray-400 text-sm shrink-0">→</span>
+                                                        <input
+                                                            type="time"
+                                                            value={plage.fermeture}
+                                                            onChange={(e) => setHorairePlage(jour, idx, 'fermeture', e.target.value)}
+                                                            className="flex-1 px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:border-[#14A8DE] focus:outline-none"
+                                                        />
+                                                        {h.plages.length > 1 && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => removePlage(jour, idx)}
+                                                                className="shrink-0 text-rose-400 hover:text-rose-600 text-lg leading-none transition-colors"
+                                                                aria-label="Supprimer cette plage"
+                                                            >
+                                                                ×
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => addPlage(jour)}
+                                                    className="text-xs text-[#14A8DE] hover:text-[#119ac8] flex items-center gap-1 transition-colors"
+                                                >
+                                                    <Plus className="size-3" /> Ajouter une plage horaire
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}

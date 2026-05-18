@@ -209,6 +209,8 @@ class ApiLaverieController extends AbstractController
             'statut' => $statutReact,
             'description' => $laverie->getDescription(),
             'adresse' => $adresseComplete,
+            'latitude' => $adresseLav->getLatitude(),
+            'longitude' => $adresseLav->getLongitude(),
             'wiLineReference' => $laverie->getWiLineReference(),
             'images' => $images,
             'equipements' => $equipements,

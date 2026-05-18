@@ -11,7 +11,7 @@ export interface FormDataAddLaverie {
     pays: string;
     latitude: number | null;
     longitude: number | null;
-    wiLineApiKey: string;
+    wiLineCode: string;
     wiLineCentraleId: number | null;
     horaires: Record<string, HorairesJour>;
     machines: Machine[];

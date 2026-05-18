@@ -25,7 +25,7 @@ export default function MesFavoris() {
 	const handleSupprimerFavori = async (laverie: FavoriLaverie) => {
 		try {
 			await removeFavorite(laverie.id);
-			setNotification({ type: 'error', message: 'Laverie retirée des favoris' });
+			setNotification({ type: 'success', message: t('main.mes_favoris.retirer_succes') });
 		} catch (err: any) {
 			setNotification({ type: 'error', message: err?.message || t('main.mes_favoris.erreur_suppression') });
 		}

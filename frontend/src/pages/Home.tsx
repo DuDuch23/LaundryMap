@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 
@@ -45,18 +45,30 @@ export default function Home() {
         if (flashMessageKey) sessionStorage.removeItem('flashMessageKey');
     }, [flashMessageKey, location.pathname, location.state, navigate]);
 
-    const token = localStorage.getItem('token');
-    const isStandardUser = !!token && isStandardUserToken(token);
+    const isStandardUser = useMemo(() => {
+        const token = localStorage.getItem('token');
+        return !!token && isStandardUserToken(token);
+    }, []);
 
-    // ── Géolocalisation à la demande ──────────────────────────────────────────
+    // ── Géolocalisation ───────────────────────────────────────────────────────
     const { userPos, centerPos, setCenterPos, geoRefused, geoLoading, requestGeolocation } = useGeolocation();
     const [mapZoom, setMapZoom] = useState(12);
+
+    // Auto-use geolocation if the user has already granted permission previously
+    useEffect(() => {
+        if (!navigator.geolocation) return;
+        if ('permissions' in navigator) {
+            navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+                if (result.state === 'granted') requestGeolocation();
+            }).catch(() => {});
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
     const {
         favoriteIds,
         pendingIds: favoritePendingIds,
-        refresh: syncFavoriteIdsFromDb,
         toggleFavorite,
         error: favoriteError,
     } = useFavorites();
@@ -107,7 +119,7 @@ export default function Home() {
             const isAlreadyFavorite = favoriteIds.includes(laverie.id);
             const action = await toggleFavorite(laverie.id, !isAlreadyFavorite);
             setNotification({
-                type: action === 'added' ? 'success' : 'error',
+                type: 'success',
                 message: action === 'added'
                     ? t('main.home.favori_ajoute', { nom: laverie.nom })
                     : t('main.home.favori_retire', { nom: laverie.nom }),
@@ -122,6 +134,16 @@ export default function Home() {
 
     const showGeoCta = !searched && !userPos && !geoRefused;
 
+    // Tri : favoris en tête, puis ordre du serveur (distance / nom)
+    const sortedLaveries = useMemo(() => {
+        if (!favoriteIds.length) return laveries;
+        return [...laveries].sort((a, b) => {
+            const aFav = favoriteIds.includes(a.id) ? 0 : 1;
+            const bFav = favoriteIds.includes(b.id) ? 0 : 1;
+            return aFav - bFav;
+        });
+    }, [laveries, favoriteIds]);
+
     return (
         <div className="flex flex-col bg-slate-50 min-h-screen pt-20 w-full">
             {notification && (
@@ -131,23 +153,23 @@ export default function Home() {
                     onClose={() => setNotification(null)}
                 />
             )}
-            <div className="w-full max-w-[1280px] mx-auto flex flex-col xl:flex-row justify-between">
+            <div className="w-full max-w-[1280px] mx-auto flex flex-col justify-between xl:flex-row">
+                <div className='mt-5 rounded-xl overflow-hidden relative w-full'>
+                    {flashMessageKey && (
+                        <div className="mx-5 mt-4 p-3 rounded-xl bg-green-100 text-green-800 text-sm font-medium" role="status" aria-live="polite">
+                            {t(flashMessageKey)}
+                        </div>
+                    )}
 
-                {flashMessageKey && (
-                    <div className="mx-5 mt-4 p-3 rounded-xl bg-green-100 text-green-800 text-sm font-medium" role="status" aria-live="polite">
-                        {t(flashMessageKey)}
-                    </div>
-                )}
+                    {geoRefused && !searched && (
+                        <div className="mx-5 mt-4 flex items-start gap-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-800" role="status">
+                            <svg className="shrink-0 mt-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            <p>{t('main.home.geo_refuse')}</p>
+                        </div>
+                    )}
 
-                {geoRefused && !searched && (
-                    <div className="mx-5 mt-4 flex items-start gap-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-800" role="status">
-                        <svg className="shrink-0 mt-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
-                        </svg>
-                        <p>{t('main.home.geo_refuse')}</p>
-                    </div>
-                )}
-                <div className="mt-5 rounded-xl overflow-hidden relative w-full">
                     <div className="mt-5 relative z-10">
                         <SearchBar
                             value={searchQuery} onChange={handleSearchInput}
@@ -200,25 +222,25 @@ export default function Home() {
                         onGeoClick={requestGeolocation}
                     />
                 </div>
-
-                {/* Résultats */}
-                <div className="mt-6 pb-20 w-full xl:w-1/2">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2>{t('main.home.a_proximite')}</h2>
-                        <Link to="/laveries">{t('main.home.voir_tout')}</Link>
+                <div className='mt-6 pb-20 w-full xl:w-1/2'>
+                    {/* Résultats */}
+                    <div className="px-5 mt-6 pb-20">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2>{t('main.home.a_proximite')}</h2>
+                            <Link to="/laveries">{t('main.home.voir_tout')}</Link>
+                        </div>
+                        <LaverieGrid
+                            laveries={sortedLaveries} loading={loading} searched={searched}
+                            activeLaverieId={activeLaverieId} onCardClick={handleLaverieSelect}
+                            cardRefs={cardRefs} nbFiltresActifs={nbFiltresActifs}
+                            onClearFilters={() => { reinitialiserFiltres(); lancerRecherche(userPos ?? undefined); }}
+                            showFavoriteButton={isStandardUser}
+                            favoriteIds={favoriteIds}
+                            favoritePendingIds={favoritePendingIds}
+                            onFavoriteToggle={handleFavoriteToggle}
+                        />
                     </div>
-                    <LaverieGrid
-                        laveries={laveries} loading={loading} searched={searched}
-                        activeLaverieId={activeLaverieId} onCardClick={handleLaverieSelect}
-                        cardRefs={cardRefs} nbFiltresActifs={nbFiltresActifs}
-                        onClearFilters={() => { reinitialiserFiltres(); lancerRecherche(userPos ?? undefined); }}
-                        showFavoriteButton={isStandardUser}
-                        favoriteIds={favoriteIds}
-                        favoritePendingIds={favoritePendingIds}
-                        onFavoriteToggle={handleFavoriteToggle}
-                    />
                 </div>
-
             </div>
         </div>
     );

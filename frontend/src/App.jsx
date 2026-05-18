@@ -31,7 +31,6 @@ const TableauDeBordPro = React.lazy(() => import('./pages/professionnel/TableauD
 const ModifierLaveriePro = React.lazy(() => import('./pages/professionnel/ModifierLaveriePro'));
 const ProRoute = React.lazy(() => import('./routes/ProRoute'));
 const UserRoute = React.lazy(() => import('./routes/UserRoute'));
-const token = localStorage.getItem('token');
 
 function AuthRoute({ children }) {
   const location = useLocation();

@@ -83,13 +83,13 @@ class ApiLaverieController extends ApiProfilController
         }
 
         $payload = json_decode($request->getContent(), true);
-        $apiKey  = trim($payload['apiKey'] ?? '');
+        $code    = trim($payload['code'] ?? '');
 
-        if ($apiKey === '') {
+        if ($code === '') {
             return $this->json(['message' => 'Le code client WI-LINE est requis.'], 400);
         }
 
-        $centrales = $wiLine->getMachinesParCodeClient($apiKey);
+        $centrales = $wiLine->getMachinesParCodeClient($code);
 
         if ($centrales === null) {
             return $this->json(['message' => 'Code client WI-LINE invalide ou service indisponible.'], 422);
@@ -185,14 +185,21 @@ class ApiLaverieController extends ApiProfilController
             $jourEnum = $jourMapping[$jourLabel] ?? null;
             if ($jourEnum === null) continue;
 
-            $fermeture = new LaverieFermeture();
-            $fermeture->setLaverie($laverie);
-            $fermeture->setJour($jourEnum);
-            $fermeture->setHeureDebut(new \DateTime($horaire['ouverture']));
-            $fermeture->setHeureFin(new \DateTime($horaire['fermeture']));
-            $fermeture->setDateAjout(new \DateTime());
-            $fermeture->setDateModification(new \DateTime());
-            $em->persist($fermeture);
+            // Support both old format (ouverture/fermeture) and new format (plages array)
+            $plages = isset($horaire['plages']) && \is_array($horaire['plages'])
+                ? $horaire['plages']
+                : [['ouverture' => $horaire['ouverture'] ?? '07:00', 'fermeture' => $horaire['fermeture'] ?? '22:00']];
+
+            foreach ($plages as $plage) {
+                $fermeture = new LaverieFermeture();
+                $fermeture->setLaverie($laverie);
+                $fermeture->setJour($jourEnum);
+                $fermeture->setHeureDebut(new \DateTime($plage['ouverture']));
+                $fermeture->setHeureFin(new \DateTime($plage['fermeture']));
+                $fermeture->setDateAjout(new \DateTime());
+                $fermeture->setDateModification(new \DateTime());
+                $em->persist($fermeture);
+            }
         }
 
         // ── Machines ──────────────────────────────────────────────────────────

@@ -38,6 +38,8 @@
     "laverie_card": {
       "disponible": "Disponible",
       "ferme": "Fermé",
+      "ferme_a": "ferme à {{heure}}",
+      "ouvre_a": "ouvre à {{heure}}",
       "voir_detail": "Voir le détail de {{nom}}",
       "ajouter_favori": "Ajouter {{nom}} aux favoris",
       "retirer_favori": "Retirer {{nom}} des favoris"
@@ -214,7 +216,7 @@
       "ou": "ou",
       "erreur_reseau": "Une erreur réseau est survenue. Veuillez vérifier votre connexion et réessayer.",
       "erreur_generique": "Une erreur est survenue. Veuillez réessayer.",
-      "erreur_compte_en_attente": "Votre compte est en attente de validation. Veuillez vérifier votre e-mail pour valider votre compte avant de vous connecter.",
+      "erreur_compte_en_attente": "Connexion impossible. Veuillez réessayer plus tard ou contacter l'administrateur.",
       "erreur_compte_banni": "Votre compte a été banni. Veuillez contacter l'administrateur pour plus d'informations.",
       "erreur_compte_refuse": "Votre compte a été refusé par l'administration. Veuillez contacter l'administrateur pour plus d'informations."
     },
@@ -263,7 +265,6 @@
       "titre": "Ajouter une laverie",
       "sous_titre": "Votre fiche sera soumise à validation avant publication.",
       "retour": "Mes laveries",
-
       "section_informations": "Informations générales",
       "nom_etablissement": "Nom de l'établissement",
       "nom_etablissement_placeholder": "Ex : Laverie du Centre",
@@ -273,7 +274,6 @@
       "contact_email_invalide": "Email invalide.",
       "description": "Description",
       "description_placeholder": "Décrivez votre établissement, ses points forts...",
-
       "section_adresse": "Adresse",
       "section_adresse_sous_titre": "Champs obligatoires",
       "rue": "Rue",
@@ -288,7 +288,6 @@
       "pays": "Pays",
       "pays_placeholder": "France",
       "pays_requis": "Le pays est obligatoire.",
-
       "section_horaires": "Horaires d'ouverture",
       "ouvert": "Ouvert",
       "ferme": "Fermé",
@@ -300,7 +299,6 @@
       "vendredi": "Vendredi",
       "samedi": "Samedi",
       "dimanche": "Dimanche",
-
       "section_equipements": "Équipements & services",
       "equipements": "Équipements",
       "services": "Services proposés",
@@ -326,7 +324,6 @@
       "paiement_app_mobile": "Application mobile",
       "paiement_badge_nfc": "Badge NFC",
       "paiement_pieces": "Pièces uniquement",
-
       "section_wiline": "Centrale WI-LINE",
       "section_wiline_sous_titre": "Optionnel — importe automatiquement la liste des machines",
       "wiline_code_placeholder": "Code client WI-LINE",
@@ -334,7 +331,6 @@
       "wiline_connexion_en_cours": "Connexion...",
       "wiline_succes": "Machines importées avec succès.",
       "wiline_erreur": "Code WI-LINE invalide ou service indisponible.",
-
       "section_machines": "Machines",
       "section_machines_sous_titre": "Ajoutez vos machines manuellement ou via WI-LINE",
       "ajouter_machine": "Ajouter",
@@ -347,7 +343,6 @@
       "machine_type_lave_linge": "Lave-linge",
       "machine_type_seche_linge": "Sèche-linge",
       "machine_type_autre": "Autre",
-
       "annuler": "Annuler",
       "soumettre": "Soumettre pour validation",
       "soumission_en_cours": "Envoi en cours...",
@@ -358,11 +353,16 @@
       "propriete_intellectuelle": "Propriété intellectuelle",
       "mentions_legales": "Mentions légales",
       "partager": "Partager",
-      "partager_aria": "Partager la page"
+      "partager_aria": "Partager la page",
+      "aria_label": "Pied de page",
+      "tagline": "Trouvez la laverie automatique la plus proche.",
+      "copyright": "© 2026 LaundryMap. Tous droits réservés.",
+      "liens_utiles": "Liens utiles"
     },
     "email_verification": {
       "titre_succes": "Vérification réussie !",
       "message_succes": "Votre compte a été validé avec succès. Vous pouvez maintenant vous connecter.",
+      "message_succes_pro": "Votre adresse e-mail a bien été vérifiée. Votre compte professionnel doit maintenant être validé manuellement par un administrateur avant que vous puissiez vous connecter. Vous recevrez un e-mail dès que cette validation aura été effectuée.",
       "bouton_connexion": "Aller à la page de connexion",
       "titre_erreur": "Une erreur est survenue",
       "erreur_invalid_token": "Ce lien de vérification est invalide. Assurez-vous d'avoir cliqué sur le lien le plus récent reçu par e-mail, ou demandez un nouveau lien.",

@@ -225,9 +225,12 @@ class LaverieRepository extends ServiceEntityRepository
             $estOuvert = $this->isOuvertMaintenant($laverie, $jourCourant, $minutesCourant);
 
             $resultats[] = new LaverieRechercheResultat(
-                laverie:    $laverie,
-                distanceKm: $distance,
-                estOuvert:  $estOuvert,
+                laverie:             $laverie,
+                distanceKm:          $distance,
+                estOuvert:           $estOuvert,
+                prochaineFermeture:  $estOuvert  ? $this->getProchaineFermeture($laverie, $jourCourant, $minutesCourant) : null,
+                prochaineOuverture:  !$estOuvert ? $this->getProchaineOuverture($laverie, $jourCourant, $minutesCourant) : null,
+                horairesAujourdhui:  $this->getHorairesAujourdhui($laverie, $jourCourant),
             );
         }
 
@@ -284,6 +287,55 @@ class LaverieRepository extends ServiceEntityRepository
             if ($minutesCourant >= $debut && $minutesCourant <= $fin) return true;
         }
         return false;
+    }
+
+    private function getHorairesAujourdhui(Laverie $laverie, int $jourCourant): array
+    {
+        $plages = [];
+        foreach ($laverie->getFermetures() as $f) {
+            if ($f->getJour()->toIsoNumber() !== $jourCourant) continue;
+            $debut = (int) $f->getHeureDebut()->format('H') * 60 + (int) $f->getHeureDebut()->format('i');
+            $plages[] = ['debut' => $debut, 'label' => $f->getHeureDebut()->format('H:i') . ' - ' . $f->getHeureFin()->format('H:i')];
+        }
+        usort($plages, static fn ($a, $b) => $a['debut'] <=> $b['debut']);
+        return array_column($plages, 'label');
+    }
+
+    private function getProchaineFermeture(Laverie $laverie, int $jourCourant, int $minutesCourant): ?string
+    {
+        foreach ($laverie->getFermetures() as $f) {
+            if ($f->getJour()->toIsoNumber() !== $jourCourant) continue;
+            $debut = (int) $f->getHeureDebut()->format('H') * 60 + (int) $f->getHeureDebut()->format('i');
+            $fin   = (int) $f->getHeureFin()->format('H')   * 60 + (int) $f->getHeureFin()->format('i');
+            if ($minutesCourant >= $debut && $minutesCourant <= $fin) {
+                return $f->getHeureFin()->format('H:i');
+            }
+        }
+        return null;
+    }
+
+    private function getProchaineOuverture(Laverie $laverie, int $jourCourant, int $minutesCourant): ?string
+    {
+        $fermetures = $laverie->getFermetures()->toArray();
+        for ($offset = 0; $offset < 7; $offset++) {
+            $jour    = (($jourCourant - 1 + $offset) % 7) + 1;
+            $minSeuil = $offset === 0 ? $minutesCourant : -1;
+
+            $candidats = [];
+            foreach ($fermetures as $f) {
+                if ($f->getJour()->toIsoNumber() !== $jour) continue;
+                $debut = (int) $f->getHeureDebut()->format('H') * 60 + (int) $f->getHeureDebut()->format('i');
+                if ($debut > $minSeuil) {
+                    $candidats[] = ['debut' => $debut, 'heure' => $f->getHeureDebut()->format('H:i')];
+                }
+            }
+
+            if (!empty($candidats)) {
+                usort($candidats, static fn ($a, $b) => $a['debut'] <=> $b['debut']);
+                return $candidats[0]['heure'];
+            }
+        }
+        return null;
     }
 
     /**

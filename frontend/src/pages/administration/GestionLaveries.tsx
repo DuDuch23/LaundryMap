@@ -3,6 +3,10 @@ import { Link } from 'react-router';
 import { ChevronLeft, ListX, SlidersHorizontal, MoreHorizontal } from 'lucide-react';
 import { fetchAdminLaveries, type FiltresLaveries } from '../../services/request';
 import FilterModal, { type FilterSection, type FilterValues } from '../../components/FilterModal';
+import { resolveUrl } from '../../services/api';
+import { LaverieAdminListSkeleton } from '../../components/administration/AdminSkeletons';
+
+const IMAGE_LAVERIE_PAR_DEFAUT = '/uploads/laveries/default-laundry.jpg';
 
 interface LaveriePro {
     id: number;
@@ -152,13 +156,14 @@ export default function GestionLaveries() {
         setFiltreModalOuverte(false);
     };
 
-    if (chargement && page === 1 && !aDesFiltresActifs) {
-        return <div className="text-center mt-20 font-bold text-[#22ACE2]">Chargement des données...</div>;
-    }
-
     if (erreur) {
         return <div className="text-center mt-20 font-bold text-red-500">{erreur}</div>;
     }
+
+    // Chargement initial : liste vide ET en cours de chargement = on affiche
+    // les skeletons à la place de la liste (mais on garde le header + filtres
+    // pour éviter l'effet "page qui saute")
+    const chargementInitial = chargement && laveries.length === 0;
 
     return (
         <div className="w-full pt-24 px-4 pb-16 font-sans max-w-[stretch]">
@@ -215,22 +220,30 @@ export default function GestionLaveries() {
                     <p className="text-green-500 font-bold text-xl">{enAttenteCount}</p>
                 </div>
 
-                {/* INDICATEUR DE CHARGEMENT */}
-                {chargement && (
-                    <div className="text-center py-4 text-[#22ACE2] font-medium">Chargement...</div>
-                )}
-
                 {/* LISTE DES LAVERIES */}
+                {chargementInitial ? (
+                    <LaverieAdminListSkeleton count={4} />
+                ) : (
                 <div className={`space-y-6 ${chargement ? 'opacity-50' : 'opacity-100'} transition-opacity`}>
                     {laveries.map((laverie) => (
                         <div key={laverie.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm relative">
 
                             <div className="w-full h-40 bg-gray-200 relative">
-                                {laverie.image ? (
-                                    <img src={laverie.image} alt={laverie.nom} className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">Aucune image</div>
-                                )}
+                                <img
+                                    src={resolveUrl(laverie.image || IMAGE_LAVERIE_PAR_DEFAUT)}
+                                    alt={laverie.nom}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        // Si l'image de la laverie est cassee/introuvable,
+                                        // on bascule sur l'image par defaut.
+                                        const target = e.currentTarget;
+                                        if (!target.src.endsWith(IMAGE_LAVERIE_PAR_DEFAUT)) {
+                                            target.src = resolveUrl(IMAGE_LAVERIE_PAR_DEFAUT);
+                                        }
+                                    }}
+                                />
+                                <div className="absolute inset-0 bg-black/15" aria-hidden="true" />
+
 
                                 <div className="absolute top-3 left-3 right-3 flex justify-between items-center">
                                     <span className={`px-3 py-1 text-xs rounded-full border font-medium shadow-sm ${getBadgeStyle(laverie.statut)}`}>
@@ -261,6 +274,7 @@ export default function GestionLaveries() {
                         </div>
                     ))}
                 </div>
+                )}
 
                 {/* PAGINATION */}
                 {pagination && (

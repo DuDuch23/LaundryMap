@@ -469,7 +469,6 @@ export async function getMesLaveries(): Promise<MesLaveriesData> {
     }
 
     const data = await response.json();
-    console.log("Laveries récupérées:", data);
     return data as MesLaveriesData;
 }
 

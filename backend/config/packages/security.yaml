@@ -55,8 +55,6 @@ security:
         - { path: ^/api/methodes-paiement, roles: PUBLIC_ACCESS }
         - { path: ^/api/professionnel, roles: ROLE_PROFESSIONNEL }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
-        - { path: ^/api/admin/utilisateurs, roles: PUBLIC_ACCESS }  # ← à supprimer
-        - { path: ^/api/admin, roles: ROLE_ADMIN }
 
 
 when@test:
