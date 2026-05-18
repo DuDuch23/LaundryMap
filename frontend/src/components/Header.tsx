@@ -69,7 +69,7 @@ export default function Header() {
 
     return (
         <>
-            <header className="fixed w-full z-50 bg-[#14A8DE]" role="banner" aria-label={t('main.header.aria_label')}>
+            <header className="fixed w-full z-4000 bg-[#14A8DE]" role="banner" aria-label={t('main.header.aria_label')}>
                 <nav className="flex items-center justify-between">
 
                     <Link to="/" className="flex items-center gap-2">

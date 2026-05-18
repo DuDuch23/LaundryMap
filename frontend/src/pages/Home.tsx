@@ -51,17 +51,12 @@ export default function Home() {
     }, []);
 
     // ── Géolocalisation ───────────────────────────────────────────────────────
-    const { userPos, centerPos, setCenterPos, geoRefused, geoLoading, requestGeolocation } = useGeolocation();
+    const { userPos, centerPos, setCenterPos, geoRefused, requestGeolocation } = useGeolocation();
     const [mapZoom, setMapZoom] = useState(12);
 
-    // Auto-use geolocation if the user has already granted permission previously
+    // Demande la position au chargement — le navigateur affiche sa popup native si besoin
     useEffect(() => {
-        if (!navigator.geolocation) return;
-        if ('permissions' in navigator) {
-            navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-                if (result.state === 'granted') requestGeolocation();
-            }).catch(() => {});
-        }
+        requestGeolocation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -139,7 +134,7 @@ export default function Home() {
         }
     };
 
-    const showGeoCta = !searched && !userPos && !geoRefused;
+
 
     // Tri : favoris en tête, puis ordre du serveur (distance / nom)
     const sortedLaveries = useMemo(() => {
@@ -224,9 +219,7 @@ export default function Home() {
                         centerPos={centerPos} zoom={mapZoom} userPos={userPos}
                         laveries={laveries} activeLaverieId={activeLaverieId}
                         onMarkerClick={handleMarkerClick}
-                        showGeoCta={showGeoCta}
-                        geoLoading={geoLoading}
-                        onGeoClick={requestGeolocation}
+
                         searchRadius={filtres.rayon}
                         searched={searched}
                         filterSlot={

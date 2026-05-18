@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { Maximize2, Minimize2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -59,17 +59,14 @@ function FullscreenSyncController() {
 
 // ─── Contrôleur d'interaction ─────────────────────────────────────────────────
 
-function MapInteractionController({ onSingleTouch }: { onSingleTouch: () => void }) {
+function MapInteractionController({ isFullscreen }: { isFullscreen: boolean }) {
     const map = useMap();
 
     useEffect(() => {
         const container = map.getContainer();
         const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-        // Toujours actif : Shift+molette ou pincement trackpad (ctrlKey+wheel)
-        // Doit être en dehors du if/else car certains PC Windows rapportent maxTouchPoints > 0
-        // même sans écran tactile (drivers, moniteurs hybrides), ce qui faisait entrer dans
-        // la branche touch et ne jamais attacher ce handler.
+        // Shift+molette / pincement trackpad — toujours actif
         const onWheel = (e: WheelEvent) => {
             if (!e.shiftKey && !e.ctrlKey) return;
             e.preventDefault();
@@ -78,6 +75,18 @@ function MapInteractionController({ onSingleTouch }: { onSingleTouch: () => void
         container.addEventListener('wheel', onWheel, { passive: false });
 
         if (isTouch) {
+            if (isFullscreen) {
+                // Plein écran : 1 doigt = déplacer carte, 2 doigts = pinch zoom (Leaflet natif)
+                container.style.touchAction = 'none';
+                map.dragging.enable();
+
+                return () => {
+                    container.removeEventListener('wheel', onWheel);
+                    container.style.touchAction = '';
+                };
+            }
+
+            // Normal : 1 doigt = scroll page, 2 doigts = déplacer carte
             container.style.touchAction = 'pan-y';
             map.dragging.disable();
 
@@ -85,17 +94,12 @@ function MapInteractionController({ onSingleTouch }: { onSingleTouch: () => void
                 if (e.touches.length >= 2) {
                     e.preventDefault();
                     map.dragging.enable();
-                } else {
-                    onSingleTouch();
                 }
             };
-
             const onTouchEnd = (e: TouchEvent) => {
                 if (e.touches.length < 2) map.dragging.disable();
             };
-
-            // Sur les appareils hybrides (PC tactile), map.dragging.disable() bloque aussi
-            // le drag souris. On le réactive dès qu'un vrai clic souris est détecté.
+            // Appareils hybrides : réactiver le drag pour la souris
             const onMouseDown = () => {
                 if (!map.dragging.enabled()) map.dragging.enable();
             };
@@ -117,7 +121,7 @@ function MapInteractionController({ onSingleTouch }: { onSingleTouch: () => void
         }
 
         return () => container.removeEventListener('wheel', onWheel);
-    }, [map, onSingleTouch]);
+    }, [map, isFullscreen]);
 
     return null;
 }
@@ -131,9 +135,6 @@ interface Props {
     laveries: Laverie[];
     activeLaverieId: number | null;
     onMarkerClick: (l: Laverie) => void;
-    showGeoCta?: boolean;
-    geoLoading?: boolean;
-    onGeoClick?: () => void;
     searchRadius?: number;
     searched?: boolean;
     filterSlot?: React.ReactNode;
@@ -143,15 +144,11 @@ interface Props {
 
 export default function LaverieMap({
     centerPos, zoom, userPos, laveries, activeLaverieId, onMarkerClick,
-    showGeoCta = false, geoLoading = false, onGeoClick,
     searchRadius = 10, searched = false, filterSlot,
 }: Props) {
     const { t } = useTranslation();
     const containerRef = useRef<HTMLDivElement>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
-    const [touchHint, setTouchHint] = useState(false);
-    const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
     useEffect(() => {
         const onChange = () => setIsFullscreen(!!document.fullscreenElement);
         document.addEventListener('fullscreenchange', onChange);
@@ -165,16 +162,6 @@ export default function LaverieMap({
             document.exitFullscreen();
         }
     };
-
-    const handleSingleTouch = useCallback(() => {
-        setTouchHint(true);
-        if (hintTimer.current) clearTimeout(hintTimer.current);
-        hintTimer.current = setTimeout(() => setTouchHint(false), 2000);
-    }, []);
-
-    useEffect(() => () => {
-        if (hintTimer.current) clearTimeout(hintTimer.current);
-    }, []);
 
     const laveriesAvecCoords = laveries.filter((l) => l.latitude && l.longitude);
 
@@ -192,7 +179,7 @@ export default function LaverieMap({
                 zoomControl={false}
                 scrollWheelZoom={false}
             >
-                <MapInteractionController onSingleTouch={handleSingleTouch} />
+                <MapInteractionController isFullscreen={isFullscreen} />
                 <FullscreenSyncController />
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -273,33 +260,6 @@ export default function LaverieMap({
                     : <Maximize2 size={16} aria-hidden="true" />
                 }
             </button>
-
-            {/* Hint tactile : 2 doigts pour déplacer (mobile/tablette) */}
-            {touchHint && (
-                <div className="absolute inset-0 z-[450] flex items-center justify-center pointer-events-none">
-                    <div className="bg-black/60 text-white text-sm font-medium rounded-xl px-4 py-2.5 backdrop-blur-sm shadow-lg">
-                        {t('main.laverie_map.deux_doigts')}
-                    </div>
-                </div>
-            )}
-
-            {/* Bouton CTA géolocalisation — masqué pendant le chargement */}
-            {showGeoCta && !geoLoading && (
-                <button
-                    type="button"
-                    onClick={onGeoClick}
-                    className="absolute bottom-7 right-3 z-[400] flex items-center gap-3 px-4 py-3 rounded-full bg-[#14A8DE] shadow-lg hover:bg-[#119ac8] active:scale-[.99] transition-all group"
-                >
-                    <span className="shrink-0 w-9 h-9 rounded-full bg-white/10 flex items-center justify-center transition-colors" aria-hidden="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
-                            <path d="M7.425 13.5L5.2875 8.2125L0 6.075V5.025L13.5 0L8.475 13.5H7.425ZM7.9125 10.725L10.95 2.55L2.775 5.5875L6.45 7.05L7.9125 10.725Z" fill="white" className="group-hover:fill-white" />
-                        </svg>
-                    </span>
-                    <span className="text-sm font-semibold text-white transition-colors">
-                        {t('main.home.utiliser_position')}
-                    </span>
-                </button>
-            )}
 
             {/* Badge position détectée */}
             {userPos && (

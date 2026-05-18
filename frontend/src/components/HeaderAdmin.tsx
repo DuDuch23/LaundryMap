@@ -51,7 +51,7 @@ export default function HeaderAdmin() {
 
     return (
         <>
-            <header className="fixed w-full z-50 bg-[#14A8DE]">
+            <header className="fixed w-full z-4000 bg-[#14A8DE]">
                 <nav className='flex items-center justify-between'>
 
                     <Link to="/" className='flex items-center gap-2'>
