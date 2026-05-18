@@ -3,7 +3,7 @@ import L from 'leaflet';
 import { ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
-import { Circle, MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import { Circle, MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import type { Laverie, Position } from '../../types/Laverie';
 import RecenterMap from './RecenterMap';
 import ItineraireButton from './ItineraireButton';
