@@ -227,3 +227,8 @@ body {
     @apply font-sans;
   }
 }
+
+.leaflet-container a{
+  color: inherit;
+  text-decoration: none;
+}

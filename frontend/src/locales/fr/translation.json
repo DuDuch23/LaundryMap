@@ -42,7 +42,8 @@
       "ouvre_a": "ouvre à {{heure}}",
       "voir_detail": "Voir le détail de {{nom}}",
       "ajouter_favori": "Ajouter {{nom}} aux favoris",
-      "retirer_favori": "Retirer {{nom}} des favoris"
+      "retirer_favori": "Retirer {{nom}} des favoris",
+      "voir_fiche": "Voir la fiche"
     },
     "search_bar": {
       "placeholder": "Rechercher par ville, code postal, adresse…",

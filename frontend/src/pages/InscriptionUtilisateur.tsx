@@ -222,6 +222,9 @@ export default function RegisterUser() {
           onChange={handleChangeEmail}
           placeholder={t("main.inscription_utilisateur.placeholder_email")}
           error={errors.email}
+          autoCorrect="off"
+          autoCapitalize="none"
+          spellCheck={false}
         />
 
         <AccessibleInput

@@ -165,6 +165,9 @@ export default function PageConnexion() {
             onChange={(e: any) => setEmail(e.target.value)}
             placeholder={"Ex: jean.dupont@email.com"}
             error={errors.email}
+            autoCorrect="off"
+            autoCapitalize="none"
+            spellCheck={false}
           />
         </div>
 

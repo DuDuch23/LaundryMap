@@ -91,8 +91,9 @@ export function AccessibleInput({
   required = false,
   disabled = false,
   error,
-  maxLength,
+  maxLength = undefined,
   children = null,
+  ...rest
 }) {
   const isCheckbox = type === 'checkbox';
 
@@ -168,6 +169,7 @@ export function AccessibleInput({
         aria-required={required}
         aria-describedby={error ? `${id}-error` : undefined}
         aria-invalid={error ? 'true' : 'false'}
+        {...rest}
         className={[
           'w-full max-w-[stretch] rounded-lg border bg-white px-3 py-2.5',
           'text-sm text-gray-900 placeholder:text-gray-400',

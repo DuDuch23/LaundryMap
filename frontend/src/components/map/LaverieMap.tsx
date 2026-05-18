@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { ArrowRight } from 'lucide-react';
+import { Maximize2, Minimize2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { Circle, MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
@@ -44,6 +44,18 @@ const userIcon = L.divIcon({
     iconSize: [16, 16],
     iconAnchor: [8, 8],
 });
+
+function FullscreenSyncController() {
+    const map = useMap();
+    useEffect(() => {
+        const onFullscreenChange = () => {
+            setTimeout(() => map.invalidateSize(), 100);
+        };
+        document.addEventListener('fullscreenchange', onFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+    }, [map]);
+    return null;
+}
 
 // ─── Contrôleur d'interaction ─────────────────────────────────────────────────
 
@@ -122,6 +134,9 @@ interface Props {
     showGeoCta?: boolean;
     geoLoading?: boolean;
     onGeoClick?: () => void;
+    searchRadius?: number;
+    searched?: boolean;
+    filterSlot?: React.ReactNode;
 }
 
 // ─── Composant ────────────────────────────────────────────────────────────────
@@ -129,10 +144,27 @@ interface Props {
 export default function LaverieMap({
     centerPos, zoom, userPos, laveries, activeLaverieId, onMarkerClick,
     showGeoCta = false, geoLoading = false, onGeoClick,
+    searchRadius = 10, searched = false, filterSlot,
 }: Props) {
     const { t } = useTranslation();
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [isFullscreen, setIsFullscreen] = useState(false);
     const [touchHint, setTouchHint] = useState(false);
     const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => {
+        const onChange = () => setIsFullscreen(!!document.fullscreenElement);
+        document.addEventListener('fullscreenchange', onChange);
+        return () => document.removeEventListener('fullscreenchange', onChange);
+    }, []);
+
+    const toggleFullscreen = () => {
+        if (!document.fullscreenElement) {
+            containerRef.current?.requestFullscreen();
+        } else {
+            document.exitFullscreen();
+        }
+    };
 
     const handleSingleTouch = useCallback(() => {
         setTouchHint(true);
@@ -148,7 +180,8 @@ export default function LaverieMap({
 
     return (
         <div
-            className="mt-5 relative w-full h-[260px] md:h-[380px] lg:h-[800px] max-h-[65vh]"
+            ref={containerRef}
+            className="mt-5 relative w-full h-[500px] md:h-[500px] lg:h-[800px] max-h-[65vh]"
             role="region"
             aria-label={t('main.laverie_map.aria_label')}
         >
@@ -160,6 +193,7 @@ export default function LaverieMap({
                 scrollWheelZoom={false}
             >
                 <MapInteractionController onSingleTouch={handleSingleTouch} />
+                <FullscreenSyncController />
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -169,16 +203,18 @@ export default function LaverieMap({
 
                 {/* Position utilisateur */}
                 {userPos && (
-                    <>
-                        <Marker position={[userPos.lat, userPos.lng]} icon={userIcon}>
-                            <Popup>{t('main.laverie_map.vous_etes_ici')}</Popup>
-                        </Marker>
-                        <Circle
-                            center={[userPos.lat, userPos.lng]}
-                            radius={500}
-                            pathOptions={{ color: '#14A8DE', fillColor: '#14A8DE', fillOpacity: 0.08, weight: 1.5 }}
-                        />
-                    </>
+                    <Marker position={[userPos.lat, userPos.lng]} icon={userIcon}>
+                        <Popup>{t('main.laverie_map.vous_etes_ici')}</Popup>
+                    </Marker>
+                )}
+
+                {/* Cercle rayon de recherche */}
+                {searched && (
+                    <Circle
+                        center={[centerPos.lat, centerPos.lng]}
+                        radius={searchRadius * 1000}
+                        pathOptions={{ color: '#14A8DE', fillColor: '#14A8DE', fillOpacity: 0.15, weight: 1.5, dashArray: '6 4' }}
+                    />
                 )}
 
                 {/* Marqueurs laveries */}
@@ -209,14 +245,34 @@ export default function LaverieMap({
                             <Link
                                 to={`/laveries/${l.id}`}
                                 aria-label={t('main.laverie_card.voir_detail', { nom: l.nom })}
-                                className="block mt-3 text-xs font-semibold text-[#14A8DE] hover:text-[#119ac8] transition-colors"
+                                className="mt-3 flex items-center justify-center gap-1 w-auto px-3 py-2 rounded-lg bg-[#14A8DE] text-white text-md font-semibold hover:bg-[#119ac8] transition-colors"
                             >
-                                Voir la fiche
+                                {t('main.laverie_card.voir_fiche')}
                             </Link>
                         </Popup>
                     </Marker>
                 ))}
             </MapContainer>
+
+            {/* Filtres en overlay (visible uniquement en plein écran) */}
+            {isFullscreen && filterSlot && (
+                <div className="absolute top-3 left-3 z-[400] w-72 max-h-[calc(100vh-4rem)] overflow-y-auto">
+                    {filterSlot}
+                </div>
+            )}
+
+            {/* Bouton plein écran */}
+            <button
+                type="button"
+                onClick={toggleFullscreen}
+                aria-label={isFullscreen ? 'Quitter le plein écran' : 'Plein écran'}
+                className="absolute top-3 right-3 z-[400] flex items-center justify-center w-9 h-9 rounded-lg bg-white/90 backdrop-blur-sm shadow-md border border-white/60 text-slate-700 hover:bg-white hover:text-slate-900 transition-all"
+            >
+                {isFullscreen
+                    ? <Minimize2 size={16} aria-hidden="true" />
+                    : <Maximize2 size={16} aria-hidden="true" />
+                }
+            </button>
 
             {/* Hint tactile : 2 doigts pour déplacer (mobile/tablette) */}
             {touchHint && (
@@ -227,26 +283,20 @@ export default function LaverieMap({
                 </div>
             )}
 
-            {/* Bouton CTA géolocalisation — superposé sur la carte */}
-            {showGeoCta && (
+            {/* Bouton CTA géolocalisation — masqué pendant le chargement */}
+            {showGeoCta && !geoLoading && (
                 <button
                     type="button"
                     onClick={onGeoClick}
-                    disabled={geoLoading}
-                    aria-busy={geoLoading}
-                    className="absolute bottom-7 right-3 z-[400] flex items-center gap-3 px-4 py-3 rounded-full bg-[#14A8DE] shadow-lg hover:bg-[#119ac8] active:scale-[.99] transition-all group disabled:opacity-60 disabled:cursor-wait"
+                    className="absolute bottom-7 right-3 z-[400] flex items-center gap-3 px-4 py-3 rounded-full bg-[#14A8DE] shadow-lg hover:bg-[#119ac8] active:scale-[.99] transition-all group"
                 >
-                    <span className="shrink-0 w-9 h-9 rounded-full bg-white/10 flex items-center justify-center  transition-colors" aria-hidden="true">
-                        {geoLoading ? (
-                            <div className="w-4 h-4 border-2 border-[#14A8DE] border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                <path d="M7.425 13.5L5.2875 8.2125L0 6.075V5.025L13.5 0L8.475 13.5H7.425ZM7.9125 10.725L10.95 2.55L2.775 5.5875L6.45 7.05L7.9125 10.725Z" fill="white" className="group-hover:fill-white" />
-                            </svg>
-                        )}
+                    <span className="shrink-0 w-9 h-9 rounded-full bg-white/10 flex items-center justify-center transition-colors" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path d="M7.425 13.5L5.2875 8.2125L0 6.075V5.025L13.5 0L8.475 13.5H7.425ZM7.9125 10.725L10.95 2.55L2.775 5.5875L6.45 7.05L7.9125 10.725Z" fill="white" className="group-hover:fill-white" />
+                        </svg>
                     </span>
                     <span className="text-sm font-semibold text-white transition-colors">
-                        {geoLoading ? t('main.home.geo_chargement') : t('main.home.utiliser_position')}
+                        {t('main.home.utiliser_position')}
                     </span>
                 </button>
             )}

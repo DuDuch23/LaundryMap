@@ -96,9 +96,16 @@ export default function Home() {
     const [showFilters, setShowFilters] = useState(false);
     const cardRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
+    // Clic sur une card : fly-to + scroll liste
     const handleLaverieSelect = (l: Laverie) => {
         setActiveLaverieId(l.id);
         if (l.latitude && l.longitude) { setCenterPos({ lat: l.latitude, lng: l.longitude }); setMapZoom(16); }
+        cardRefs.current[l.id]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    };
+
+    // Clic sur un marker : pas de fly-to, juste highlight + scroll liste
+    const handleMarkerClick = (l: Laverie) => {
+        setActiveLaverieId(l.id);
         cardRefs.current[l.id]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     };
 
@@ -216,13 +223,46 @@ export default function Home() {
                     <LaverieMap
                         centerPos={centerPos} zoom={mapZoom} userPos={userPos}
                         laveries={laveries} activeLaverieId={activeLaverieId}
-                        onMarkerClick={handleLaverieSelect}
+                        onMarkerClick={handleMarkerClick}
                         showGeoCta={showGeoCta}
                         geoLoading={geoLoading}
                         onGeoClick={requestGeolocation}
+                        searchRadius={filtres.rayon}
+                        searched={searched}
+                        filterSlot={
+                            <div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowFilters((v) => !v)}
+                                    aria-expanded={showFilters}
+                                    aria-label={t('main.home.filtres')}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium shadow transition-all ${nbFiltresActifs > 0 ? 'bg-[#14A8DE] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                                >
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                                        <line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/>
+                                    </svg>
+                                    {t('main.home.filtres')}
+                                    {nbFiltresActifs > 0 && <span className="bg-white/30 text-white rounded-full px-1.5 py-0.5 text-xs font-bold leading-none">{nbFiltresActifs}</span>}
+                                </button>
+                                {showFilters && (
+                                    <div className="mt-2">
+                                        <FilterPanel
+                                            filtres={filtres}
+                                            onHoraireChange={setFiltreHoraire}
+                                            onToggleServiceId={toggleServiceId}
+                                            onTogglePaiementId={togglePaiementId}
+                                            onRayonChange={setFiltreRayon}
+                                            onReinitialiser={reinitialiserFiltres}
+                                            onAppliquer={() => { setShowFilters(false); lancerRecherche(userPos ?? undefined); }}
+                                            nbActifs={nbFiltresActifs}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        }
                     />
                 </div>
-                <div className='mt-6 pb-20 w-full xl:w-1/2'>
+                <div className='mt-6 w-full xl:w-1/2 xl:overflow-y-auto xl:max-h-[calc(100vh-5rem)] xl:sticky xl:top-20'>
                     {/* Résultats */}
                     <div className="px-5 mt-6 pb-20">
                         <div className="flex items-center justify-between mb-4">

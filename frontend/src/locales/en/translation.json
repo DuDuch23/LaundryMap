@@ -42,7 +42,8 @@
       "ouvre_a": "opens at {{heure}}",
       "voir_detail": "View details for {{nom}}",
       "ajouter_favori": "Add {{nom}} to favourites",
-      "retirer_favori": "Remove {{nom}} from favourites"
+      "retirer_favori": "Remove {{nom}} from favourites",
+      "voir_fiche": "View details"
     },
     "search_bar": {
       "placeholder": "Search by city, postcode, address…",
