@@ -23,6 +23,7 @@ const AjoutLaverie = React.lazy(() => import('./pages/AjoutLaverie/AjoutLaverie'
 const Laveries = React.lazy(() => import('./pages/Laveries'));
 
 const MesFavoris = React.lazy(() => import('./pages/MesFavoris'));
+const MesAvis = React.lazy(() => import('./pages/MesAvis'));
 const FicheLaverie = React.lazy(() => import('./pages/FicheLaverie'));
 const TermsOfUse = React.lazy(() => import('./pages/TermsOfUse'));
 const LegalNotice = React.lazy(() => import('./pages/LegalNotice'));
@@ -102,6 +103,7 @@ function App() {
               <Route path="/propriete-intellectuelle" element={<ProprieteIntellectuelle />} />
               <Route element={<UserRoute />}>
                 <Route path="/mes-favoris" element={<MesFavoris />} />
+                <Route path="/mes-avis" element={<MesAvis />} />
               </Route>
 
             </Route>

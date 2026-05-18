@@ -265,7 +265,7 @@ class ApiUtilisateurController extends AbstractController
             $historique->setMotifAction($motif ?: 'Compte vérifié et validé.');
 
             //ENVOIE DU MAIL EN CAS DE VALIDATION
-            $frontendBaseUrl = $this->getParameter('app.frontend_url');
+            $frontendBaseUrl = rtrim($this->getParameter('app.frontend_url'), '/');
             $email = (new TemplatedEmail())
                 ->from($this->getParameter('mailer_from'))
                 ->to($user->getEmail())
@@ -320,7 +320,7 @@ class ApiUtilisateurController extends AbstractController
     #[IsGranted('PUBLIC_ACCESS')]
     #[Route('/api/verify-email/{token}', name: 'api_verify_email', methods: ['GET'])]
     public function verifyUserEmail(string $token, EmailVerificationTokenRepository $tokenRepository, EntityManagerInterface $em): Response {
-        $frontendBaseUrl = $this->getParameter('app.frontend_url');
+        $frontendBaseUrl = rtrim($this->getParameter('app.frontend_url'), '/');
 
         $verificationToken = $tokenRepository->findOneBy(['token' => $token]);
 

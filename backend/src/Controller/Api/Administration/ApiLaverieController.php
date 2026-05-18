@@ -3,6 +3,8 @@
 namespace App\Controller\Api\Administration;
 
 use App\Entity\LaverieHistoriqueInteraction;
+use App\Entity\Utilisateur;
+use App\Repository\LaverieNoteRepository;
 use App\Repository\LaverieRepository;
 use App\Service\Professionnel\ProfessionnelLaverieFormatterService;
 use App\Enum\StatutLaverieEnum;
@@ -25,6 +27,7 @@ class ApiLaverieController extends AbstractController
         int $id,
         Request $request,
         LaverieRepository $laverieRepository,
+        LaverieNoteRepository $laverieNoteRepository,
         ProfessionnelLaverieFormatterService $formatter,
     ): JsonResponse {
         $laverie = $laverieRepository->find($id);
@@ -44,6 +47,19 @@ class ApiLaverieController extends AbstractController
 
         if ($mainImage === null && $laverie->getLogo() !== null && $formatter->isProjectManagedMediaPath($laverie->getLogo()->getEmplacement())) {
             $mainImage = $formatter->toPublicMediaUrl($laverie->getLogo()->getEmplacement(), $request);
+        }
+
+        $monAvis = null;
+        $currentUser = $this->getUser();
+        if ($currentUser instanceof Utilisateur) {
+            $userNote = $laverieNoteRepository->findOneBy(['laverie' => $laverie, 'utilisateur' => $currentUser]);
+            if ($userNote) {
+                $monAvis = [
+                    'id'          => $userNote->getId(),
+                    'note'        => $userNote->getNote(),
+                    'commentaire' => $userNote->getCommentaire(),
+                ];
+            }
         }
 
         return $this->json([
@@ -67,6 +83,7 @@ class ApiLaverieController extends AbstractController
             'horaires' => $horaires,
             'commentairesCount' => $formatter->countLaverieCommentaires($laverie),
             'noteMoyenne' => $formatter->getLaverieNoteMoyenne($laverie),
+            'monAvis' => $monAvis,
             'professionnel' => [
                 'id' => $laverie->getProfessionnel()?->getId(),
                 'nom' => $laverie->getProfessionnel()?->getUtilisateur()?->getNom(),
@@ -286,7 +303,7 @@ class ApiLaverieController extends AbstractController
 
         try {
             if ($action === 'accepter') {
-                $frontendBaseUrl = $this->getParameter('app.frontend_url');
+                $frontendBaseUrl = rtrim($this->getParameter('app.frontend_url'), '/');
                 $email = (new TemplatedEmail())
                     ->from($this->getParameter('mailer_from'))
                     ->to($user->getEmail())

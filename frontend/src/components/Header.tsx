@@ -93,6 +93,7 @@ export default function Header() {
                                     </>
                                 )}
                                 {isStandardUser && <li><NavLink to="/mes-favoris" className={navLinkClass}>{t('main.header.mes_favoris')}</NavLink></li>}
+                                {isStandardUser && <li><NavLink to="/mes-avis" className={navLinkClass}>{t('main.header.mes_avis')}</NavLink></li>}
                                 <li><NavLink to="/profil" className={navLinkClass}>{t('main.header.profil')}</NavLink></li>
                                 <li>
                                     <button type="button" onClick={handleLogout} className="px-4 py-2 rounded-lg text-sm font-semibold text-red-500 bg-white cursor-pointer">
@@ -179,6 +180,11 @@ export default function Header() {
                                         {isStandardUser && (
                                             <li className="border-b border-gray-100">
                                                 <NavLink to="/mes-favoris" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>{t('main.header.mes_favoris')}</NavLink>
+                                            </li>
+                                        )}
+                                        {isStandardUser && (
+                                            <li className="border-b border-gray-100">
+                                                <NavLink to="/mes-avis" className={mobileNavLinkClass} onClick={() => setIsOpen(false)}>{t('main.header.mes_avis')}</NavLink>
                                             </li>
                                         )}
                                         <li className="border-b border-gray-100">

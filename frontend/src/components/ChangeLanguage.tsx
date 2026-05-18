@@ -5,7 +5,6 @@ import {
     SelectContent,
     SelectItem,
     SelectTrigger,
-    SelectValue,
 } from '@/components/ui/select';
 
 type ChangeLanguageProps = {
@@ -34,7 +33,11 @@ export default function ChangeLanguage({ langues, selectedLangueId, onSelectLang
                 className="w-auto min-w-32 text-sm text-slate-700"
                 aria-label={t('main.change_language.aria_label')}
             >
-                <SelectValue placeholder={t('main.profil.langue')} />
+                <span className="flex flex-1 text-left">
+                    {selectedLangueId !== ''
+                        ? langues.find((l) => l.id === selectedLangueId)?.nom
+                        : <span className="text-muted-foreground">{t('main.profil.langue')}</span>}
+                </span>
             </SelectTrigger>
             <SelectContent>
                 {langues.map((langue) => (
