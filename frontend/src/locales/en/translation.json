@@ -265,7 +265,6 @@
       "titre": "Add a laundromat",
       "sous_titre": "Your listing will be submitted for validation before publication.",
       "retour": "My laundromats",
-
       "section_informations": "General information",
       "nom_etablissement": "Establishment name",
       "nom_etablissement_placeholder": "Ex: City Center Laundry",
@@ -275,7 +274,6 @@
       "contact_email_invalide": "Invalid email address.",
       "description": "Description",
       "description_placeholder": "Describe your establishment and its highlights...",
-
       "section_adresse": "Address",
       "section_adresse_sous_titre": "Required fields",
       "rue": "Street",
@@ -290,7 +288,6 @@
       "pays": "Country",
       "pays_placeholder": "France",
       "pays_requis": "Country is required.",
-
       "section_horaires": "Opening hours",
       "ouvert": "Open",
       "ferme": "Closed",
@@ -302,7 +299,6 @@
       "vendredi": "Friday",
       "samedi": "Saturday",
       "dimanche": "Sunday",
-
       "section_equipements": "Equipment & services",
       "equipements": "Equipment",
       "services": "Services offered",
@@ -328,7 +324,6 @@
       "paiement_app_mobile": "Mobile app",
       "paiement_badge_nfc": "NFC badge",
       "paiement_pieces": "Coins only",
-
       "section_wiline": "WI-LINE hub",
       "section_wiline_sous_titre": "Optional — automatically imports the machine list",
       "wiline_code_placeholder": "WI-LINE client code",
@@ -336,7 +331,6 @@
       "wiline_connexion_en_cours": "Connecting...",
       "wiline_succes": "Machines imported successfully.",
       "wiline_erreur": "Invalid WI-LINE code or service unavailable.",
-
       "section_machines": "Machines",
       "section_machines_sous_titre": "Add your machines manually or via WI-LINE",
       "ajouter_machine": "Add",
@@ -349,7 +343,6 @@
       "machine_type_lave_linge": "Washing machine",
       "machine_type_seche_linge": "Dryer",
       "machine_type_autre": "Other",
-
       "annuler": "Cancel",
       "soumettre": "Submit for validation",
       "soumission_en_cours": "Submitting...",
@@ -360,7 +353,11 @@
       "propriete_intellectuelle": "Intellectual Property",
       "mentions_legales": "Legal Notice",
       "partager": "Share",
-      "partager_aria": "Share this page"
+      "partager_aria": "Share this page",
+      "aria_label": "Footer",
+      "tagline": "Find the nearest laundromat.",
+      "copyright": "© 2026 LaundryMap. All rights reserved.",
+      "liens_utiles": "Useful links"
     },
     "email_verification": {
       "titre_succes": "Verification successful!",
