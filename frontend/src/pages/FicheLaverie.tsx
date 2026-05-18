@@ -271,7 +271,7 @@ export default function FicheLaverie() {
 
 	if (loading) {
 		return (
-			<div className="min-h-screen bg-slate-50 px-5 pb-16 pt-20 lg:px-0">
+			<div className="min-h-screen bg-slate-50 px-5 pb-16 pt-20 lg:px-5">
 				<div className="mx-auto max-w-[1280px] overflow-hidden rounded-[28px] bg-white shadow-sm" aria-busy="true" aria-live="polite" role="status">
 					<div className="animate-pulse">
 						<div className="h-72 bg-slate-200 sm:h-[28rem]" />
@@ -302,7 +302,7 @@ export default function FicheLaverie() {
 		}
 
 		return (
-			<div className="min-h-screen w-full bg-slate-50 px-5 pt-20 lg:px-0">
+			<div className="min-h-screen w-full bg-slate-50 px-5 pt-20 lg:px-5">
 				<div className="mx-auto max-w-[1280px] rounded-2xl bg-rose-100 px-4 py-3 text-rose-700" role="alert" aria-live="assertive">
 					{fullMessage}
 				</div>
@@ -312,7 +312,7 @@ export default function FicheLaverie() {
 
 	if (!laverie) {
 		return (
-			<div className="min-h-screen w-full bg-slate-50 px-5 pt-20 lg:px-0">
+			<div className="min-h-screen w-full bg-slate-50 px-5 pt-20 lg:px-5">
 				<div className="mx-auto max-w-[1280px] rounded-[28px] bg-white p-8 text-center shadow-sm">
 					<p className="text-base font-semibold text-slate-900">Laverie introuvable.</p>
 					<p className="mt-2 text-sm text-slate-500">Cette fiche n’est plus disponible.</p>
@@ -323,9 +323,9 @@ export default function FicheLaverie() {
 
 	return (
 		<>
-		<div className="bg-slate-50 px-5 pb-16 pt-16 sm:pt-20 lg:px-0 lg:pt-24">
+		<div className="bg-slate-50 px-5 pb-16 pt-16 sm:pt-20 lg:px-5 lg:pt-24">
 			<SkipLink />
-			<main id="main-content" role="main" tabIndex={-1} className="mx-auto max-w-[1280px]">
+			<main id="main-content" role="main" tabIndex={-1} className="mx-auto max-w-[1280px] pt-10">
 				<section className="overflow-hidden rounded-[28px] bg-white shadow-sm" aria-labelledby="fiche-laverie-titre">
 					<div className="grid lg:grid-cols-[1.35fr_0.95fr]">
 						<div className="relative min-h-[22rem] bg-slate-100 sm:min-h-[28rem] lg:min-h-[40rem]">
@@ -381,16 +381,17 @@ export default function FicheLaverie() {
 							</div>
 						</div>
 
-						<div className="px-5 pt-4 sm:px-8 sm:pt-5">
-							<p className="flex items-start gap-2 text-sm text-slate-600 sm:text-base">
-								<MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-cyan-600" />
-								<span>
-									{[laverie.adresse, laverie.codePostal, laverie.ville].filter(Boolean).join(' • ')}
-								</span>
-							</p>
-						</div>
+						<div className="flex flex-col gap-5">
+							<div className="px-5 pt-4 sm:px-8 sm:pt-5">
+								<p className="flex items-start gap-2 text-sm text-slate-600 sm:text-base">
+									<MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-cyan-600" />
+									<span>
+										{[laverie.adresse, laverie.codePostal, laverie.ville].filter(Boolean).join(' • ')}
+									</span>
+								</p>
+							</div>
 
-						<div className="flex flex-col gap-5 p-5 sm:p-6 lg:p-8">
+							<div className="flex flex-col gap-5 p-5 sm:p-6 lg:p-8">
 							<div className="rounded-[24px] border border-slate-100 bg-slate-50 p-5 shadow-sm" aria-labelledby="presentation-title">
 								<p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Présentation</p>
 								<p id="presentation-title" className="mt-3 text-sm leading-6 text-slate-600">
@@ -444,6 +445,7 @@ export default function FicheLaverie() {
 										</div>
 									)}
 								</div>
+							</div>
 							</div>
 						</div>
 					</div>
