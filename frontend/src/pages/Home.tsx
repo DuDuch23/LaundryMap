@@ -98,10 +98,13 @@ export default function Home() {
         cardRefs.current[l.id]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     };
 
-    // Clic sur un marker : pas de fly-to, juste highlight + scroll liste
+    // Clic sur un marker : centre la carte + highlight + scroll liste uniquement sur desktop (xl)
     const handleMarkerClick = (l: Laverie) => {
         setActiveLaverieId(l.id);
-        cardRefs.current[l.id]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        if (l.latitude && l.longitude) setCenterPos({ lat: l.latitude, lng: l.longitude });
+        if (window.innerWidth >= 1280) {
+            cardRefs.current[l.id]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
     };
 
     const handleSuggestionPick = (s: GeoSuggestion) => {
@@ -147,7 +150,7 @@ export default function Home() {
     }, [laveries, favoriteIds]);
 
     return (
-        <div className="flex flex-col bg-slate-50 min-h-screen pt-20 w-full">
+        <div className="flex flex-col bg-slate-50 min-h-screen py-20 w-full">
             {notification && (
                 <Notification
                     type={notification.type}

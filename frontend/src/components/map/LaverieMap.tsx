@@ -168,7 +168,7 @@ export default function LaverieMap({
     return (
         <div
             ref={containerRef}
-            className="mt-5 relative w-full h-[500px] md:h-[500px] lg:h-[800px] max-h-[65vh]"
+            className="mt-5 relative w-full h-[500px] md:h-[500px] lg:h-[800px] max-h-[80vh]"
             role="region"
             aria-label={t('main.laverie_map.aria_label')}
         >
@@ -215,24 +215,43 @@ export default function LaverieMap({
                         )}
                         eventHandlers={{ click: () => onMarkerClick(l) }}
                     >
-                        <Popup>
-                            <p className="font-bold text-slate-900 text-lg leading-tight line-clamp-2">{l.nom}</p>
-                            <p className="text-md text-slate-400 truncate">{l.adresse}</p>
-                            <p className={`text-sm font-medium mt-1 ${l.estOuvert ? 'text-emerald-600' : 'text-rose-500'}`}>
-                                {l.estOuvert ? t('main.laverie_map.ouvert') : t('main.laverie_map.ferme')}
-                            </p>
-                            {l.horairesAujourdhui && l.horairesAujourdhui.length > 0 && (
-                                <p className="text-xs text-slate-400 mt-0.5">
-                                    {l.horairesAujourdhui.join(' · ')}
-                                </p>
-                            )}
+                        <Popup autoPan={false}>
+                            <p className="font-bold text-slate-900 text-base leading-tight line-clamp-2">{l.nom}</p>
+                            <p className="text-xs text-slate-400 truncate mt-0.5">{l.adresse}</p>
+
+                            <div className="mt-2 flex items-center gap-1.5">
+                                <span className={`text-xs font-semibold ${l.estOuvert ? 'text-emerald-600' : 'text-rose-500'}`}>
+                                    {l.estOuvert ? t('main.laverie_map.ouvert') : t('main.laverie_map.ferme')}
+                                </span>
+                            </div>
+
+                            <div className="mt-1.5">
+                                {l.horairesAujourdhui && l.horairesAujourdhui.length > 0 ? (
+                                    <div className="flex flex-col gap-0.5">
+                                        {l.horairesAujourdhui.map((h, i) => (
+                                            <span
+                                                key={i}
+                                                className="inline-flex items-center gap-1 text-xs text-slate-600 font-medium bg-slate-100 rounded px-2 py-0.5 w-fit"
+                                            >
+                                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                                                    <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                                                </svg>
+                                                {h}
+                                            </span>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <span className="text-xs text-slate-400 italic">{t('main.laverie_map.ferme_aujourd_hui')}</span>
+                                )}
+                            </div>
+
                             {l.latitude !== null && l.longitude !== null && (
                                 <ItineraireButton lat={l.latitude} lng={l.longitude} nom={l.nom} />
                             )}
                             <Link
                                 to={`/laveries/${l.id}`}
                                 aria-label={t('main.laverie_card.voir_detail', { nom: l.nom })}
-                                className="mt-3 flex items-center justify-center gap-1 w-auto px-3 py-2 rounded-lg bg-[#14A8DE] text-white text-md font-semibold hover:bg-[#119ac8] transition-colors"
+                                className="mt-3 flex items-center justify-center gap-1 w-auto px-3 py-2 rounded-lg bg-[#14A8DE] text-white text-sm font-semibold hover:bg-[#119ac8] transition-colors"
                             >
                                 {t('main.laverie_card.voir_fiche')}
                             </Link>

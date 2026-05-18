@@ -127,6 +127,28 @@ class AdresseFixtures extends Fixture
         ['adresse' => '14 rue du Chat Haret',         'rue' => 'rue du Chat Haret',          'cp' => 60300, 'ville' => 'Senlis',          'pays' => 'France', 'lat' => 49.2059,  'lng' => 2.5857],
         ['adresse' => '3 avenue Maréchal Joffre',     'rue' => 'avenue Maréchal Joffre',     'cp' => 60300, 'ville' => 'Senlis',          'pays' => 'France', 'lat' => 49.2082,  'lng' => 2.5901],
         ['adresse' => '19 rue Vieille de Paris',      'rue' => 'rue Vieille de Paris',       'cp' => 60300, 'ville' => 'Senlis',          'pays' => 'France', 'lat' => 49.2048,  'lng' => 2.5876],
+        // Senlis (suite)
+        ['adresse' => '12 avenue du Maréchal Foch',   'rue' => 'avenue du Maréchal Foch',    'cp' => 60300, 'ville' => 'Senlis',          'pays' => 'France', 'lat' => 49.2087,  'lng' => 2.5872],
+        ['adresse' => '7 rue Saint-Pierre',            'rue' => 'rue Saint-Pierre',           'cp' => 60300, 'ville' => 'Senlis',          'pays' => 'France', 'lat' => 49.2073,  'lng' => 2.5842],
+        ['adresse' => '25 rue de Meaux',               'rue' => 'rue de Meaux',               'cp' => 60300, 'ville' => 'Senlis',          'pays' => 'France', 'lat' => 49.2051,  'lng' => 2.5915],
+        ['adresse' => '9 avenue de la Gare',           'rue' => 'avenue de la Gare',          'cp' => 60300, 'ville' => 'Senlis',          'pays' => 'France', 'lat' => 49.2097,  'lng' => 2.5928],
+        ['adresse' => '33 rue du Châtel',              'rue' => 'rue du Châtel',              'cp' => 60300, 'ville' => 'Senlis',          'pays' => 'France', 'lat' => 49.2057,  'lng' => 2.5851],
+        // Chantilly
+        ['adresse' => '42 rue du Connétable',          'rue' => 'rue du Connétable',          'cp' => 60500, 'ville' => 'Chantilly',       'pays' => 'France', 'lat' => 49.1933,  'lng' => 2.4702],
+        ['adresse' => '15 avenue du Maréchal Joffre',  'rue' => 'avenue du Maréchal Joffre',  'cp' => 60500, 'ville' => 'Chantilly',       'pays' => 'France', 'lat' => 49.1947,  'lng' => 2.4718],
+        ['adresse' => '8 avenue de Paris',             'rue' => 'avenue de Paris',            'cp' => 60500, 'ville' => 'Chantilly',       'pays' => 'France', 'lat' => 49.1961,  'lng' => 2.4694],
+        // Creil
+        ['adresse' => '17 rue Jules Uhry',             'rue' => 'rue Jules Uhry',             'cp' => 60100, 'ville' => 'Creil',           'pays' => 'France', 'lat' => 49.2587,  'lng' => 2.4819],
+        ['adresse' => '5 rue de la République',        'rue' => 'rue de la République',       'cp' => 60100, 'ville' => 'Creil',           'pays' => 'France', 'lat' => 49.2571,  'lng' => 2.4831],
+        // Pont-Sainte-Maxence
+        ['adresse' => '11 rue de la République',       'rue' => 'rue de la République',       'cp' => 60700, 'ville' => 'Pont-Sainte-Maxence', 'pays' => 'France', 'lat' => 49.3005, 'lng' => 2.6033],
+        ['adresse' => '3 avenue du Maréchal Foch',     'rue' => 'avenue du Maréchal Foch',    'cp' => 60700, 'ville' => 'Pont-Sainte-Maxence', 'pays' => 'France', 'lat' => 49.2993, 'lng' => 2.6019],
+        // Verberie
+        ['adresse' => '14 rue de Paris',               'rue' => 'rue de Paris',               'cp' => 60410, 'ville' => 'Verberie',        'pays' => 'France', 'lat' => 49.3124,  'lng' => 2.5329],
+        // Nanteuil-le-Haudouin
+        ['adresse' => '6 Grande Rue',                  'rue' => 'Grande Rue',                 'cp' => 60440, 'ville' => 'Nanteuil-le-Haudouin', 'pays' => 'France', 'lat' => 49.1372, 'lng' => 2.8052],
+        // Luzarches
+        ['adresse' => '22 Grande Rue',                 'rue' => 'Grande Rue',                 'cp' => 95270, 'ville' => 'Luzarches',       'pays' => 'France', 'lat' => 49.1193,  'lng' => 2.4347],
     ];
 
     public function load(ObjectManager $manager): void

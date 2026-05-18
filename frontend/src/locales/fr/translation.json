@@ -72,7 +72,9 @@
       "ouvrir_maps": "Ouvrir l'itinéraire dans Google Maps",
       "annuler": "Annuler",
       "deux_doigts": "Utilisez 2 doigts pour déplacer la carte",
-      "shift_zoom": "Shift + molette pour zoomer"
+      "shift_zoom": "Shift + molette pour zoomer",
+      "horaires_du_jour": "Aujourd'hui",
+      "ferme_aujourd_hui": "Fermé aujourd'hui"
     },
     "mes_favoris": {
       "titre": "Mes favoris",
