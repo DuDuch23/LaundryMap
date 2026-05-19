@@ -101,6 +101,7 @@ export interface ProfilPreferenceData {
 export interface UpdateProfilData {
     nom: string;
     prenom: string;
+    motDePasseActuel?: string;
     nouveauMotDePasse?: string;
     preference?: {
         langueId?: number;
