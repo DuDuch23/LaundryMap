@@ -38,6 +38,7 @@ interface LaverieDetailData {
     latitude?: number;
     longitude?: number;
     wiLineReference?: number;
+    logo?: string | null;
     images: ImageDetail[];
     equipements: Equipement[];
     horaires: Horaire[];
@@ -170,8 +171,8 @@ export default function DetailLaverie() {
             {/* HEADER IMAGE */}
             <div className="relative h-64 bg-slate-800 w-full overflow-hidden">
                 <img
-                    src={resolveUrl(laverie.images?.[0]?.url || IMAGE_LAVERIE_PAR_DEFAUT)}
-                    alt={laverie.images?.[0]?.description || laverie.nom}
+                    src={resolveUrl(laverie.logo || laverie.images?.[0]?.url || IMAGE_LAVERIE_PAR_DEFAUT)}
+                    alt={laverie.nom}
                     className="absolute inset-0 w-full h-full object-cover opacity-80"
                     onError={(e) => {
                         const target = e.currentTarget;
@@ -231,7 +232,7 @@ export default function DetailLaverie() {
                         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                             {laverie.images.map((img, index) => (
                                 <div key={index} className="w-24 h-24 rounded-2xl overflow-hidden bg-gray-200 shrink-0 shadow-sm border border-gray-100">
-                                    <img src={img.url} alt={img.description || `Image ${index + 1}`} className="w-full h-full object-cover" />
+                                    <img src={resolveUrl(img.url)} alt={img.description || `Image ${index + 1}`} className="w-full h-full object-cover" />
                                 </div>
                             ))}
                         </div>

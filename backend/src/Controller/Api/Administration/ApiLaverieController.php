@@ -79,6 +79,8 @@ class ApiLaverieController extends AbstractController
             }
         }
 
+        $logoUrl = $formatter->buildLogoUrl($laverie, $request);
+
         return $this->json([
             'id' => $laverie->getId(),
             'nom' => $laverie->getNomEtablissement(),
@@ -91,6 +93,7 @@ class ApiLaverieController extends AbstractController
             'longitude' => $adresse?->getLongitude(),
             'distance' => null,
             'wiLineReference' => $laverie->getWiLineReference(),
+            'logo' => $logoUrl,
             'image' => $mainImage,
             'images' => $gallery,
             'equipements' => $equipements,
@@ -113,7 +116,8 @@ class ApiLaverieController extends AbstractController
     #[IsGranted('ROLE_ADMIN')]
     public function getLaveries(
         Request $request,
-        LaverieRepository $laverieRepository
+        LaverieRepository $laverieRepository,
+        ProfessionnelLaverieFormatterService $formatter,
     ): JsonResponse
     {
         $page = max(1, $request->query->getInt('page', 1));
@@ -143,11 +147,7 @@ class ApiLaverieController extends AbstractController
                 $adresseComplete = sprintf('%s, %s %s', $adresseLav->getAdresse(), $adresseLav->getCodePostal(), $adresseLav->getVille());
             }
 
-            $image = null;
-            $premierMediaAssoc = $laverie->getMedias()->first();
-            if ($premierMediaAssoc && $premierMediaAssoc->getMedia()) {
-                $image = '/uploads/medias/' . $premierMediaAssoc->getMedia()->getEmplacement();
-            }
+            $image = $formatter->buildLogoUrl($laverie, $request);
 
             $pro = $laverie->getProfessionnel();
 
@@ -181,7 +181,7 @@ class ApiLaverieController extends AbstractController
 
     #[Route('/api/admin/laveries/{id}', name: 'api_admin_laverie_detail', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN')]
-    public function getLaverieDetail(int $id, LaverieRepository $laverieRepository): JsonResponse
+    public function getLaverieDetail(int $id, Request $request, LaverieRepository $laverieRepository, ProfessionnelLaverieFormatterService $formatter): JsonResponse
     {
         $laverie = $laverieRepository->find($id);
 
@@ -201,15 +201,20 @@ class ApiLaverieController extends AbstractController
             $adresseComplete = sprintf('%s, %s %s', $adresseLav->getAdresse(), $adresseLav->getCodePostal(), $adresseLav->getVille());
         }
 
-        // Images
+        $logoUrl = $formatter->buildLogoUrl($laverie, $request);
+
+        // Images (gallery only — logo excluded)
         $images = [];
+        $logoId = $laverie->getLogo()?->getId();
         foreach ($laverie->getMedias() as $mediaAssoc) {
-            if ($mediaAssoc->getMedia()) {
-                $images[] = [
-                    'url' => '/uploads/medias/' . $mediaAssoc->getMedia()->getEmplacement(),
-                    'description' => $mediaAssoc->getDescription(),
-                ];
-            }
+            $media = $mediaAssoc->getMedia();
+            if (!$media) continue;
+            if ($logoId !== null && $media->getId() === $logoId) continue;
+            if (!$formatter->isProjectManagedMediaPath($media->getEmplacement())) continue;
+            $images[] = [
+                'url' => $formatter->toPublicMediaUrl($media->getEmplacement(), $request),
+                'description' => $mediaAssoc->getDescription(),
+            ];
         }
 
         // Equipements
@@ -246,6 +251,7 @@ class ApiLaverieController extends AbstractController
             'latitude' => $adresseLav->getLatitude(),
             'longitude' => $adresseLav->getLongitude(),
             'wiLineReference' => $laverie->getWiLineReference(),
+            'logo' => $logoUrl,
             'images' => $images,
             'equipements' => $equipements,
             'horaires' => $horaires,

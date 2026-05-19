@@ -83,9 +83,19 @@ class ProfessionnelLaverieFormatterService
         return $horaires;
     }
 
+    public function buildLogoUrl(Laverie $laverie, Request $request): ?string
+    {
+        $logo = $laverie->getLogo();
+        if (!$logo || !$this->isProjectManagedMediaPath($logo->getEmplacement())) {
+            return null;
+        }
+        return $this->toPublicMediaUrl($logo->getEmplacement(), $request);
+    }
+
     public function buildGalleryResponse(Laverie $laverie, Request $request): array
     {
         $gallery = [];
+        $logoId = $laverie->getLogo()?->getId();
 
         foreach ($laverie->getMedias() as $laverieMedia) {
             $media = $laverieMedia->getMedia();
@@ -95,6 +105,11 @@ class ProfessionnelLaverieFormatterService
             }
 
             if (!$this->isProjectManagedMediaPath($media->getEmplacement())) {
+                continue;
+            }
+
+            // Skip the logo — it is exposed separately via the `logo` field
+            if ($logoId !== null && $media->getId() === $logoId) {
                 continue;
             }
 
