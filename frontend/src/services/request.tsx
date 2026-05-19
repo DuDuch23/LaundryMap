@@ -429,6 +429,7 @@ export interface LaveriePublicDetail {
         commentaire: string;
         date: string;
         utilisateur: {
+            id?: number;
             prenom: string;
             nom: string;
         };
@@ -620,11 +621,12 @@ export async function supprimerAvis(id: number): Promise<void> {
 }
 
 export async function fetchPublicLaverieDetail(id: string): Promise<LaveriePublicDetail> {
-    const response = await fetch(`${API_BASE_URL}/api/laveries/${id}`, {
-        headers: {
-            accept: 'application/json',
-        },
-    });
+    const token = localStorage.getItem('token');
+    const headers: Record<string, string> = { accept: 'application/json' };
+    if (token) {
+        headers.Authorization = `Bearer ${token}`;
+    }
+    const response = await fetch(`${API_BASE_URL}/api/laveries/${id}`, { headers });
 
     if (!response.ok) {
         const error: any = new Error('Impossible de récupérer la fiche de la laverie.');

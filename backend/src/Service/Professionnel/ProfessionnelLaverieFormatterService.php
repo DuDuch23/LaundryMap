@@ -149,22 +149,32 @@ class ProfessionnelLaverieFormatterService
             if ($laverieNote->getCommentaireSupprimeeLe() !== null || empty($laverieNote->getCommentaire())) {
                 continue;
             }
-            
+
             $utilisateur = $laverieNote->getUtilisateur();
             $nom = $utilisateur->getNom();
             $nomAbrege = $nom ? mb_substr($nom, 0, 1) . '.' : '';
-            
+            $dateSource = $laverieNote->getCommenteLe() ?? $laverieNote->getNoteLe();
+
             $commentaires[] = [
                 'id' => $laverieNote->getId(),
                 'note' => $laverieNote->getNote(),
                 'commentaire' => $laverieNote->getCommentaire(),
-                'date' => $laverieNote->getCommenteLe() ? $laverieNote->getCommenteLe()->format('c') : ($laverieNote->getNoteLe() ? $laverieNote->getNoteLe()->format('c') : null),
+                'date' => $dateSource ? $dateSource->format('c') : null,
+                '_sortKey' => $dateSource ? $dateSource->getTimestamp() : 0,
                 'utilisateur' => [
+                    'id' => $utilisateur->getId(),
                     'prenom' => $utilisateur->getPrenom(),
                     'nom' => $nomAbrege,
                 ]
             ];
         }
+
+        //TRI par date décroissante
+        usort($commentaires, static fn(array $a, array $b): int => $b['_sortKey'] <=> $a['_sortKey']);
+        foreach ($commentaires as &$c) {
+            unset($c['_sortKey']);
+        }
+
         return $commentaires;
     }
 

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 import {
+	ArrowRight,
 	Check,
 	CheckCircle2,
 	Clock3,
@@ -133,6 +134,14 @@ export default function FicheLaverie() {
 	const [avisEditing, setAvisEditing] = useState(false);
 	const [avisConfirmDelete, setAvisConfirmDelete] = useState(false);
 	const [avisPending, setAvisPending] = useState(false);
+
+	// ── Édition inline du commentaire propre dans la liste ───────────────────
+	const [commentEditing, setCommentEditing] = useState(false);
+	const [commentStep, setCommentStep] = useState<'note' | 'commentaire'>('note');
+	const [commentEditNote, setCommentEditNote] = useState(0);
+	const [commentEditText, setCommentEditText] = useState('');
+	const [commentConfirmDelete, setCommentConfirmDelete] = useState(false);
+	const [commentPending, setCommentPending] = useState(false);
 
 	const isProfessionnel = useMemo(() => {
 		const token = localStorage.getItem('token');
@@ -322,11 +331,106 @@ export default function FicheLaverie() {
 			setAvisFormNote(0);
 			setAvisConfirmDelete(false);
 			setAvisEditing(false);
+			// Retirer de la liste publique des commentaires
+			setLaverie((prev) => prev ? { ...prev, commentaires: prev.commentaires.filter((c) => c.id !== monAvis.id), commentairesCount: Math.max(0, prev.commentairesCount - (monAvis.commentaire ? 1 : 0)) } : prev);
 			toast.success('Note supprimée');
 		} catch (err: any) {
 			toast.error(err?.message || 'Erreur');
 		} finally {
 			setAvisPending(false);
+		}
+	};
+
+	// ── Modification inline du commentaire dans la liste ─────────────────────
+	const startInlineEdit = () => {
+		if (!monAvis) return;
+		setCommentEditNote(monAvis.note);
+		setCommentEditText(monAvis.commentaire ?? '');
+		setCommentStep('note');
+		setCommentConfirmDelete(false);
+		setCommentEditing(true);
+	};
+
+	const handleCommentCancel = () => {
+		setCommentEditing(false);
+		setCommentConfirmDelete(false);
+		setCommentStep('note');
+	};
+
+	const handleCommentNext = () => {
+		if (commentEditNote < 1) {
+			toast.error('Veuillez sélectionner une note');
+			return;
+		}
+		setCommentStep('commentaire');
+	};
+
+	const handleCommentSave = async () => {
+		if (!monAvis || commentEditNote < 1) {
+			toast.error('Veuillez sélectionner une note');
+			return;
+		}
+		setCommentPending(true);
+		try {
+			const trimmed = commentEditText.trim();
+			const updated = await modifierAvis(monAvis.id, commentEditNote, trimmed === '' ? null : trimmed);
+			setMonAvis(updated);
+			setAvisFormNote(updated.note);
+			setCommentEditing(false);
+			setCommentStep('note');
+
+			// Mettre à jour la liste publique : ajouter/modifier/retirer selon le commentaire
+			setLaverie((prev) => {
+				if (!prev) return prev;
+				const dateIso = updated.commenteLe ?? updated.noteLe ?? new Date().toISOString();
+				const without = prev.commentaires.filter((c) => c.id !== updated.id);
+				let next = without;
+				if (updated.commentaire && updated.commentaire.trim() !== '') {
+					// On réutilise les infos d'auteur déjà présentes dans la liste si dispo
+					const previous = prev.commentaires.find((c) => c.id === updated.id);
+					const own = {
+						id: updated.id,
+						note: updated.note,
+						commentaire: updated.commentaire,
+						date: dateIso,
+						utilisateur: previous?.utilisateur ?? { prenom: '', nom: '' },
+					};
+					next = [own, ...without];
+				}
+				// Recalcule du compteur
+				const count = next.length + (prev.commentairesCount - prev.commentaires.length);
+				return { ...prev, commentaires: next, commentairesCount: Math.max(count, next.length) };
+			});
+
+			toast.success('Avis modifié');
+		} catch (err: any) {
+			toast.error(err?.message || 'Erreur');
+		} finally {
+			setCommentPending(false);
+		}
+	};
+
+	const handleCommentDelete = async () => {
+		if (!monAvis) return;
+		setCommentPending(true);
+		try {
+			await supprimerAvis(monAvis.id);
+			const deletedId = monAvis.id;
+			const hadCommentaire = !!monAvis.commentaire;
+			setMonAvis(null);
+			setAvisFormNote(0);
+			setCommentEditing(false);
+			setCommentConfirmDelete(false);
+			setLaverie((prev) => prev ? {
+				...prev,
+				commentaires: prev.commentaires.filter((c) => c.id !== deletedId),
+				commentairesCount: Math.max(0, prev.commentairesCount - (hadCommentaire ? 1 : 0)),
+			} : prev);
+			toast.success('Avis supprimé');
+		} catch (err: any) {
+			toast.error(err?.message || 'Erreur');
+		} finally {
+			setCommentPending(false);
 		}
 	};
 
@@ -607,7 +711,7 @@ export default function FicheLaverie() {
 								<button
 									type="button"
 									onClick={() => setAvisFormVisible(true)}
-									className="mt-4 w-full rounded-full bg-white px-4 py-2 text-sm font-semibold text-cyan-700 shadow-sm transition hover:bg-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+									className="mt-4 w-full rounded-full bg-white py-2 text-sm font-semibold text-cyan-700 shadow-sm transition hover:bg-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
 								>
 									Laisser un avis
 								</button>
@@ -640,11 +744,11 @@ export default function FicheLaverie() {
 											) : (
 												<div className="flex gap-2 justify-center">
 													<button type="button" onClick={() => { setAvisEditing(true); setAvisFormNote(monAvis.note); }}
-														className="flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors">
+														className="flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer">
 														<Pencil className="h-3 w-3" /> Modifier
 													</button>
 													<button type="button" onClick={() => setAvisConfirmDelete(true)}
-														className="flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors">
+														className="flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer">
 														<Trash2 className="h-3 w-3" /> Supprimer
 													</button>
 												</div>
@@ -684,22 +788,157 @@ export default function FicheLaverie() {
 								
 								{laverie.commentaires && laverie.commentaires.length > 0 ? (
 									<div className="space-y-3">
-										{laverie.commentaires.map((commentaire) => (
-											<div key={commentaire.id} className="rounded-2xl border border-slate-100 p-4 bg-white shadow-sm">
-												<div className="flex justify-between items-start mb-2">
-													<div>
-														<p className="text-sm font-semibold text-slate-900">{commentaire.utilisateur.prenom} {commentaire.utilisateur.nom}</p>
-														<p className="text-xs text-slate-500">{new Date(commentaire.date).toLocaleDateString('fr-FR')}</p>
+										{laverie.commentaires.map((commentaire) => {
+											const isMine = isStandardUser && monAvis !== null && commentaire.id === monAvis.id;
+											const showInlineEdit = isMine && commentEditing;
+											const showConfirmDelete = isMine && commentConfirmDelete;
+
+											return (
+												<div key={commentaire.id} className={`rounded-2xl border p-4 bg-white shadow-sm ${isMine ? 'border-cyan-200 ring-1 ring-cyan-100' : 'border-slate-100'}`}>
+													<div className="flex justify-between items-start mb-2 gap-3">
+														<div className="min-w-0">
+															<p className="text-sm font-semibold text-slate-900">
+																{commentaire.utilisateur.prenom} {commentaire.utilisateur.nom}
+																{isMine && <span className="ml-2 inline-block rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-cyan-700">Votre avis</span>}
+															</p>
+															<p className="text-xs text-slate-500">{commentaire.date ? new Date(commentaire.date).toLocaleDateString('fr-FR') : ''}</p>
+														</div>
+														<div className="flex items-center gap-2 shrink-0">
+															<div className="flex gap-0.5 text-amber-500">
+																{Array.from({ length: 5 }).map((_, index) => (
+																	<Star key={index} className={`h-3.5 w-3.5 ${index < commentaire.note ? 'fill-current' : 'text-slate-200'}`} aria-hidden="true" />
+																))}
+															</div>
+															{isMine && !commentEditing && !commentConfirmDelete && (
+																<div className="flex gap-1.5 ml-1">
+																	<button
+																		type="button"
+																		onClick={startInlineEdit}
+																		className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-[#14A8DE] hover:text-white transition-colors cursor-pointer"
+																		aria-label="Modifier mon commentaire"
+																	>
+																		<Pencil className="h-3.5 w-3.5" />
+																	</button>
+																	<button
+																		type="button"
+																		onClick={() => setCommentConfirmDelete(true)}
+																		className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-rose-500 hover:text-white transition-colors cursor-pointer"
+																		aria-label="Supprimer mon commentaire"
+																	>
+																		<Trash2 className="h-3.5 w-3.5" />
+																	</button>
+																</div>
+															)}
+														</div>
 													</div>
-													<div className="flex gap-0.5 text-amber-500">
-														{Array.from({ length: 5 }).map((_, index) => (
-															<Star key={index} className={`h-3.5 w-3.5 ${index < commentaire.note ? 'fill-current' : 'text-slate-200'}`} aria-hidden="true" />
-														))}
-													</div>
+
+													{showConfirmDelete ? (
+														<div className="mt-3 rounded-xl bg-rose-50 border border-rose-200 p-3">
+															<p className="text-sm font-medium text-rose-800">Supprimer votre avis définitivement ?</p>
+															<div className="mt-2 flex gap-2">
+																<button
+																	type="button"
+																	onClick={handleCommentDelete}
+																	disabled={commentPending}
+																	className="flex items-center gap-1.5 rounded-lg bg-rose-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-600 disabled:opacity-60 transition-colors cursor-pointer"
+																>
+																	<Trash2 className="h-3.5 w-3.5" />
+																	Supprimer
+																</button>
+																<button
+																	type="button"
+																	onClick={() => setCommentConfirmDelete(false)}
+																	className="flex items-center gap-1.5 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+																>
+																	<X className="h-3.5 w-3.5" />
+																	Annuler
+																</button>
+															</div>
+														</div>
+													) : showInlineEdit ? (
+														<div className="mt-3 space-y-3">
+															<div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+																<span className={commentStep === 'note' ? 'text-[#14A8DE]' : ''}>1. Note</span>
+																<span className="text-slate-300">/</span>
+																<span className={commentStep === 'commentaire' ? 'text-[#14A8DE]' : ''}>2. Commentaire</span>
+															</div>
+
+															{commentStep === 'note' ? (
+																<>
+																	<StarPicker value={commentEditNote} onChange={setCommentEditNote} />
+																	<div className="flex flex-wrap gap-2">
+																		<button
+																			type="button"
+																			onClick={handleCommentNext}
+																			disabled={commentPending}
+																			className="flex items-center gap-1.5 rounded-lg bg-[#14A8DE] px-4 py-2 text-xs font-semibold text-white hover:bg-[#119ac8] disabled:opacity-60 transition-colors cursor-pointer"
+																		>
+																			Suivant
+																			<ArrowRight className="h-3.5 w-3.5" />
+																		</button>
+																		<button
+																			type="button"
+																			onClick={handleCommentCancel}
+																			className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+																		>
+																			<X className="h-3.5 w-3.5" />
+																			Annuler
+																		</button>
+																	</div>
+																</>
+															) : (
+																<>
+																	<label htmlFor={`commentaire-fiche-${commentaire.id}`} className="block text-sm font-medium text-slate-700">
+																		Votre commentaire <span className="text-slate-400 font-normal">(facultatif)</span>
+																	</label>
+																	<div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 focus-within:border-[#14A8DE] focus-within:ring-2 focus-within:ring-[#14A8DE]/20 transition-colors">
+																		<textarea
+																			id={`commentaire-fiche-${commentaire.id}`}
+																			rows={4}
+																			maxLength={1000}
+																			value={commentEditText}
+																			onChange={(e) => setCommentEditText(e.target.value)}
+																			placeholder="Partagez votre expérience…"
+																			className="block w-full bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none resize-none border-0 p-0"
+																		/>
+																	</div>
+																	<p className="text-right text-[11px] text-slate-400">{commentEditText.length}/1000</p>
+																	<div className="flex flex-wrap gap-2">
+																		<button
+																			type="button"
+																			onClick={handleCommentSave}
+																			disabled={commentPending}
+																			className="flex items-center gap-1.5 rounded-lg bg-[#14A8DE] px-4 py-2 text-xs font-semibold text-white hover:bg-[#119ac8] disabled:opacity-60 transition-colors cursor-pointer"
+																		>
+																			<Check className="h-3.5 w-3.5" />
+																			Enregistrer
+																		</button>
+																		<button
+																			type="button"
+																			onClick={() => setCommentStep('note')}
+																			disabled={commentPending}
+																			className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+																		>
+																			Retour
+																		</button>
+																		<button
+																			type="button"
+																			onClick={handleCommentCancel}
+																			className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+																		>
+																			<X className="h-3.5 w-3.5" />
+																			Annuler
+																		</button>
+																	</div>
+																</>
+															)}
+														</div>
+													) : (
+														<p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line break-words">{commentaire.commentaire}</p>
+													)}
 												</div>
-												<p className="text-sm text-slate-600 leading-relaxed">{commentaire.commentaire}</p>
-											</div>
-										))}
+											);
+										})}
 									</div>
 								) : (
 									<div className="rounded-2xl border border-slate-100 p-4">

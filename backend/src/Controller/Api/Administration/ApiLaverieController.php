@@ -58,6 +58,8 @@ class ApiLaverieController extends AbstractController
                     'id'          => $userNote->getId(),
                     'note'        => $userNote->getNote(),
                     'commentaire' => $userNote->getCommentaire(),
+                    'commenteLe'  => $userNote->getCommenteLe()?->format('c'),
+                    'noteLe'      => $userNote->getNoteLe()?->format('c'),
                 ];
             }
         }
