@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 import { AccessibleInput, AccessibleButton } from "../components/accessibility";
 import { inscriptionUtilisateur } from "../services/request";
 import API_BASE_URL from "../services/api";
@@ -273,7 +274,19 @@ export default function RegisterUser() {
 
         <AccessibleInput
           id="cgu"
-          label={t("main.inscription_utilisateur.accepte_condition")}
+          label={
+            <>
+              {t("main.inscription_utilisateur.accepte_condition_prefixe")}{' '}
+              <Link
+                to="/cgu"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#22ACE2] underline hover:text-blue-600"
+              >
+                {t("main.inscription_utilisateur.lien_conditions")}
+              </Link>
+            </>
+          }
           type="checkbox"
           className={'flex flex-row-reverse justify-end'}
           value={cguAccepted}

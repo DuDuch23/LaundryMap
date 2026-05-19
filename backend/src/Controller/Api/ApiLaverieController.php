@@ -16,6 +16,8 @@ use App\Enum\StatutLaverieEnum;
 use App\Repository\LaverieEquipementRepository;
 use App\Repository\LaverieFermetureRepository;
 use App\Repository\LaverieMediaRepository;
+use App\Repository\LaveriePaiementRepository;
+use App\Repository\LaverieServiceRepository;
 use App\Repository\LaverieRepository;
 use App\Repository\MethodePaiementRepository;
 use App\Repository\ProfessionnelRepository;
@@ -313,9 +315,12 @@ class ApiLaverieController extends ApiProfilController
             'id' => $laverie->getId(),
             'nom' => $laverie->getNomEtablissement(),
             'adresse' => $laverie->getAdresse()->getAdresse(),
+            'rue' => $laverie->getAdresse()->getRue(),
             'codePostal' => $laverie->getAdresse()->getCodePostal(),
             'ville' => $laverie->getAdresse()->getVille(),
             'pays' => $laverie->getAdresse()->getPays(),
+            'latitude' => $laverie->getAdresse()->getLatitude(),
+            'longitude' => $laverie->getAdresse()->getLongitude(),
             'email' => $laverie->getContactEmail(),
             'description' => $laverie->getDescription(),
             'wiLineReference' => $laverie->getWiLineReference(),
@@ -326,6 +331,8 @@ class ApiLaverieController extends ApiProfilController
             'images' => $gallery,
             'horaires' => $horaires,
             'equipements' => $equipements,
+            'services' => $formatter->buildServicesResponse($laverie),
+            'paiements' => $formatter->buildPaiementsResponse($laverie),
             'commentairesCount' => $formatter->countLaverieCommentaires($laverie),
             'noteMoyenne' => $formatter->getLaverieNoteMoyenne($laverie),
         ], 200);
@@ -343,6 +350,10 @@ class ApiLaverieController extends ApiProfilController
         LaverieFermetureRepository $laverieFermetureRepository,
         LaverieEquipementRepository $laverieEquipementRepository,
         LaverieMediaRepository $laverieMediaRepository,
+        LaverieServiceRepository $laverieServiceRepository,
+        LaveriePaiementRepository $laveriePaiementRepository,
+        ServiceRepository $serviceRepository,
+        MethodePaiementRepository $methodePaiementRepository,
         ProfessionnelLaverieFormatterService $formatter,
     ): JsonResponse {
         $professionnel = $this->getValidatedProfessionnel($professionnelRepository);
@@ -359,22 +370,27 @@ class ApiLaverieController extends ApiProfilController
 
         $adresseEntity = $laverie->getAdresse();
 
-        $nom = trim((string) $request->request->get('nom', $laverie->getNomEtablissement()));
-        $adresse = trim((string) $request->request->get('adresse', $adresseEntity->getAdresse()));
+        $nom = trim((string) $request->request->get('nomEtablissement', $request->request->get('nom', $laverie->getNomEtablissement())));
+        $rue = trim((string) $request->request->get('rue', $adresseEntity->getRue() ?? $adresseEntity->getAdresse()));
         $codePostal = trim((string) $request->request->get('codePostal', (string) $adresseEntity->getCodePostal()));
         $ville = trim((string) $request->request->get('ville', $adresseEntity->getVille()));
         $pays = trim((string) $request->request->get('pays', $adresseEntity->getPays() ?: 'France'));
-        $email = trim((string) $request->request->get('email', $laverie->getContactEmail() ?? ''));
+        $email = trim((string) $request->request->get('contactEmail', $request->request->get('email', $laverie->getContactEmail() ?? '')));
         $description = trim((string) $request->request->get('description', $laverie->getDescription() ?? ''));
-        $wiLineReferenceRaw = trim((string) $request->request->get('wiLineReference', ''));
         $horairesJson = (string) $request->request->get('horaires', '[]');
+        $machinesJson = (string) $request->request->get('machines', '[]');
         $equipementsJson = (string) $request->request->get('equipements', '[]');
+        $serviceIdsJson = (string) $request->request->get('serviceIds', '[]');
+        $paiementIdsJson = (string) $request->request->get('paiementIds', '[]');
         $removeImageIdsJson = (string) $request->request->get('removeImageIds', '[]');
+        $latRaw = $request->request->get('latitude');
+        $lngRaw = $request->request->get('longitude');
 
+        $adresse = $rue . ', ' . $codePostal . ' ' . $ville . ', ' . $pays;
         $codePostal = preg_replace('/\D+/', '', $codePostal) ?? '';
 
-        if ($nom === '' || $adresse === '' || $codePostal === '' || $ville === '') {
-            return $this->json(['erreur' => 'Les champs nom, adresse, code postal et ville sont requis'], 400);
+        if ($nom === '' || $rue === '' || $codePostal === '' || $ville === '') {
+            return $this->json(['erreur' => 'Les champs nom, rue, code postal et ville sont requis'], 400);
         }
 
         if (strlen($codePostal) !== 5) {
@@ -385,18 +401,29 @@ class ApiLaverieController extends ApiProfilController
             return $this->json(['erreur' => 'Le format de l\'email est invalide'], 400);
         }
 
-        if ($wiLineReferenceRaw !== '' && (!ctype_digit($wiLineReferenceRaw) || (int) $wiLineReferenceRaw <= 0)) {
-            return $this->json(['erreur' => 'La référence API WI-LINE doit être un entier positif'], 400);
-        }
-
         $horaires = json_decode($horairesJson, true);
         if (!is_array($horaires)) {
             return $this->json(['erreur' => 'Format des horaires invalide'], 400);
         }
 
+        $machines = json_decode($machinesJson, true);
+        if (!is_array($machines)) {
+            $machines = [];
+        }
+
         $equipements = json_decode($equipementsJson, true);
         if (!is_array($equipements)) {
-            return $this->json(['erreur' => 'Format des équipements invalide'], 400);
+            $equipements = [];
+        }
+
+        $serviceIds = json_decode($serviceIdsJson, true);
+        if (!is_array($serviceIds)) {
+            $serviceIds = [];
+        }
+
+        $paiementIds = json_decode($paiementIdsJson, true);
+        if (!is_array($paiementIds)) {
+            $paiementIds = [];
         }
 
         $removeImageIds = json_decode($removeImageIdsJson, true);
@@ -430,58 +457,108 @@ class ApiLaverieController extends ApiProfilController
         }
 
         $adresseEntity->setAdresse($adresse);
-        $adresseEntity->setRue($adresse);
+        $adresseEntity->setRue($rue);
         $adresseEntity->setCodePostal((int) $codePostal);
         $adresseEntity->setVille($ville);
         $adresseEntity->setPays($pays === '' ? 'France' : $pays);
+        if ($latRaw !== null && is_numeric($latRaw)) {
+            $adresseEntity->setLatitude((float) $latRaw);
+        }
+        if ($lngRaw !== null && is_numeric($lngRaw)) {
+            $adresseEntity->setLongitude((float) $lngRaw);
+        }
 
         $laverie->setNomEtablissement($nom);
         $laverie->setContactEmail($email === '' ? null : $email);
         $laverie->setDescription($description === '' ? null : $description);
-        $laverie->setWiLineReference($wiLineReferenceRaw === '' ? null : (int) $wiLineReferenceRaw);
         $laverie->setDateModification(new \DateTime());
 
         $laverieFermetureRepository->deleteByLaverie($laverie);
         $laverieEquipementRepository->deleteByLaverie($laverie);
+        $laverieServiceRepository->deleteByLaverie($laverie);
+        $laveriePaiementRepository->deleteByLaverie($laverie);
 
-        foreach ($horaires as $horaireData) {
-            if (!is_array($horaireData)) {
-                continue;
+        $jourMapping = [
+            'Lundi' => JourEnum::LUNDI, 'Mardi' => JourEnum::MARDI,
+            'Mercredi' => JourEnum::MERCREDI, 'Jeudi' => JourEnum::JEUDI,
+            'Vendredi' => JourEnum::VENDREDI, 'Samedi' => JourEnum::SAMEDI,
+            'Dimanche' => JourEnum::DIMANCHE,
+        ];
+
+        // Support new format {Lundi: {ouvert, plages}} and old flat array [{jour, debut, fin, ferme}]
+        $isNewFormat = !array_is_list($horaires);
+
+        if ($isNewFormat) {
+            foreach ($horaires as $jourLabel => $horaire) {
+                if (empty($horaire['ouvert'])) {
+                    $jourEnum = $jourMapping[$jourLabel] ?? null;
+                    if (!$jourEnum) continue;
+                    $fermeture = new LaverieFermeture();
+                    $fermeture->setLaverie($laverie);
+                    $fermeture->setJour($jourEnum);
+                    $fermeture->setHeureDebut(new \DateTime('00:00:00'));
+                    $fermeture->setHeureFin(new \DateTime('23:59:59'));
+                    $fermeture->setDateAjout(new \DateTime());
+                    $fermeture->setDateModification(new \DateTime());
+                    $entityManager->persist($fermeture);
+                    continue;
+                }
+                $jourEnum = $jourMapping[$jourLabel] ?? null;
+                if (!$jourEnum) continue;
+                $plages = isset($horaire['plages']) && is_array($horaire['plages'])
+                    ? $horaire['plages']
+                    : [['ouverture' => $horaire['ouverture'] ?? '07:00', 'fermeture' => $horaire['fermeture'] ?? '22:00']];
+                foreach ($plages as $plage) {
+                    $fermeture = new LaverieFermeture();
+                    $fermeture->setLaverie($laverie);
+                    $fermeture->setJour($jourEnum);
+                    $fermeture->setHeureDebut(new \DateTime($plage['ouverture']));
+                    $fermeture->setHeureFin(new \DateTime($plage['fermeture']));
+                    $fermeture->setDateAjout(new \DateTime());
+                    $fermeture->setDateModification(new \DateTime());
+                    $entityManager->persist($fermeture);
+                }
             }
-
-            $jourValue = $horaireData['jour'] ?? null;
-            if (!is_string($jourValue)) {
-                continue;
+        } else {
+            foreach ($horaires as $horaireData) {
+                if (!is_array($horaireData)) continue;
+                $jourValue = $horaireData['jour'] ?? null;
+                if (!is_string($jourValue)) continue;
+                $jour = JourEnum::tryFrom($jourValue);
+                if (!$jour) continue;
+                $ferme = (bool) ($horaireData['ferme'] ?? false);
+                $heureDebutValue = (string) ($horaireData['debut'] ?? '10:00');
+                $heureFinValue = (string) ($horaireData['fin'] ?? '22:00');
+                $fermeture = new LaverieFermeture();
+                $fermeture->setLaverie($laverie);
+                $fermeture->setJour($jour);
+                $fermeture->setDateAjout(new \DateTime());
+                $fermeture->setDateModification(new \DateTime());
+                if ($ferme) {
+                    $fermeture->setHeureDebut(new \DateTime('00:00:00'));
+                    $fermeture->setHeureFin(new \DateTime('23:59:59'));
+                } else {
+                    $fermeture->setHeureDebut(new \DateTime($heureDebutValue . ':00'));
+                    $fermeture->setHeureFin(new \DateTime($heureFinValue . ':00'));
+                }
+                $entityManager->persist($fermeture);
             }
+        }
 
-            $jour = JourEnum::tryFrom($jourValue);
-            if (!$jour) {
-                continue;
+        // Machines (new format)
+        foreach ($machines as $machineData) {
+            if (!is_array($machineData) || empty($machineData['type'])) continue;
+            $equipement = new LaverieEquipement();
+            $equipement->setLaverie($laverie);
+            $equipement->setNom($machineData['nom'] ?? $machineData['type']);
+            $equipement->setType($machineData['type']);
+            $equipement->setCapacite((int) ($machineData['capacite'] ?? 0));
+            $equipement->setTarif((float) ($machineData['tarif'] ?? 0));
+            $equipement->setDuree((int) ($machineData['duree'] ?? 0));
+            if (!empty($machineData['wiline_machine_id'])) {
+                $equipement->setEquipementReference((int) $machineData['wiline_machine_id']);
             }
-
-            $ferme = (bool) ($horaireData['ferme'] ?? false);
-            $heureDebutValue = (string) ($horaireData['debut'] ?? '10:00');
-            $heureFinValue = (string) ($horaireData['fin'] ?? '22:00');
-
-            if (!$ferme && (!$formatter->isValidHourFormat($heureDebutValue) || !$formatter->isValidHourFormat($heureFinValue))) {
-                return $this->json(['erreur' => 'Format des horaires invalide (HH:MM attendu)'], 400);
-            }
-
-            $fermeture = new LaverieFermeture();
-            $fermeture->setLaverie($laverie);
-            $fermeture->setJour($jour);
-            $fermeture->setDateAjout(new \DateTime());
-            $fermeture->setDateModification(new \DateTime());
-
-            if ($ferme) {
-                $fermeture->setHeureDebut(new \DateTime('00:00:00'));
-                $fermeture->setHeureFin(new \DateTime('23:59:59'));
-            } else {
-                $fermeture->setHeureDebut(new \DateTime($heureDebutValue . ':00'));
-                $fermeture->setHeureFin(new \DateTime($heureFinValue . ':00'));
-            }
-
-            $entityManager->persist($fermeture);
+            $entityManager->persist($equipement);
         }
 
         foreach ($equipements as $equipementData) {
@@ -513,6 +590,24 @@ class ApiLaverieController extends ApiProfilController
             $equipement->setDuree($dureeEquipement);
             $equipement->setEquipementReference(is_numeric($equipementReference) ? (int) $equipementReference : null);
             $entityManager->persist($equipement);
+        }
+
+        foreach ($serviceIds as $serviceId) {
+            $service = $serviceRepository->find((int) $serviceId);
+            if ($service === null) continue;
+            $laverieService = new LaverieService();
+            $laverieService->setLaverie($laverie);
+            $laverieService->setService($service);
+            $entityManager->persist($laverieService);
+        }
+
+        foreach ($paiementIds as $paiementId) {
+            $paiement = $methodePaiementRepository->find((int) $paiementId);
+            if ($paiement === null) continue;
+            $laveriePaiement = new LaveriePaiement();
+            $laveriePaiement->setLaverie($laverie);
+            $laveriePaiement->setPaiement($paiement);
+            $entityManager->persist($laveriePaiement);
         }
 
         foreach ($removeImageIds as $removeImageId) {

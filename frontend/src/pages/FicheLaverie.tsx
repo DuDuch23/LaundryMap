@@ -59,14 +59,33 @@ function formatDistance(distance: number | null): string {
 }
 
 function groupHoraires(horaires: LaveriePublicDetail['horaires']) {
-	const groupes: Array<{ jours: string[]; debut: string; fin: string; ferme: boolean }> = [];
+	const JOURS_ORDER = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
 
-	for (const horaire of horaires) {
-		const precedent = groupes[groupes.length - 1];
-		if (precedent && precedent.debut === horaire.debut && precedent.fin === horaire.fin && precedent.ferme === horaire.ferme) {
-			precedent.jours.push(horaire.jour);
+	const byDay: Record<string, Array<{ debut: string; fin: string; ferme: boolean }>> = {};
+	for (const h of horaires) {
+		if (!byDay[h.jour]) byDay[h.jour] = [];
+		byDay[h.jour].push({ debut: h.debut, fin: h.fin, ferme: h.ferme });
+	}
+
+	const dayEntries = JOURS_ORDER
+		.filter((j) => byDay[j])
+		.map((j) => {
+			const slots = byDay[j];
+			const isClosed = slots.every((s) => s.ferme);
+			return { jour: j, ferme: isClosed, plages: isClosed ? [] : slots.filter((s) => !s.ferme).map(({ debut, fin }) => ({ debut, fin })) };
+		});
+
+	const getKey = (e: typeof dayEntries[0]) =>
+		e.ferme ? 'F' : e.plages.map((p) => `${p.debut}-${p.fin}`).join('|');
+
+	const groupes: Array<{ jours: string[]; ferme: boolean; plages: Array<{ debut: string; fin: string }> }> = [];
+	for (const entry of dayEntries) {
+		const key = getKey(entry);
+		const last = groupes[groupes.length - 1];
+		if (last && getKey(last) === key) {
+			last.jours.push(entry.jour);
 		} else {
-			groupes.push({ jours: [horaire.jour], debut: horaire.debut, fin: horaire.fin, ferme: horaire.ferme });
+			groupes.push({ jours: [entry.jour], ferme: entry.ferme, plages: entry.plages });
 		}
 	}
 
@@ -98,19 +117,13 @@ function parseTimeToMinutes(time: string): number | null {
 function isOpenNow(laverie: LaveriePublicDetail): boolean {
 	const today = getCurrentDayLabel();
 	const currentMinutes = getCurrentTimeMinutes();
-	const todayHours = laverie.horaires.find((horaire) => horaire.jour === today);
+	const todaySlots = laverie.horaires.filter((h) => h.jour === today && !h.ferme);
 
-	if (!todayHours || todayHours.ferme) {
-		return false;
-	}
-
-	const start = parseTimeToMinutes(todayHours.debut);
-	const end = parseTimeToMinutes(todayHours.fin);
-	if (start === null || end === null) {
-		return false;
-	}
-
-	return currentMinutes >= start && currentMinutes <= end;
+	return todaySlots.some((slot) => {
+		const start = parseTimeToMinutes(slot.debut);
+		const end = parseTimeToMinutes(slot.fin);
+		return start !== null && end !== null && currentMinutes >= start && currentMinutes <= end;
+	});
 }
 
 function buildMapsLink(laverie: LaveriePublicDetail): string {
@@ -514,16 +527,22 @@ export default function FicheLaverie() {
 								<h2 id="horaires-title" className="sr-only">Horaires de la laverie</h2>
 								<div className="mt-4 space-y-3">
 									{horairesGroupes.length > 0 ? horairesGroupes.map((ligne) => (
-										<div key={`${ligne.jours.join('-')}-${ligne.debut}-${ligne.fin}`} className="flex items-start justify-between gap-4 rounded-2xl bg-slate-50 px-4 py-3">
+										<div key={`${ligne.jours.join('-')}-${ligne.ferme ? 'F' : ligne.plages.map((p) => `${p.debut}-${p.fin}`).join('|')}`} className="flex items-start justify-between gap-4 rounded-2xl bg-slate-50 px-4 py-3">
 											<div>
 												<p className="text-sm font-semibold text-slate-900">
 													{ligne.jours.length > 1 ? `${getJourLabel(ligne.jours[0])} - ${getJourLabel(ligne.jours[ligne.jours.length - 1])}` : getJourLabel(ligne.jours[0])}
 												</p>
-												<p className="mt-1 text-xs text-slate-500">{ligne.ferme ? 'Fermée' : 'Ouverture continue'}</p>
+												<p className="mt-1 text-xs text-slate-500">{ligne.ferme ? 'Fermée' : ligne.plages.length > 1 ? 'Plusieurs plages' : 'Ouverture continue'}</p>
 											</div>
-											<p className="text-sm font-semibold text-slate-700">
-												{ligne.ferme ? 'Fermée' : `${ligne.debut} - ${ligne.fin}`}
-											</p>
+											<div className="text-right">
+												{ligne.ferme ? (
+													<p className="text-sm font-semibold text-slate-700">Fermée</p>
+												) : (
+													ligne.plages.map((p, i) => (
+														<p key={i} className="text-sm font-semibold text-slate-700">{p.debut} – {p.fin}</p>
+													))
+												)}
+											</div>
 										</div>
 									)) : (
 										<div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500" role="status" aria-live="polite">
@@ -648,7 +667,7 @@ export default function FicheLaverie() {
 								<button
 									type="button"
 									onClick={() => setAvisFormVisible(true)}
-									className="mt-4 w-full rounded-full bg-white px-4 py-2 text-sm font-semibold text-cyan-700 shadow-sm transition hover:bg-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+									className="mt-4 w-stretch rounded-full bg-white px-4 py-2 text-sm font-semibold text-cyan-700 shadow-sm transition hover:bg-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
 								>
 									Laisser un avis
 								</button>

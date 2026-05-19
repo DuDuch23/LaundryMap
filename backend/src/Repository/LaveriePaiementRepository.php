@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Laverie;
 use App\Entity\LaveriePaiement;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -14,6 +15,13 @@ class LaveriePaiementRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, LaveriePaiement::class);
+    }
+
+    public function deleteByLaverie(Laverie $laverie): void
+    {
+        foreach ($this->findBy(['laverie' => $laverie]) as $item) {
+            $this->getEntityManager()->remove($item);
+        }
     }
 
     //    /**

@@ -28,7 +28,7 @@ interface UseLaverieSearchResult {
     rechercherParTexte: (q: string) => Promise<void>;
 }
 
-const FILTRES_VIDES: FiltresRecherche = { horaire: '', serviceIds: [], paiementIds: [], rayon: 10 };
+const FILTRES_VIDES: FiltresRecherche = { horaire: '', serviceIds: [], paiementIds: [], rayon: 2 };
 
 export function useLaverieSearch(): UseLaverieSearchResult {
     const [laveries, setLaveries] = useState<Laverie[]>([]);
