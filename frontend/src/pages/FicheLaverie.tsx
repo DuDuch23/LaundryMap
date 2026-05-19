@@ -17,6 +17,7 @@ import {
 	Weight,
 	X,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { AccessibleButton, SkipLink } from '../components/accessibility';
 import API_BASE_URL, { uploadPath, resolveUrl } from '../services/api';
 import { toast } from 'sonner';
@@ -119,6 +120,7 @@ function StarPicker({ value, onChange }: { value: number; onChange: (n: number) 
 }
 
 export default function FicheLaverie() {
+	const { t } = useTranslation();
 	const { id } = useParams<{ id: string }>();
 	const [laverie, setLaverie] = useState<LaveriePublicDetail | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -324,14 +326,14 @@ export default function FicheLaverie() {
 
 	const handleAvisNext = () => {
 		if (avisFormNote < 1) {
-			toast.error('Veuillez sélectionner une note');
+			toast.error(t('main.fiche_laverie.avis.toast_note_requise'));
 			return;
 		}
 		setAvisFormStep('commentaire');
 	};
 
 	const handleSubmitAvis = async () => {
-		if (!laverie || avisFormNote < 1) { toast.error('Veuillez sélectionner une note'); return; }
+		if (!laverie || avisFormNote < 1) { toast.error(t('main.fiche_laverie.avis.toast_note_requise')); return; }
 		setAvisPending(true);
 		try {
 			const trimmed = avisFormCommentaire.trim();
@@ -365,7 +367,7 @@ export default function FicheLaverie() {
 					return { ...prev, commentaires: next, commentairesCount: Math.max(0, prev.commentairesCount + delta) };
 				});
 
-				toast.success('Avis modifié');
+				toast.success(t('main.fiche_laverie.avis.toast_avis_modifie'));
 			} else {
 				const created = await creerAvis(laverie.id, avisFormNote, commentairePayload);
 				setMonAvis(created);
@@ -393,10 +395,10 @@ export default function FicheLaverie() {
 					});
 				}
 
-				toast.success('Avis publié');
+				toast.success(t('main.fiche_laverie.avis.toast_avis_publie'));
 			}
 		} catch (err: any) {
-			toast.error(err?.message || 'Erreur');
+			toast.error(err?.message || t('main.fiche_laverie.avis.toast_erreur'));
 		} finally {
 			setAvisPending(false);
 		}
@@ -413,9 +415,9 @@ export default function FicheLaverie() {
 			setAvisEditing(false);
 			// Retirer de la liste publique des commentaires
 			setLaverie((prev) => prev ? { ...prev, commentaires: prev.commentaires.filter((c) => c.id !== monAvis.id), commentairesCount: Math.max(0, prev.commentairesCount - (monAvis.commentaire ? 1 : 0)) } : prev);
-			toast.success('Note supprimée');
+			toast.success(t('main.fiche_laverie.avis.toast_avis_supprime'));
 		} catch (err: any) {
-			toast.error(err?.message || 'Erreur');
+			toast.error(err?.message || t('main.fiche_laverie.avis.toast_erreur'));
 		} finally {
 			setAvisPending(false);
 		}
@@ -439,7 +441,7 @@ export default function FicheLaverie() {
 
 	const handleCommentNext = () => {
 		if (commentEditNote < 1) {
-			toast.error('Veuillez sélectionner une note');
+			toast.error(t('main.fiche_laverie.avis.toast_note_requise'));
 			return;
 		}
 		setCommentStep('commentaire');
@@ -447,7 +449,7 @@ export default function FicheLaverie() {
 
 	const handleCommentSave = async () => {
 		if (!monAvis || commentEditNote < 1) {
-			toast.error('Veuillez sélectionner une note');
+			toast.error(t('main.fiche_laverie.avis.toast_note_requise'));
 			return;
 		}
 		setCommentPending(true);
@@ -482,9 +484,9 @@ export default function FicheLaverie() {
 				return { ...prev, commentaires: next, commentairesCount: Math.max(count, next.length) };
 			});
 
-			toast.success('Avis modifié');
+			toast.success(t('main.fiche_laverie.avis.toast_avis_modifie'));
 		} catch (err: any) {
-			toast.error(err?.message || 'Erreur');
+			toast.error(err?.message || t('main.fiche_laverie.avis.toast_erreur'));
 		} finally {
 			setCommentPending(false);
 		}
@@ -506,9 +508,9 @@ export default function FicheLaverie() {
 				commentaires: prev.commentaires.filter((c) => c.id !== deletedId),
 				commentairesCount: Math.max(0, prev.commentairesCount - (hadCommentaire ? 1 : 0)),
 			} : prev);
-			toast.success('Avis supprimé');
+			toast.success(t('main.fiche_laverie.avis.toast_avis_supprime'));
 		} catch (err: any) {
-			toast.error(err?.message || 'Erreur');
+			toast.error(err?.message || t('main.fiche_laverie.avis.toast_erreur'));
 		} finally {
 			setCommentPending(false);
 		}
@@ -768,8 +770,8 @@ export default function FicheLaverie() {
 				<section className="mt-8 rounded-[28px] bg-white p-5 shadow-sm sm:p-6" aria-labelledby="avis-title">
 					<div className="flex items-center justify-between gap-3">
 						<div>
-							<p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Notes et avis</p>
-							<h2 id="avis-title" className="mt-2 text-lg font-bold text-slate-900">Ce que disent les clients</h2>
+							<p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{t('main.fiche_laverie.avis.section_kicker')}</p>
+							<h2 id="avis-title" className="mt-2 text-lg font-bold text-slate-900">{t('main.fiche_laverie.avis.section_titre')}</h2>
 						</div>
 						<div className="flex items-center gap-2 rounded-full bg-amber-50 px-3 py-2 text-sm font-semibold text-slate-900">
 							<Star className="h-4 w-4 text-amber-500" aria-hidden="true" />
@@ -780,7 +782,7 @@ export default function FicheLaverie() {
 					<div className="mt-5 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
 						{/* Panneau gauche : note moyenne + formulaire */}
 						<div className="rounded-[24px] bg-cyan-50 p-5">
-							<p className="text-center text-sm font-medium text-slate-700">Note moyenne</p>
+							<p className="text-center text-sm font-medium text-slate-700">{t('main.fiche_laverie.avis.note_moyenne')}</p>
 							<div className="mt-3 flex justify-center gap-1">
 								{Array.from({ length: 5 }, (_, i) => (
 									<Star key={i} className={`h-7 w-7 ${i < Math.round(laverie.noteMoyenne ?? 0) ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} aria-hidden="true" />
@@ -793,7 +795,7 @@ export default function FicheLaverie() {
 									onClick={openAvisForm}
 									className="mt-4 w-full rounded-full bg-white py-2 text-sm font-semibold text-cyan-700 shadow-sm transition hover:bg-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 cursor-pointer"
 								>
-									Laisser un avis
+									{t('main.fiche_laverie.avis.bouton_laisser_avis')}
 								</button>
 							)}
 
@@ -801,7 +803,7 @@ export default function FicheLaverie() {
 								<div className="mt-4 space-y-3">
 									{monAvis && !avisEditing ? (
 										<>
-											<p className="text-xs font-semibold text-slate-500 text-center">Votre avis</p>
+											<p className="text-xs font-semibold text-slate-500 text-center">{t('main.fiche_laverie.avis.votre_avis_badge')}</p>
 											<div className="flex justify-center gap-1">
 												{Array.from({ length: 5 }, (_, i) => (
 													<Star key={i} className={`h-5 w-5 ${i < monAvis.note ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} />
@@ -809,15 +811,15 @@ export default function FicheLaverie() {
 											</div>
 											{avisConfirmDelete ? (
 												<div className="space-y-2">
-													<p className="text-xs font-medium text-rose-700 text-center">Supprimer définitivement ?</p>
+													<p className="text-xs font-medium text-rose-700 text-center">{t('main.fiche_laverie.avis.confirmer_suppression_court')}</p>
 													<div className="flex gap-2 justify-center">
 														<button type="button" onClick={handleDeleteAvis} disabled={avisPending}
 															className="flex items-center gap-1 rounded-lg bg-rose-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-600 disabled:opacity-60 transition-colors">
-															<Trash2 className="h-3 w-3" /> Supprimer
+															<Trash2 className="h-3 w-3" /> {t('main.fiche_laverie.avis.bouton_supprimer')}
 														</button>
 														<button type="button" onClick={() => setAvisConfirmDelete(false)}
 															className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
-															<X className="h-3 w-3" /> Annuler
+															<X className="h-3 w-3" /> {t('main.fiche_laverie.avis.bouton_annuler')}
 														</button>
 													</div>
 												</div>
@@ -825,11 +827,11 @@ export default function FicheLaverie() {
 												<div className="flex gap-2 justify-center">
 													<button type="button" onClick={openAvisForm}
 														className="flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer">
-														<Pencil className="h-3 w-3" /> Modifier
+														<Pencil className="h-3 w-3" /> {t('main.fiche_laverie.avis.bouton_modifier')}
 													</button>
 													<button type="button" onClick={() => setAvisConfirmDelete(true)}
 														className="flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer">
-														<Trash2 className="h-3 w-3" /> Supprimer
+														<Trash2 className="h-3 w-3" /> {t('main.fiche_laverie.avis.bouton_supprimer')}
 													</button>
 												</div>
 											)}
@@ -837,32 +839,32 @@ export default function FicheLaverie() {
 									) : (
 										<>
 											<div className="flex items-center justify-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-												<span className={avisFormStep === 'note' ? 'text-[#14A8DE]' : ''}>1. Note</span>
+												<span className={avisFormStep === 'note' ? 'text-[#14A8DE]' : ''}>{t('main.fiche_laverie.avis.etape_note')}</span>
 												<span className="text-slate-300">/</span>
-												<span className={avisFormStep === 'commentaire' ? 'text-[#14A8DE]' : ''}>2. Commentaire</span>
+												<span className={avisFormStep === 'commentaire' ? 'text-[#14A8DE]' : ''}>{t('main.fiche_laverie.avis.etape_commentaire')}</span>
 											</div>
 
 											{avisFormStep === 'note' ? (
 												<>
-													<p className="text-xs font-semibold text-slate-500 text-center">{monAvis ? 'Modifier votre note' : 'Votre note'}</p>
+													<p className="text-xs font-semibold text-slate-500 text-center">{monAvis ? t('main.fiche_laverie.avis.modifier_votre_note') : t('main.fiche_laverie.avis.votre_note')}</p>
 													<div className="flex justify-center">
 														<StarPicker value={avisFormNote} onChange={setAvisFormNote} />
 													</div>
 													<div className="flex flex-wrap gap-2 justify-center">
 														<button type="button" onClick={handleAvisNext} disabled={avisPending || avisFormNote < 1}
 															className="flex items-center gap-1.5 rounded-lg bg-[#14A8DE] px-4 py-2 text-xs font-semibold text-white hover:bg-[#119ac8] disabled:opacity-60 transition-colors cursor-pointer">
-															Suivant <ArrowRight className="h-3.5 w-3.5" />
+															{t('main.fiche_laverie.avis.bouton_suivant')} <ArrowRight className="h-3.5 w-3.5" />
 														</button>
 														<button type="button" onClick={closeAvisForm}
 															className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
-															<X className="h-3 w-3" /> Annuler
+															<X className="h-3 w-3" /> {t('main.fiche_laverie.avis.bouton_annuler')}
 														</button>
 													</div>
 												</>
 											) : (
 												<>
 													<label htmlFor="avis-form-commentaire" className="block text-xs font-semibold text-slate-500 text-center">
-														Votre commentaire <span className="text-slate-400 font-normal normal-case">(facultatif)</span>
+														{t('main.fiche_laverie.avis.label_commentaire')} <span className="text-slate-400 font-normal normal-case">{t('main.fiche_laverie.avis.label_facultatif')}</span>
 													</label>
 													<div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 focus-within:border-[#14A8DE] focus-within:ring-2 focus-within:ring-[#14A8DE]/20 transition-colors">
 														<textarea
@@ -871,7 +873,7 @@ export default function FicheLaverie() {
 															maxLength={1000}
 															value={avisFormCommentaire}
 															onChange={(e) => setAvisFormCommentaire(e.target.value)}
-															placeholder="Partagez votre expérience…"
+															placeholder={t('main.fiche_laverie.avis.placeholder_commentaire') as string}
 															className="block w-full bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none resize-none border-0 p-0"
 														/>
 													</div>
@@ -879,15 +881,15 @@ export default function FicheLaverie() {
 													<div className="flex flex-wrap gap-2 justify-center">
 														<button type="button" onClick={handleSubmitAvis} disabled={avisPending || avisFormNote < 1}
 															className="flex items-center gap-1.5 rounded-lg bg-[#14A8DE] px-4 py-2 text-xs font-semibold text-white hover:bg-[#119ac8] disabled:opacity-60 transition-colors cursor-pointer">
-															<Check className="h-3.5 w-3.5" /> {monAvis ? 'Enregistrer' : 'Publier'}
+															<Check className="h-3.5 w-3.5" /> {monAvis ? t('main.fiche_laverie.avis.bouton_enregistrer') : t('main.fiche_laverie.avis.bouton_publier')}
 														</button>
 														<button type="button" onClick={() => setAvisFormStep('note')} disabled={avisPending}
 															className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
-															Retour
+															{t('main.fiche_laverie.avis.bouton_retour')}
 														</button>
 														<button type="button" onClick={closeAvisForm}
 															className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
-															<X className="h-3 w-3" /> Annuler
+															<X className="h-3 w-3" /> {t('main.fiche_laverie.avis.bouton_annuler')}
 														</button>
 													</div>
 												</>
@@ -902,8 +904,8 @@ export default function FicheLaverie() {
 							<div className="space-y-4" role="status" aria-live="polite">
 								<div className="flex items-start justify-between gap-3 px-2">
 									<div>
-										<p className="text-sm font-semibold text-slate-900">Avis clients</p>
-										<p className="mt-1 text-xs text-slate-500">{laverie.commentairesCount} commentaire{laverie.commentairesCount > 1 ? 's' : ''}</p>
+										<p className="text-sm font-semibold text-slate-900">{t('main.fiche_laverie.avis.liste_titre')}</p>
+										<p className="mt-1 text-xs text-slate-500">{t('main.fiche_laverie.avis.liste_compteur', { count: laverie.commentairesCount })}</p>
 									</div>
 									<MessageSquare className="h-4 w-4 text-slate-400" aria-hidden="true" />
 								</div>
@@ -921,7 +923,7 @@ export default function FicheLaverie() {
 														<div className="min-w-0">
 															<p className="text-sm font-semibold text-slate-900">
 																{commentaire.utilisateur.prenom} {commentaire.utilisateur.nom}
-																{isMine && <span className="ml-2 inline-block rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-cyan-700">Votre avis</span>}
+																{isMine && <span className="ml-2 inline-block rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-cyan-700">{t('main.fiche_laverie.avis.votre_avis_badge')}</span>}
 															</p>
 															<p className="text-xs text-slate-500">{commentaire.date ? new Date(commentaire.date).toLocaleDateString('fr-FR') : ''}</p>
 														</div>
@@ -937,7 +939,7 @@ export default function FicheLaverie() {
 																		type="button"
 																		onClick={startInlineEdit}
 																		className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-[#14A8DE] hover:text-white transition-colors cursor-pointer"
-																		aria-label="Modifier mon commentaire"
+																		aria-label={t('main.fiche_laverie.avis.modifier_aria') as string}
 																	>
 																		<Pencil className="h-3.5 w-3.5" />
 																	</button>
@@ -945,7 +947,7 @@ export default function FicheLaverie() {
 																		type="button"
 																		onClick={() => setCommentConfirmDelete(true)}
 																		className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-rose-500 hover:text-white transition-colors cursor-pointer"
-																		aria-label="Supprimer mon commentaire"
+																		aria-label={t('main.fiche_laverie.avis.supprimer_aria') as string}
 																	>
 																		<Trash2 className="h-3.5 w-3.5" />
 																	</button>
@@ -956,7 +958,7 @@ export default function FicheLaverie() {
 
 													{showConfirmDelete ? (
 														<div className="mt-3 rounded-xl bg-rose-50 border border-rose-200 p-3">
-															<p className="text-sm font-medium text-rose-800">Supprimer votre avis définitivement ?</p>
+															<p className="text-sm font-medium text-rose-800">{t('main.fiche_laverie.avis.confirmer_suppression_long')}</p>
 															<div className="mt-2 flex gap-2">
 																<button
 																	type="button"
@@ -965,7 +967,7 @@ export default function FicheLaverie() {
 																	className="flex items-center gap-1.5 rounded-lg bg-rose-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-600 disabled:opacity-60 transition-colors cursor-pointer"
 																>
 																	<Trash2 className="h-3.5 w-3.5" />
-																	Supprimer
+																	{t('main.fiche_laverie.avis.bouton_supprimer')}
 																</button>
 																<button
 																	type="button"
@@ -973,16 +975,16 @@ export default function FicheLaverie() {
 																	className="flex items-center gap-1.5 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
 																>
 																	<X className="h-3.5 w-3.5" />
-																	Annuler
+																	{t('main.fiche_laverie.avis.bouton_annuler')}
 																</button>
 															</div>
 														</div>
 													) : showInlineEdit ? (
 														<div className="mt-3 space-y-3">
 															<div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-																<span className={commentStep === 'note' ? 'text-[#14A8DE]' : ''}>1. Note</span>
+																<span className={commentStep === 'note' ? 'text-[#14A8DE]' : ''}>{t('main.fiche_laverie.avis.etape_note')}</span>
 																<span className="text-slate-300">/</span>
-																<span className={commentStep === 'commentaire' ? 'text-[#14A8DE]' : ''}>2. Commentaire</span>
+																<span className={commentStep === 'commentaire' ? 'text-[#14A8DE]' : ''}>{t('main.fiche_laverie.avis.etape_commentaire')}</span>
 															</div>
 
 															{commentStep === 'note' ? (
@@ -995,7 +997,7 @@ export default function FicheLaverie() {
 																			disabled={commentPending}
 																			className="flex items-center gap-1.5 rounded-lg bg-[#14A8DE] px-4 py-2 text-xs font-semibold text-white hover:bg-[#119ac8] disabled:opacity-60 transition-colors cursor-pointer"
 																		>
-																			Suivant
+																			{t('main.fiche_laverie.avis.bouton_suivant')}
 																			<ArrowRight className="h-3.5 w-3.5" />
 																		</button>
 																		<button
@@ -1004,14 +1006,14 @@ export default function FicheLaverie() {
 																			className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
 																		>
 																			<X className="h-3.5 w-3.5" />
-																			Annuler
+																			{t('main.fiche_laverie.avis.bouton_annuler')}
 																		</button>
 																	</div>
 																</>
 															) : (
 																<>
 																	<label htmlFor={`commentaire-fiche-${commentaire.id}`} className="block text-sm font-medium text-slate-700">
-																		Votre commentaire <span className="text-slate-400 font-normal">(facultatif)</span>
+																		{t('main.fiche_laverie.avis.label_commentaire')} <span className="text-slate-400 font-normal">{t('main.fiche_laverie.avis.label_facultatif')}</span>
 																	</label>
 																	<div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 focus-within:border-[#14A8DE] focus-within:ring-2 focus-within:ring-[#14A8DE]/20 transition-colors">
 																		<textarea
@@ -1020,7 +1022,7 @@ export default function FicheLaverie() {
 																			maxLength={1000}
 																			value={commentEditText}
 																			onChange={(e) => setCommentEditText(e.target.value)}
-																			placeholder="Partagez votre expérience…"
+																			placeholder={t('main.fiche_laverie.avis.placeholder_commentaire') as string}
 																			className="block w-full bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none resize-none border-0 p-0"
 																		/>
 																	</div>
@@ -1033,7 +1035,7 @@ export default function FicheLaverie() {
 																			className="flex items-center gap-1.5 rounded-lg bg-[#14A8DE] px-4 py-2 text-xs font-semibold text-white hover:bg-[#119ac8] disabled:opacity-60 transition-colors cursor-pointer"
 																		>
 																			<Check className="h-3.5 w-3.5" />
-																			Enregistrer
+																			{t('main.fiche_laverie.avis.bouton_enregistrer')}
 																		</button>
 																		<button
 																			type="button"
@@ -1041,7 +1043,7 @@ export default function FicheLaverie() {
 																			disabled={commentPending}
 																			className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
 																		>
-																			Retour
+																			{t('main.fiche_laverie.avis.bouton_retour')}
 																		</button>
 																		<button
 																			type="button"
@@ -1049,7 +1051,7 @@ export default function FicheLaverie() {
 																			className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
 																		>
 																			<X className="h-3.5 w-3.5" />
-																			Annuler
+																			{t('main.fiche_laverie.avis.bouton_annuler')}
 																		</button>
 																	</div>
 																</>
@@ -1064,7 +1066,7 @@ export default function FicheLaverie() {
 									</div>
 								) : (
 									<div className="rounded-2xl border border-slate-100 p-4">
-										<p className="text-sm leading-6 text-slate-600">Aucun avis détaillé n'est encore disponible pour cette laverie.</p>
+										<p className="text-sm leading-6 text-slate-600">{t('main.fiche_laverie.avis.liste_vide')}</p>
 									</div>
 								)}
 							</div>

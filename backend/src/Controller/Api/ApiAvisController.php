@@ -76,7 +76,7 @@ class ApiAvisController extends AbstractController
         }
 
         if ($commentaire !== null && mb_strlen($commentaire) > 1000) {
-            return $this->json(['message' => 'Le commentaire ne peut pas dépasser 1000 caractères'], 400);
+            return $this->json(['message' => 'Le commentaire est trop long.'], 400);
         }
 
         $laverie = $laverieRepo->find((int) $laverieId);
@@ -157,7 +157,7 @@ class ApiAvisController extends AbstractController
                 $laverieNote->setCommentaire(null)->setCommenteLe(null);
             } else {
                 if (mb_strlen($commentaireClean) > 1000) {
-                    return $this->json(['message' => 'Le commentaire ne peut pas dépasser 1000 caractères'], 400);
+                    return $this->json(['message' => 'Le commentaire est trop long.'], 400);
                 }
                 $laverieNote->setCommentaire($commentaireClean)->setCommenteLe(new \DateTime());
             }

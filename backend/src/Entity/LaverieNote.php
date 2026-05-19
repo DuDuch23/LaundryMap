@@ -31,7 +31,7 @@ class LaverieNote
     #[ORM\Column(name: 'note_le', type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $noteLe = null;
 
-    #[ORM\Column(type: 'string', length: 500, nullable: true)]
+    #[ORM\Column(type: 'string', length: 1000, nullable: true)]
     private ?string $commentaire = null;
 
     #[ORM\Column(name: 'commente_le', type: 'datetime', nullable: true)]
