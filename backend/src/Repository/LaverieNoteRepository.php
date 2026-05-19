@@ -6,6 +6,7 @@ use App\Entity\Laverie;
 use App\Entity\LaverieNote;
 use App\Entity\Utilisateur;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -55,14 +56,19 @@ class LaverieNoteRepository extends ServiceEntityRepository
     /** @return LaverieNote[] */
     public function findByUtilisateur(Utilisateur $utilisateur): array
     {
+        return $this->createByUtilisateurQueryBuilder($utilisateur)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function createByUtilisateurQueryBuilder(Utilisateur $utilisateur): QueryBuilder
+    {
         return $this->createQueryBuilder('n')
             ->join('n.laverie', 'l')
             ->where('n.utilisateur = :user')
             ->andWhere('l.supprimee_le IS NULL')
             ->setParameter('user', $utilisateur)
-            ->orderBy('n.noteLe', 'DESC')
-            ->getQuery()
-            ->getResult();
+            ->orderBy('n.noteLe', 'DESC');
     }
 
     //    /**

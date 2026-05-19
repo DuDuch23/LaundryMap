@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 import {
+	ArrowRight,
 	Check,
 	CheckCircle2,
 	Clock3,
@@ -16,10 +17,11 @@ import {
 	Weight,
 	X,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { AccessibleButton, SkipLink } from '../components/accessibility';
 import API_BASE_URL, { uploadPath, resolveUrl } from '../services/api';
 import { toast } from 'sonner';
-import { fetchPublicLaverieDetail, ajouterFavori, supprimerFavori, type LaveriePublicDetail } from '../services/request';
+import { fetchPublicLaverieDetail, ajouterFavori, supprimerFavori, creerAvis, modifierAvis, supprimerAvis, type LaveriePublicDetail, type MonAvis } from '../services/request';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 import { useGeolocation } from '../hooks/useGeolocation';
@@ -78,7 +80,7 @@ function groupHoraires(horaires: LaveriePublicDetail['horaires']) {
 			return { jour: j, ferme: isClosed, plages: isClosed ? [] : slots.filter((s) => !s.ferme).map(({ debut, fin }) => ({ debut, fin })) };
 		});
 
-	const getKey = (e: typeof dayEntries[0]) =>
+	const getKey = (e: { ferme: boolean; plages: { debut: string; fin: string }[] }) =>
 		e.ferme ? 'F' : e.plages.map((p) => `${p.debut}-${p.fin}`).join('|');
 
 	const groupes: Array<{ jours: string[]; ferme: boolean; plages: Array<{ debut: string; fin: string }> }> = [];
@@ -141,14 +143,13 @@ function buildMapsLink(laverie: LaveriePublicDetail): string {
 function StarPicker({ value, onChange }: { value: number; onChange: (n: number) => void }) {
 	const [hovered, setHovered] = useState(0);
 	return (
-		<div className="flex gap-1.5" role="group" aria-label="Note sur 5">
+		<div className="flex gap-1.5" role="group" aria-label="Note sur 5" onMouseLeave={() => setHovered(0)}>
 			{[1, 2, 3, 4, 5].map((star) => (
 				<button
 					key={star}
 					type="button"
 					onClick={() => onChange(star)}
 					onMouseEnter={() => setHovered(star)}
-					onMouseLeave={() => setHovered(0)}
 					aria-label={`${star} étoile${star > 1 ? 's' : ''}`}
 					className="transition-transform hover:scale-110 focus-visible:outline-none"
 				>
@@ -160,6 +161,7 @@ function StarPicker({ value, onChange }: { value: number; onChange: (n: number) 
 }
 
 export default function FicheLaverie() {
+	const { t } = useTranslation();
 	const { id } = useParams<{ id: string }>();
 	const [laverie, setLaverie] = useState<LaveriePublicDetail | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -178,10 +180,20 @@ export default function FicheLaverie() {
 	// ── Avis ─────────────────────────────────────────────────────────────────
 	const [monAvis, setMonAvis] = useState<MonAvis | null>(null);
 	const [avisFormNote, setAvisFormNote] = useState(0);
+	const [avisFormCommentaire, setAvisFormCommentaire] = useState('');
+	const [avisFormStep, setAvisFormStep] = useState<'note' | 'commentaire'>('note');
 	const [avisFormVisible, setAvisFormVisible] = useState(false);
 	const [avisEditing, setAvisEditing] = useState(false);
 	const [avisConfirmDelete, setAvisConfirmDelete] = useState(false);
 	const [avisPending, setAvisPending] = useState(false);
+
+	// ── Édition inline du commentaire propre dans la liste ───────────────────
+	const [commentEditing, setCommentEditing] = useState(false);
+	const [commentStep, setCommentStep] = useState<'note' | 'commentaire'>('note');
+	const [commentEditNote, setCommentEditNote] = useState(0);
+	const [commentEditText, setCommentEditText] = useState('');
+	const [commentConfirmDelete, setCommentConfirmDelete] = useState(false);
+	const [commentPending, setCommentPending] = useState(false);
 
 	const isProfessionnel = useMemo(() => {
 		return userToken ? userToken.roles.some((r: string) => r.includes('PROFESSIONNEL')) : false;
@@ -210,6 +222,7 @@ export default function FicheLaverie() {
 				if (data.monAvis) {
 					setMonAvis(data.monAvis);
 					setAvisFormNote(data.monAvis.note);
+					setAvisFormCommentaire(data.monAvis.commentaire ?? '');
 				}
 
 				// Vérifier si l'utilisateur est connecté et si c'est un favori
@@ -357,23 +370,100 @@ export default function FicheLaverie() {
 		} catch { return false; }
 	}, []);
 
+	const openAvisForm = () => {
+		setAvisFormNote(monAvis?.note ?? 0);
+		setAvisFormCommentaire(monAvis?.commentaire ?? '');
+		setAvisFormStep('note');
+		if (monAvis) {
+			setAvisEditing(true);
+		} else {
+			setAvisFormVisible(true);
+		}
+	};
+
+	const closeAvisForm = () => {
+		setAvisFormVisible(false);
+		setAvisEditing(false);
+		setAvisFormStep('note');
+		setAvisFormNote(monAvis?.note ?? 0);
+		setAvisFormCommentaire(monAvis?.commentaire ?? '');
+	};
+
+	const handleAvisNext = () => {
+		if (avisFormNote < 1) {
+			toast.error(t('main.fiche_laverie.avis.toast_note_requise'));
+			return;
+		}
+		setAvisFormStep('commentaire');
+	};
+
 	const handleSubmitAvis = async () => {
-		if (!laverie || avisFormNote < 1) { toast.error('Veuillez sélectionner une note'); return; }
+		if (!laverie || avisFormNote < 1) { toast.error(t('main.fiche_laverie.avis.toast_note_requise')); return; }
 		setAvisPending(true);
 		try {
+			const trimmed = avisFormCommentaire.trim();
+			const commentairePayload = trimmed === '' ? null : trimmed;
+
 			if (monAvis) {
-				const updated = await modifierAvis(monAvis.id, avisFormNote);
+				const updated = await modifierAvis(monAvis.id, avisFormNote, commentairePayload);
 				setMonAvis(updated);
 				setAvisEditing(false);
-				toast.success('Note modifiée');
+				setAvisFormStep('note');
+
+				// Synchroniser la liste publique
+				setLaverie((prev) => {
+					if (!prev) return prev;
+					const previous = prev.commentaires.find((c) => c.id === updated.id);
+					const without = prev.commentaires.filter((c) => c.id !== updated.id);
+					const hadCommentBefore = !!previous;
+					const hasCommentNow = !!(updated.commentaire && updated.commentaire.trim() !== '');
+					let next = without;
+					if (hasCommentNow) {
+						const dateIso = updated.commenteLe ?? updated.noteLe ?? new Date().toISOString();
+						next = [{
+							id: updated.id,
+							note: updated.note,
+							commentaire: updated.commentaire as string,
+							date: dateIso,
+							utilisateur: previous?.utilisateur ?? { prenom: '', nom: '' },
+						}, ...without];
+					}
+					const delta = (hasCommentNow ? 1 : 0) - (hadCommentBefore ? 1 : 0);
+					return { ...prev, commentaires: next, commentairesCount: Math.max(0, prev.commentairesCount + delta) };
+				});
+
+				toast.success(t('main.fiche_laverie.avis.toast_avis_modifie'));
 			} else {
-				const created = await creerAvis(laverie.id, avisFormNote);
+				const created = await creerAvis(laverie.id, avisFormNote, commentairePayload);
 				setMonAvis(created);
 				setAvisFormVisible(false);
-				toast.success('Note publiée');
+				setAvisFormStep('note');
+				setAvisFormCommentaire('');
+
+				// Ajouter à la liste publique si commentaire renseigné
+				if (created.commentaire && created.commentaire.trim() !== '') {
+					setLaverie((prev) => {
+						if (!prev) return prev;
+						const dateIso = created.commenteLe ?? created.noteLe ?? new Date().toISOString();
+						const ownEntry = {
+							id: created.id,
+							note: created.note,
+							commentaire: created.commentaire as string,
+							date: dateIso,
+							utilisateur: { prenom: 'Mon', nom: 'avis' },
+						};
+						return {
+							...prev,
+							commentaires: [ownEntry, ...prev.commentaires],
+							commentairesCount: prev.commentairesCount + 1,
+						};
+					});
+				}
+
+				toast.success(t('main.fiche_laverie.avis.toast_avis_publie'));
 			}
 		} catch (err: any) {
-			toast.error(err?.message || 'Erreur');
+			toast.error(err?.message || t('main.fiche_laverie.avis.toast_erreur'));
 		} finally {
 			setAvisPending(false);
 		}
@@ -388,11 +478,106 @@ export default function FicheLaverie() {
 			setAvisFormNote(0);
 			setAvisConfirmDelete(false);
 			setAvisEditing(false);
-			toast.success('Note supprimée');
+			// Retirer de la liste publique des commentaires
+			setLaverie((prev) => prev ? { ...prev, commentaires: prev.commentaires.filter((c) => c.id !== monAvis.id), commentairesCount: Math.max(0, prev.commentairesCount - (monAvis.commentaire ? 1 : 0)) } : prev);
+			toast.success(t('main.fiche_laverie.avis.toast_avis_supprime'));
 		} catch (err: any) {
-			toast.error(err?.message || 'Erreur');
+			toast.error(err?.message || t('main.fiche_laverie.avis.toast_erreur'));
 		} finally {
 			setAvisPending(false);
+		}
+	};
+
+	// ── Modification inline du commentaire dans la liste ─────────────────────
+	const startInlineEdit = () => {
+		if (!monAvis) return;
+		setCommentEditNote(monAvis.note);
+		setCommentEditText(monAvis.commentaire ?? '');
+		setCommentStep('note');
+		setCommentConfirmDelete(false);
+		setCommentEditing(true);
+	};
+
+	const handleCommentCancel = () => {
+		setCommentEditing(false);
+		setCommentConfirmDelete(false);
+		setCommentStep('note');
+	};
+
+	const handleCommentNext = () => {
+		if (commentEditNote < 1) {
+			toast.error(t('main.fiche_laverie.avis.toast_note_requise'));
+			return;
+		}
+		setCommentStep('commentaire');
+	};
+
+	const handleCommentSave = async () => {
+		if (!monAvis || commentEditNote < 1) {
+			toast.error(t('main.fiche_laverie.avis.toast_note_requise'));
+			return;
+		}
+		setCommentPending(true);
+		try {
+			const trimmed = commentEditText.trim();
+			const updated = await modifierAvis(monAvis.id, commentEditNote, trimmed === '' ? null : trimmed);
+			setMonAvis(updated);
+			setAvisFormNote(updated.note);
+			setCommentEditing(false);
+			setCommentStep('note');
+
+			// Mettre à jour la liste publique : ajouter/modifier/retirer selon le commentaire
+			setLaverie((prev) => {
+				if (!prev) return prev;
+				const dateIso = updated.commenteLe ?? updated.noteLe ?? new Date().toISOString();
+				const without = prev.commentaires.filter((c) => c.id !== updated.id);
+				let next = without;
+				if (updated.commentaire && updated.commentaire.trim() !== '') {
+					// On réutilise les infos d'auteur déjà présentes dans la liste si dispo
+					const previous = prev.commentaires.find((c) => c.id === updated.id);
+					const own = {
+						id: updated.id,
+						note: updated.note,
+						commentaire: updated.commentaire,
+						date: dateIso,
+						utilisateur: previous?.utilisateur ?? { prenom: '', nom: '' },
+					};
+					next = [own, ...without];
+				}
+				// Recalcule du compteur
+				const count = next.length + (prev.commentairesCount - prev.commentaires.length);
+				return { ...prev, commentaires: next, commentairesCount: Math.max(count, next.length) };
+			});
+
+			toast.success(t('main.fiche_laverie.avis.toast_avis_modifie'));
+		} catch (err: any) {
+			toast.error(err?.message || t('main.fiche_laverie.avis.toast_erreur'));
+		} finally {
+			setCommentPending(false);
+		}
+	};
+
+	const handleCommentDelete = async () => {
+		if (!monAvis) return;
+		setCommentPending(true);
+		try {
+			await supprimerAvis(monAvis.id);
+			const deletedId = monAvis.id;
+			const hadCommentaire = !!monAvis.commentaire;
+			setMonAvis(null);
+			setAvisFormNote(0);
+			setCommentEditing(false);
+			setCommentConfirmDelete(false);
+			setLaverie((prev) => prev ? {
+				...prev,
+				commentaires: prev.commentaires.filter((c) => c.id !== deletedId),
+				commentairesCount: Math.max(0, prev.commentairesCount - (hadCommentaire ? 1 : 0)),
+			} : prev);
+			toast.success(t('main.fiche_laverie.avis.toast_avis_supprime'));
+		} catch (err: any) {
+			toast.error(err?.message || t('main.fiche_laverie.avis.toast_erreur'));
+		} finally {
+			setCommentPending(false);
 		}
 	};
 
@@ -693,8 +878,8 @@ export default function FicheLaverie() {
 				<section className="mt-8 rounded-[28px] bg-white p-5 shadow-sm sm:p-6" aria-labelledby="avis-title">
 					<div className="flex items-center justify-between gap-3">
 						<div>
-							<p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Notes et avis</p>
-							<h2 id="avis-title" className="mt-2 text-lg font-bold text-slate-900">Ce que disent les clients</h2>
+							<p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{t('main.fiche_laverie.avis.section_kicker')}</p>
+							<h2 id="avis-title" className="mt-2 text-lg font-bold text-slate-900">{t('main.fiche_laverie.avis.section_titre')}</h2>
 						</div>
 						<div className="flex items-center gap-2 rounded-full bg-amber-50 px-3 py-2 text-sm font-semibold text-slate-900">
 							<Star className="h-4 w-4 text-amber-500" aria-hidden="true" />
@@ -705,7 +890,7 @@ export default function FicheLaverie() {
 					<div className="mt-5 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
 						{/* Panneau gauche : note moyenne + formulaire */}
 						<div className="rounded-[24px] bg-cyan-50 p-5">
-							<p className="text-center text-sm font-medium text-slate-700">Note moyenne</p>
+							<p className="text-center text-sm font-medium text-slate-700">{t('main.fiche_laverie.avis.note_moyenne')}</p>
 							<div className="mt-3 flex justify-center gap-1">
 								{Array.from({ length: 5 }, (_, i) => (
 									<Star key={i} className={`h-7 w-7 ${i < Math.round(laverie.noteMoyenne ?? 0) ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} aria-hidden="true" />
@@ -715,10 +900,10 @@ export default function FicheLaverie() {
 							{isStandardUser && !monAvis && !avisFormVisible && (
 								<button
 									type="button"
-									onClick={() => setAvisFormVisible(true)}
-									className="mt-4 w-stretch rounded-full bg-white px-4 py-2 text-sm font-semibold text-cyan-700 shadow-sm transition hover:bg-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+									onClick={openAvisForm}
+									className="mt-4 w-full rounded-full bg-white py-2 text-sm font-semibold text-cyan-700 shadow-sm transition hover:bg-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 cursor-pointer"
 								>
-									Laisser un avis
+									{t('main.fiche_laverie.avis.bouton_laisser_avis')}
 								</button>
 							)}
 
@@ -726,7 +911,7 @@ export default function FicheLaverie() {
 								<div className="mt-4 space-y-3">
 									{monAvis && !avisEditing ? (
 										<>
-											<p className="text-xs font-semibold text-slate-500 text-center">Votre avis</p>
+											<p className="text-xs font-semibold text-slate-500 text-center">{t('main.fiche_laverie.avis.votre_avis_badge')}</p>
 											<div className="flex justify-center gap-1">
 												{Array.from({ length: 5 }, (_, i) => (
 													<Star key={i} className={`h-5 w-5 ${i < monAvis.note ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} />
@@ -734,47 +919,89 @@ export default function FicheLaverie() {
 											</div>
 											{avisConfirmDelete ? (
 												<div className="space-y-2">
-													<p className="text-xs font-medium text-rose-700 text-center">Supprimer définitivement ?</p>
+													<p className="text-xs font-medium text-rose-700 text-center">{t('main.fiche_laverie.avis.confirmer_suppression_court')}</p>
 													<div className="flex gap-2 justify-center">
 														<button type="button" onClick={handleDeleteAvis} disabled={avisPending}
 															className="flex items-center gap-1 rounded-lg bg-rose-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-600 disabled:opacity-60 transition-colors">
-															<Trash2 className="h-3 w-3" /> Supprimer
+															<Trash2 className="h-3 w-3" /> {t('main.fiche_laverie.avis.bouton_supprimer')}
 														</button>
 														<button type="button" onClick={() => setAvisConfirmDelete(false)}
 															className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
-															<X className="h-3 w-3" /> Annuler
+															<X className="h-3 w-3" /> {t('main.fiche_laverie.avis.bouton_annuler')}
 														</button>
 													</div>
 												</div>
 											) : (
 												<div className="flex gap-2 justify-center">
-													<button type="button" onClick={() => { setAvisEditing(true); setAvisFormNote(monAvis.note); }}
-														className="flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors">
-														<Pencil className="h-3 w-3" /> Modifier
+													<button type="button" onClick={openAvisForm}
+														className="flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer">
+														<Pencil className="h-3 w-3" /> {t('main.fiche_laverie.avis.bouton_modifier')}
 													</button>
 													<button type="button" onClick={() => setAvisConfirmDelete(true)}
-														className="flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors">
-														<Trash2 className="h-3 w-3" /> Supprimer
+														className="flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer">
+														<Trash2 className="h-3 w-3" /> {t('main.fiche_laverie.avis.bouton_supprimer')}
 													</button>
 												</div>
 											)}
 										</>
 									) : (
 										<>
-											<p className="text-xs font-semibold text-slate-500 text-center">{monAvis ? 'Modifier votre note' : 'Votre note'}</p>
-											<div className="flex justify-center">
-												<StarPicker value={avisFormNote} onChange={setAvisFormNote} />
+											<div className="flex items-center justify-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+												<span className={avisFormStep === 'note' ? 'text-[#14A8DE]' : ''}>{t('main.fiche_laverie.avis.etape_note')}</span>
+												<span className="text-slate-300">/</span>
+												<span className={avisFormStep === 'commentaire' ? 'text-[#14A8DE]' : ''}>{t('main.fiche_laverie.avis.etape_commentaire')}</span>
 											</div>
-											<div className="flex gap-2 justify-center">
-												<button type="button" onClick={handleSubmitAvis} disabled={avisPending || avisFormNote < 1}
-													className="flex items-center gap-1 rounded-lg bg-[#14A8DE] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#119ac8] disabled:opacity-60 transition-colors">
-													<Check className="h-3 w-3" /> {monAvis ? 'Enregistrer' : 'Publier'}
-												</button>
-												<button type="button" onClick={() => { setAvisFormVisible(false); setAvisEditing(false); setAvisFormNote(monAvis?.note ?? 0); }}
-													className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
-													<X className="h-3 w-3" /> Annuler
-												</button>
-											</div>
+
+											{avisFormStep === 'note' ? (
+												<>
+													<p className="text-xs font-semibold text-slate-500 text-center">{monAvis ? t('main.fiche_laverie.avis.modifier_votre_note') : t('main.fiche_laverie.avis.votre_note')}</p>
+													<div className="flex justify-center">
+														<StarPicker value={avisFormNote} onChange={setAvisFormNote} />
+													</div>
+													<div className="flex flex-wrap gap-2 justify-center">
+														<button type="button" onClick={handleAvisNext} disabled={avisPending || avisFormNote < 1}
+															className="flex items-center gap-1.5 rounded-lg bg-[#14A8DE] px-4 py-2 text-xs font-semibold text-white hover:bg-[#119ac8] disabled:opacity-60 transition-colors cursor-pointer">
+															{t('main.fiche_laverie.avis.bouton_suivant')} <ArrowRight className="h-3.5 w-3.5" />
+														</button>
+														<button type="button" onClick={closeAvisForm}
+															className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
+															<X className="h-3 w-3" /> {t('main.fiche_laverie.avis.bouton_annuler')}
+														</button>
+													</div>
+												</>
+											) : (
+												<>
+													<label htmlFor="avis-form-commentaire" className="block text-xs font-semibold text-slate-500 text-center">
+														{t('main.fiche_laverie.avis.label_commentaire')} <span className="text-slate-400 font-normal normal-case">{t('main.fiche_laverie.avis.label_facultatif')}</span>
+													</label>
+													<div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 focus-within:border-[#14A8DE] focus-within:ring-2 focus-within:ring-[#14A8DE]/20 transition-colors">
+														<textarea
+															id="avis-form-commentaire"
+															rows={4}
+															maxLength={1000}
+															value={avisFormCommentaire}
+															onChange={(e) => setAvisFormCommentaire(e.target.value)}
+															placeholder={t('main.fiche_laverie.avis.placeholder_commentaire') as string}
+															className="block w-full bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none resize-none border-0 p-0"
+														/>
+													</div>
+													<p className="text-right text-[11px] text-slate-400">{avisFormCommentaire.length}/1000</p>
+													<div className="flex flex-wrap gap-2 justify-center">
+														<button type="button" onClick={handleSubmitAvis} disabled={avisPending || avisFormNote < 1}
+															className="flex items-center gap-1.5 rounded-lg bg-[#14A8DE] px-4 py-2 text-xs font-semibold text-white hover:bg-[#119ac8] disabled:opacity-60 transition-colors cursor-pointer">
+															<Check className="h-3.5 w-3.5" /> {monAvis ? t('main.fiche_laverie.avis.bouton_enregistrer') : t('main.fiche_laverie.avis.bouton_publier')}
+														</button>
+														<button type="button" onClick={() => setAvisFormStep('note')} disabled={avisPending}
+															className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
+															{t('main.fiche_laverie.avis.bouton_retour')}
+														</button>
+														<button type="button" onClick={closeAvisForm}
+															className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
+															<X className="h-3 w-3" /> {t('main.fiche_laverie.avis.bouton_annuler')}
+														</button>
+													</div>
+												</>
+											)}
 										</>
 									)}
 								</div>
@@ -785,34 +1012,169 @@ export default function FicheLaverie() {
 							<div className="space-y-4" role="status" aria-live="polite">
 								<div className="flex items-start justify-between gap-3 px-2">
 									<div>
-										<p className="text-sm font-semibold text-slate-900">Avis clients</p>
-										<p className="mt-1 text-xs text-slate-500">{laverie.commentairesCount} commentaire{laverie.commentairesCount > 1 ? 's' : ''}</p>
+										<p className="text-sm font-semibold text-slate-900">{t('main.fiche_laverie.avis.liste_titre')}</p>
+										<p className="mt-1 text-xs text-slate-500">{t('main.fiche_laverie.avis.liste_compteur', { count: laverie.commentairesCount })}</p>
 									</div>
 									<MessageSquare className="h-4 w-4 text-slate-400" aria-hidden="true" />
 								</div>
 								
 								{laverie.commentaires && laverie.commentaires.length > 0 ? (
 									<div className="space-y-3">
-										{laverie.commentaires.map((commentaire) => (
-											<div key={commentaire.id} className="rounded-2xl border border-slate-100 p-4 bg-white shadow-sm">
-												<div className="flex justify-between items-start mb-2">
-													<div>
-														<p className="text-sm font-semibold text-slate-900">{commentaire.utilisateur.prenom} {commentaire.utilisateur.nom}</p>
-														<p className="text-xs text-slate-500">{new Date(commentaire.date).toLocaleDateString('fr-FR')}</p>
+										{laverie.commentaires.map((commentaire) => {
+											const isMine = isStandardUser && monAvis !== null && commentaire.id === monAvis.id;
+											const showInlineEdit = isMine && commentEditing;
+											const showConfirmDelete = isMine && commentConfirmDelete;
+
+											return (
+												<div key={commentaire.id} className={`rounded-2xl border p-4 bg-white shadow-sm ${isMine ? 'border-cyan-200 ring-1 ring-cyan-100' : 'border-slate-100'}`}>
+													<div className="flex justify-between items-start mb-2 gap-3">
+														<div className="min-w-0">
+															<p className="text-sm font-semibold text-slate-900">
+																{commentaire.utilisateur.prenom} {commentaire.utilisateur.nom}
+																{isMine && <span className="ml-2 inline-block rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-cyan-700">{t('main.fiche_laverie.avis.votre_avis_badge')}</span>}
+															</p>
+															<p className="text-xs text-slate-500">{commentaire.date ? new Date(commentaire.date).toLocaleDateString('fr-FR') : ''}</p>
+														</div>
+														<div className="flex items-center gap-2 shrink-0">
+															<div className="flex gap-0.5 text-amber-500">
+																{Array.from({ length: 5 }).map((_, index) => (
+																	<Star key={index} className={`h-3.5 w-3.5 ${index < commentaire.note ? 'fill-current' : 'text-slate-200'}`} aria-hidden="true" />
+																))}
+															</div>
+															{isMine && !commentEditing && !commentConfirmDelete && (
+																<div className="flex gap-1.5 ml-1">
+																	<button
+																		type="button"
+																		onClick={startInlineEdit}
+																		className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-[#14A8DE] hover:text-white transition-colors cursor-pointer"
+																		aria-label={t('main.fiche_laverie.avis.modifier_aria') as string}
+																	>
+																		<Pencil className="h-3.5 w-3.5" />
+																	</button>
+																	<button
+																		type="button"
+																		onClick={() => setCommentConfirmDelete(true)}
+																		className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-rose-500 hover:text-white transition-colors cursor-pointer"
+																		aria-label={t('main.fiche_laverie.avis.supprimer_aria') as string}
+																	>
+																		<Trash2 className="h-3.5 w-3.5" />
+																	</button>
+																</div>
+															)}
+														</div>
 													</div>
-													<div className="flex gap-0.5 text-amber-500">
-														{Array.from({ length: 5 }).map((_, index) => (
-															<Star key={index} className={`h-3.5 w-3.5 ${index < commentaire.note ? 'fill-current' : 'text-slate-200'}`} aria-hidden="true" />
-														))}
-													</div>
+
+													{showConfirmDelete ? (
+														<div className="mt-3 rounded-xl bg-rose-50 border border-rose-200 p-3">
+															<p className="text-sm font-medium text-rose-800">{t('main.fiche_laverie.avis.confirmer_suppression_long')}</p>
+															<div className="mt-2 flex gap-2">
+																<button
+																	type="button"
+																	onClick={handleCommentDelete}
+																	disabled={commentPending}
+																	className="flex items-center gap-1.5 rounded-lg bg-rose-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-600 disabled:opacity-60 transition-colors cursor-pointer"
+																>
+																	<Trash2 className="h-3.5 w-3.5" />
+																	{t('main.fiche_laverie.avis.bouton_supprimer')}
+																</button>
+																<button
+																	type="button"
+																	onClick={() => setCommentConfirmDelete(false)}
+																	className="flex items-center gap-1.5 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+																>
+																	<X className="h-3.5 w-3.5" />
+																	{t('main.fiche_laverie.avis.bouton_annuler')}
+																</button>
+															</div>
+														</div>
+													) : showInlineEdit ? (
+														<div className="mt-3 space-y-3">
+															<div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+																<span className={commentStep === 'note' ? 'text-[#14A8DE]' : ''}>{t('main.fiche_laverie.avis.etape_note')}</span>
+																<span className="text-slate-300">/</span>
+																<span className={commentStep === 'commentaire' ? 'text-[#14A8DE]' : ''}>{t('main.fiche_laverie.avis.etape_commentaire')}</span>
+															</div>
+
+															{commentStep === 'note' ? (
+																<>
+																	<StarPicker value={commentEditNote} onChange={setCommentEditNote} />
+																	<div className="flex flex-wrap gap-2">
+																		<button
+																			type="button"
+																			onClick={handleCommentNext}
+																			disabled={commentPending}
+																			className="flex items-center gap-1.5 rounded-lg bg-[#14A8DE] px-4 py-2 text-xs font-semibold text-white hover:bg-[#119ac8] disabled:opacity-60 transition-colors cursor-pointer"
+																		>
+																			{t('main.fiche_laverie.avis.bouton_suivant')}
+																			<ArrowRight className="h-3.5 w-3.5" />
+																		</button>
+																		<button
+																			type="button"
+																			onClick={handleCommentCancel}
+																			className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+																		>
+																			<X className="h-3.5 w-3.5" />
+																			{t('main.fiche_laverie.avis.bouton_annuler')}
+																		</button>
+																	</div>
+																</>
+															) : (
+																<>
+																	<label htmlFor={`commentaire-fiche-${commentaire.id}`} className="block text-sm font-medium text-slate-700">
+																		{t('main.fiche_laverie.avis.label_commentaire')} <span className="text-slate-400 font-normal">{t('main.fiche_laverie.avis.label_facultatif')}</span>
+																	</label>
+																	<div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 focus-within:border-[#14A8DE] focus-within:ring-2 focus-within:ring-[#14A8DE]/20 transition-colors">
+																		<textarea
+																			id={`commentaire-fiche-${commentaire.id}`}
+																			rows={4}
+																			maxLength={1000}
+																			value={commentEditText}
+																			onChange={(e) => setCommentEditText(e.target.value)}
+																			placeholder={t('main.fiche_laverie.avis.placeholder_commentaire') as string}
+																			className="block w-full bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none resize-none border-0 p-0"
+																		/>
+																	</div>
+																	<p className="text-right text-[11px] text-slate-400">{commentEditText.length}/1000</p>
+																	<div className="flex flex-wrap gap-2">
+																		<button
+																			type="button"
+																			onClick={handleCommentSave}
+																			disabled={commentPending}
+																			className="flex items-center gap-1.5 rounded-lg bg-[#14A8DE] px-4 py-2 text-xs font-semibold text-white hover:bg-[#119ac8] disabled:opacity-60 transition-colors cursor-pointer"
+																		>
+																			<Check className="h-3.5 w-3.5" />
+																			{t('main.fiche_laverie.avis.bouton_enregistrer')}
+																		</button>
+																		<button
+																			type="button"
+																			onClick={() => setCommentStep('note')}
+																			disabled={commentPending}
+																			className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+																		>
+																			{t('main.fiche_laverie.avis.bouton_retour')}
+																		</button>
+																		<button
+																			type="button"
+																			onClick={handleCommentCancel}
+																			className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+																		>
+																			<X className="h-3.5 w-3.5" />
+																			{t('main.fiche_laverie.avis.bouton_annuler')}
+																		</button>
+																	</div>
+																</>
+															)}
+														</div>
+													) : (
+														<p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line break-words">{commentaire.commentaire}</p>
+													)}
 												</div>
-												<p className="text-sm text-slate-600 leading-relaxed">{commentaire.commentaire}</p>
-											</div>
-										))}
+											);
+										})}
 									</div>
 								) : (
 									<div className="rounded-2xl border border-slate-100 p-4">
-										<p className="text-sm leading-6 text-slate-600">Aucun avis détaillé n'est encore disponible pour cette laverie.</p>
+										<p className="text-sm leading-6 text-slate-600">{t('main.fiche_laverie.avis.liste_vide')}</p>
 									</div>
 								)}
 							</div>
