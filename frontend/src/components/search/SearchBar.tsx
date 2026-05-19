@@ -52,7 +52,7 @@ export default function SearchBar({
                   */}
                 <Combobox
                     as="div"
-                    className="relative flex-1"
+                    className="w-full box-border flex-1"
                     onChange={(s: GeoSuggestion) => onSuggestionPick(s)}
                     onClose={onSuggestionBlur}
                 >
@@ -78,9 +78,10 @@ export default function SearchBar({
                       * et on retourne toujours `value` (la saisie contrôlée du parent).
                       */}
                     <ComboboxInput
-                        className="w-full pl-9 pr-3 py-2.5 text-sm bg-transparent outline-none text-slate-800 placeholder:text-slate-400"
+                        className="pl-9 pr-3 py-2.5 text-sm bg-transparent outline-none text-slate-800 placeholder:text-slate-400"
                         placeholder={t('main.search_bar.placeholder')}
                         aria-label={t('main.search_bar.placeholder')}
+                        id='search-input'
                         autoComplete="off"
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
@@ -139,6 +140,7 @@ export default function SearchBar({
                         type="button"
                         onClick={onGeoClick}
                         className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
+                        id='search-button'
                         aria-label={t('main.search_bar.recentrer')}
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
