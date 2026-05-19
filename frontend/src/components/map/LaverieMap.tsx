@@ -3,7 +3,7 @@ import L from 'leaflet';
 import { Maximize2, Minimize2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
-import { Circle, MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import type { Laverie, Position } from '../../types/Laverie';
 import RecenterMap from './RecenterMap';
 import ItineraireButton from './ItineraireButton';
@@ -193,15 +193,6 @@ export default function LaverieMap({
                     <Marker position={[userPos.lat, userPos.lng]} icon={userIcon}>
                         <Popup>{t('main.laverie_map.vous_etes_ici')}</Popup>
                     </Marker>
-                )}
-
-                {/* Cercle rayon de recherche */}
-                {searched && (
-                    <Circle
-                        center={[centerPos.lat, centerPos.lng]}
-                        radius={searchRadius * 1000}
-                        pathOptions={{ color: '#14A8DE', fillColor: '#14A8DE', fillOpacity: 0.15, weight: 1.5, dashArray: '6 4' }}
-                    />
                 )}
 
                 {/* Marqueurs laveries */}

@@ -14,6 +14,7 @@ services:
         bind:
             string $wilineServer: '%env(resolve:WILINE_SERVER)%'
             string $wilineUser: '%env(resolve:WILINE_USER)%'
+            string $wilineApiKey: '%env(resolve:API_KEY_WILINE)%'
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name

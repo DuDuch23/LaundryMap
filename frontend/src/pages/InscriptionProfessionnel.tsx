@@ -3,7 +3,7 @@ import {AccessibleInput} from '../components/accessibility';
 import { useState, useEffect, useRef } from 'react';
 import { inscriptionProfessionnel, geocodeSuggestions } from '../services/request';
 import type { GeoSuggestion } from '../services/request';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
 export default function InscriptionProfessionnel() {
     const { t } = useTranslation();
@@ -12,6 +12,7 @@ export default function InscriptionProfessionnel() {
     const [nom, setnom] = useState<string>("");
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
+    const [confirmPassword, setConfirmPassword] = useState<string>("");
     const [sirenOrSiret, setSirenOrSiret] = useState<string>("");
     const [rgpdAccepted, setRgpdAccepted] = useState<boolean>(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -44,8 +45,9 @@ export default function InscriptionProfessionnel() {
     const handleChangenom = (e: any) => setnom(e.target.value);
     const handleChangeEmail = (e: any) => setEmail(e.target.value);
     const handleChangePassword = (e: any) => setPassword(e.target.value);
+    const handleChangeConfirmPassword = (e: any) => setConfirmPassword(e.target.value);
     const handleChangeSirenOrSiret = (e: any) => setSirenOrSiret(e.target.value);
-    const handleChangeRgpd = (e: any) => setRgpdAccepted(e.target.value);
+    const handleChangeRgpd = (e: any) => setRgpdAccepted(e.target.checked);
 
     // Adresse
     const handleChangeRue = (e: any) => setRue(e.target.value);
@@ -150,6 +152,10 @@ export default function InscriptionProfessionnel() {
             newsErrors.password = t('main.inscription_professionnel.mot_de_passe_trop_court');
         }else if(password.trim().length > 255){
             newsErrors.password = t('main.inscription_professionnel.mot_de_passe_trop_long');
+        }
+
+        if(password && confirmPassword !== password){
+            newsErrors.confirmPassword = t('main.inscription_professionnel.mots_de_passe_non_identiques');
         }
 
         if(!email.trim()){
@@ -319,6 +325,17 @@ export default function InscriptionProfessionnel() {
                         }
                     >
                     </AccessibleInput>
+                    <AccessibleInput
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        className='flex flex-col'
+                        label={t('main.inscription_professionnel.confirmer_mot_de_passe')}
+                        type='password'
+                        value={confirmPassword}
+                        onChange={handleChangeConfirmPassword}
+                        placeholder={t('main.inscription_professionnel.placeholder_confirmer_mot_de_passe')}
+                        error={errors.confirmPassword}
+                    />
                 </div>
 
                 <div className='w-full min-[744px]:grid-cols-2 gap-5'>
@@ -437,12 +454,24 @@ export default function InscriptionProfessionnel() {
                 <AccessibleInput
                     id="rgpd"
                     name="rgpd"
-                    label={t('main.inscription_professionnel.accepte_condition')}
+                    label={
+                        <>
+                            {t('main.inscription_professionnel.accepte_condition_prefixe')}{' '}
+                            <Link
+                                to="/cgu"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[#22ACE2] underline hover:text-blue-600"
+                            >
+                                {t('main.inscription_professionnel.lien_conditions')}
+                            </Link>
+                        </>
+                    }
                     type='checkbox'
                     className='flex flex-row-reverse justify-end'
                     value={rgpdAccepted}
                     onChange={handleChangeRgpd}
-                    placeholder={t('main.inscription_professionnel.placeholder_num_siren_ou_siret')}
+                    placeholder=""
                     error={errors.rgpdAccepted}
                 />
 
