@@ -130,6 +130,8 @@ export default function FicheLaverie() {
 	// ── Avis ─────────────────────────────────────────────────────────────────
 	const [monAvis, setMonAvis] = useState<MonAvis | null>(null);
 	const [avisFormNote, setAvisFormNote] = useState(0);
+	const [avisFormCommentaire, setAvisFormCommentaire] = useState('');
+	const [avisFormStep, setAvisFormStep] = useState<'note' | 'commentaire'>('note');
 	const [avisFormVisible, setAvisFormVisible] = useState(false);
 	const [avisEditing, setAvisEditing] = useState(false);
 	const [avisConfirmDelete, setAvisConfirmDelete] = useState(false);
@@ -181,6 +183,7 @@ export default function FicheLaverie() {
 				if (data.monAvis) {
 					setMonAvis(data.monAvis);
 					setAvisFormNote(data.monAvis.note);
+					setAvisFormCommentaire(data.monAvis.commentaire ?? '');
 				}
 
 				// Vérifier si l'utilisateur est connecté et si c'est un favori
@@ -300,20 +303,97 @@ export default function FicheLaverie() {
 		} catch { return false; }
 	}, []);
 
+	const openAvisForm = () => {
+		setAvisFormNote(monAvis?.note ?? 0);
+		setAvisFormCommentaire(monAvis?.commentaire ?? '');
+		setAvisFormStep('note');
+		if (monAvis) {
+			setAvisEditing(true);
+		} else {
+			setAvisFormVisible(true);
+		}
+	};
+
+	const closeAvisForm = () => {
+		setAvisFormVisible(false);
+		setAvisEditing(false);
+		setAvisFormStep('note');
+		setAvisFormNote(monAvis?.note ?? 0);
+		setAvisFormCommentaire(monAvis?.commentaire ?? '');
+	};
+
+	const handleAvisNext = () => {
+		if (avisFormNote < 1) {
+			toast.error('Veuillez sélectionner une note');
+			return;
+		}
+		setAvisFormStep('commentaire');
+	};
+
 	const handleSubmitAvis = async () => {
 		if (!laverie || avisFormNote < 1) { toast.error('Veuillez sélectionner une note'); return; }
 		setAvisPending(true);
 		try {
+			const trimmed = avisFormCommentaire.trim();
+			const commentairePayload = trimmed === '' ? null : trimmed;
+
 			if (monAvis) {
-				const updated = await modifierAvis(monAvis.id, avisFormNote);
+				const updated = await modifierAvis(monAvis.id, avisFormNote, commentairePayload);
 				setMonAvis(updated);
 				setAvisEditing(false);
-				toast.success('Note modifiée');
+				setAvisFormStep('note');
+
+				// Synchroniser la liste publique
+				setLaverie((prev) => {
+					if (!prev) return prev;
+					const previous = prev.commentaires.find((c) => c.id === updated.id);
+					const without = prev.commentaires.filter((c) => c.id !== updated.id);
+					const hadCommentBefore = !!previous;
+					const hasCommentNow = !!(updated.commentaire && updated.commentaire.trim() !== '');
+					let next = without;
+					if (hasCommentNow) {
+						const dateIso = updated.commenteLe ?? updated.noteLe ?? new Date().toISOString();
+						next = [{
+							id: updated.id,
+							note: updated.note,
+							commentaire: updated.commentaire as string,
+							date: dateIso,
+							utilisateur: previous?.utilisateur ?? { prenom: '', nom: '' },
+						}, ...without];
+					}
+					const delta = (hasCommentNow ? 1 : 0) - (hadCommentBefore ? 1 : 0);
+					return { ...prev, commentaires: next, commentairesCount: Math.max(0, prev.commentairesCount + delta) };
+				});
+
+				toast.success('Avis modifié');
 			} else {
-				const created = await creerAvis(laverie.id, avisFormNote);
+				const created = await creerAvis(laverie.id, avisFormNote, commentairePayload);
 				setMonAvis(created);
 				setAvisFormVisible(false);
-				toast.success('Note publiée');
+				setAvisFormStep('note');
+				setAvisFormCommentaire('');
+
+				// Ajouter à la liste publique si commentaire renseigné
+				if (created.commentaire && created.commentaire.trim() !== '') {
+					setLaverie((prev) => {
+						if (!prev) return prev;
+						const dateIso = created.commenteLe ?? created.noteLe ?? new Date().toISOString();
+						const ownEntry = {
+							id: created.id,
+							note: created.note,
+							commentaire: created.commentaire as string,
+							date: dateIso,
+							utilisateur: { prenom: 'Mon', nom: 'avis' },
+						};
+						return {
+							...prev,
+							commentaires: [ownEntry, ...prev.commentaires],
+							commentairesCount: prev.commentairesCount + 1,
+						};
+					});
+				}
+
+				toast.success('Avis publié');
 			}
 		} catch (err: any) {
 			toast.error(err?.message || 'Erreur');
@@ -710,8 +790,8 @@ export default function FicheLaverie() {
 							{isStandardUser && !monAvis && !avisFormVisible && (
 								<button
 									type="button"
-									onClick={() => setAvisFormVisible(true)}
-									className="mt-4 w-full rounded-full bg-white py-2 text-sm font-semibold text-cyan-700 shadow-sm transition hover:bg-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+									onClick={openAvisForm}
+									className="mt-4 w-full rounded-full bg-white py-2 text-sm font-semibold text-cyan-700 shadow-sm transition hover:bg-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 cursor-pointer"
 								>
 									Laisser un avis
 								</button>
@@ -743,7 +823,7 @@ export default function FicheLaverie() {
 												</div>
 											) : (
 												<div className="flex gap-2 justify-center">
-													<button type="button" onClick={() => { setAvisEditing(true); setAvisFormNote(monAvis.note); }}
+													<button type="button" onClick={openAvisForm}
 														className="flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer">
 														<Pencil className="h-3 w-3" /> Modifier
 													</button>
@@ -756,20 +836,62 @@ export default function FicheLaverie() {
 										</>
 									) : (
 										<>
-											<p className="text-xs font-semibold text-slate-500 text-center">{monAvis ? 'Modifier votre note' : 'Votre note'}</p>
-											<div className="flex justify-center">
-												<StarPicker value={avisFormNote} onChange={setAvisFormNote} />
+											<div className="flex items-center justify-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+												<span className={avisFormStep === 'note' ? 'text-[#14A8DE]' : ''}>1. Note</span>
+												<span className="text-slate-300">/</span>
+												<span className={avisFormStep === 'commentaire' ? 'text-[#14A8DE]' : ''}>2. Commentaire</span>
 											</div>
-											<div className="flex gap-2 justify-center">
-												<button type="button" onClick={handleSubmitAvis} disabled={avisPending || avisFormNote < 1}
-													className="flex items-center gap-1 rounded-lg bg-[#14A8DE] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#119ac8] disabled:opacity-60 transition-colors">
-													<Check className="h-3 w-3" /> {monAvis ? 'Enregistrer' : 'Publier'}
-												</button>
-												<button type="button" onClick={() => { setAvisFormVisible(false); setAvisEditing(false); setAvisFormNote(monAvis?.note ?? 0); }}
-													className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
-													<X className="h-3 w-3" /> Annuler
-												</button>
-											</div>
+
+											{avisFormStep === 'note' ? (
+												<>
+													<p className="text-xs font-semibold text-slate-500 text-center">{monAvis ? 'Modifier votre note' : 'Votre note'}</p>
+													<div className="flex justify-center">
+														<StarPicker value={avisFormNote} onChange={setAvisFormNote} />
+													</div>
+													<div className="flex flex-wrap gap-2 justify-center">
+														<button type="button" onClick={handleAvisNext} disabled={avisPending || avisFormNote < 1}
+															className="flex items-center gap-1.5 rounded-lg bg-[#14A8DE] px-4 py-2 text-xs font-semibold text-white hover:bg-[#119ac8] disabled:opacity-60 transition-colors cursor-pointer">
+															Suivant <ArrowRight className="h-3.5 w-3.5" />
+														</button>
+														<button type="button" onClick={closeAvisForm}
+															className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
+															<X className="h-3 w-3" /> Annuler
+														</button>
+													</div>
+												</>
+											) : (
+												<>
+													<label htmlFor="avis-form-commentaire" className="block text-xs font-semibold text-slate-500 text-center">
+														Votre commentaire <span className="text-slate-400 font-normal normal-case">(facultatif)</span>
+													</label>
+													<div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 focus-within:border-[#14A8DE] focus-within:ring-2 focus-within:ring-[#14A8DE]/20 transition-colors">
+														<textarea
+															id="avis-form-commentaire"
+															rows={4}
+															maxLength={1000}
+															value={avisFormCommentaire}
+															onChange={(e) => setAvisFormCommentaire(e.target.value)}
+															placeholder="Partagez votre expérience…"
+															className="block w-full bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none resize-none border-0 p-0"
+														/>
+													</div>
+													<p className="text-right text-[11px] text-slate-400">{avisFormCommentaire.length}/1000</p>
+													<div className="flex flex-wrap gap-2 justify-center">
+														<button type="button" onClick={handleSubmitAvis} disabled={avisPending || avisFormNote < 1}
+															className="flex items-center gap-1.5 rounded-lg bg-[#14A8DE] px-4 py-2 text-xs font-semibold text-white hover:bg-[#119ac8] disabled:opacity-60 transition-colors cursor-pointer">
+															<Check className="h-3.5 w-3.5" /> {monAvis ? 'Enregistrer' : 'Publier'}
+														</button>
+														<button type="button" onClick={() => setAvisFormStep('note')} disabled={avisPending}
+															className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
+															Retour
+														</button>
+														<button type="button" onClick={closeAvisForm}
+															className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
+															<X className="h-3 w-3" /> Annuler
+														</button>
+													</div>
+												</>
+											)}
 										</>
 									)}
 								</div>

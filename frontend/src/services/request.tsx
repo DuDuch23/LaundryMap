@@ -577,16 +577,20 @@ export async function getMesAvis(): Promise<AvisUtilisateur[]> {
     return data.avis as AvisUtilisateur[];
 }
 
-export async function creerAvis(laverieId: number, note: number): Promise<MonAvis> {
+export async function creerAvis(laverieId: number, note: number, commentaire?: string | null): Promise<MonAvis> {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('Non connecté');
+    const body: Record<string, unknown> = { laverieId, note };
+    if (commentaire !== undefined && commentaire !== null && commentaire !== '') {
+        body.commentaire = commentaire;
+    }
     const res = await fetch(`${API_BASE_URL}/api/profil/avis`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', accept: 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ laverieId, note }),
+        body: JSON.stringify(body),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Erreur lors de la création de la note');
+    if (!res.ok) throw new Error(data.message || 'Erreur lors de la création de l\'avis');
     return data.avis as MonAvis;
 }
 

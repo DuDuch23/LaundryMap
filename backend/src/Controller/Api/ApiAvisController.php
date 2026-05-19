@@ -62,9 +62,10 @@ class ApiAvisController extends AbstractController
             return $this->json(['message' => 'Non autorisé'], 403);
         }
 
-        $data      = json_decode($request->getContent(), true) ?? [];
-        $laverieId = $data['laverieId'] ?? null;
-        $note      = $data['note'] ?? null;
+        $data        = json_decode($request->getContent(), true) ?? [];
+        $laverieId   = $data['laverieId'] ?? null;
+        $note        = $data['note'] ?? null;
+        $commentaire = isset($data['commentaire']) && is_string($data['commentaire']) ? trim($data['commentaire']) : null;
 
         if (!$laverieId || $note === null) {
             return $this->json(['message' => 'laverieId et note sont requis'], 400);
@@ -72,6 +73,10 @@ class ApiAvisController extends AbstractController
 
         if ((int) $note < 1 || (int) $note > 5) {
             return $this->json(['message' => 'La note doit être comprise entre 1 et 5'], 400);
+        }
+
+        if ($commentaire !== null && mb_strlen($commentaire) > 1000) {
+            return $this->json(['message' => 'Le commentaire ne peut pas dépasser 1000 caractères'], 400);
         }
 
         $laverie = $laverieRepo->find((int) $laverieId);
@@ -83,21 +88,28 @@ class ApiAvisController extends AbstractController
             return $this->json(['message' => 'Vous avez déjà laissé un avis pour cette laverie'], 409);
         }
 
+        $maintenant = new \DateTime();
         $laverieNote = new LaverieNote();
         $laverieNote->setLaverie($laverie)
                     ->setUtilisateur($user)
                     ->setNote((int) $note)
-                    ->setNoteLe(new \DateTime());
+                    ->setNoteLe($maintenant);
+
+        if ($commentaire !== null && $commentaire !== '') {
+            $laverieNote->setCommentaire($commentaire)->setCommenteLe($maintenant);
+        }
 
         $em->persist($laverieNote);
         $em->flush();
 
         return $this->json([
-            'message' => 'Note créée avec succès',
+            'message' => 'Avis créé avec succès',
             'avis' => [
-                'id'     => $laverieNote->getId(),
-                'note'   => $laverieNote->getNote(),
-                'noteLe' => $laverieNote->getNoteLe()?->format('Y-m-d H:i:s'),
+                'id'          => $laverieNote->getId(),
+                'note'        => $laverieNote->getNote(),
+                'noteLe'      => $laverieNote->getNoteLe()?->format('c'),
+                'commentaire' => $laverieNote->getCommentaire(),
+                'commenteLe'  => $laverieNote->getCommenteLe()?->format('c'),
             ],
         ], 201);
     }
