@@ -32,8 +32,23 @@ class ApiLaverieController extends AbstractController
     ): JsonResponse {
         $laverie = $laverieRepository->find($id);
 
-        if (!$laverie || $laverie->getSupprimee_le() !== null || $laverie->getStatut()->value !== 'Validée') {
+        if (!$laverie || $laverie->getSupprimee_le() !== null) {
             return $this->json(['message' => 'Laverie introuvable'], 404);
+        }
+
+        // Vérifier l'accès selon le statut de la laverie
+        $statutLaverie = $laverie->getStatut()->value;
+        if ($statutLaverie !== 'Validée') {
+            $user = $this->getUser();
+            $isAdmin = $user && in_array('ROLE_ADMIN', $user->getRoles(), true);
+            $isProfessionnelOwner = $user && 
+                $user instanceof Utilisateur &&
+                $laverie->getProfessionnel() && 
+                $laverie->getProfessionnel()->getUtilisateur()?->getId() === $user->getId();
+
+            if (!$isAdmin && !$isProfessionnelOwner) {
+                return $this->json(['message' => 'Laverie introuvable'], 404);
+            }
         }
 
         $adresse = $laverie->getAdresse();
@@ -65,7 +80,7 @@ class ApiLaverieController extends AbstractController
         return $this->json([
             'id' => $laverie->getId(),
             'nom' => $laverie->getNomEtablissement(),
-            'statut' => 'Validée',
+            'statut' => $laverie->getStatut()->value,
             'description' => $laverie->getDescription(),
             'adresse' => $adresse?->getAdresse(),
             'codePostal' => $adresse?->getCodePostal(),
