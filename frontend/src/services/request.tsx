@@ -545,12 +545,17 @@ export async function supprimerFavori(laverieId: number): Promise<void> {
 export interface MonAvis {
     id: number;
     note: number;
+    commentaire?: string | null;
+    commenteLe?: string | null;
+    noteLe?: string | null;
 }
 
 export interface AvisUtilisateur {
     id: number;
     note: number;
     noteLe: string | null;
+    commentaire: string | null;
+    commenteLe: string | null;
     laverie: {
         id: number;
         nom: string;
@@ -584,16 +589,20 @@ export async function creerAvis(laverieId: number, note: number): Promise<MonAvi
     return data.avis as MonAvis;
 }
 
-export async function modifierAvis(id: number, note: number): Promise<MonAvis> {
+export async function modifierAvis(id: number, note: number, commentaire?: string | null): Promise<MonAvis> {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('Non connecté');
+    const body: Record<string, unknown> = { note };
+    if (commentaire !== undefined) {
+        body.commentaire = commentaire;
+    }
     const res = await fetch(`${API_BASE_URL}/api/profil/avis/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', accept: 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ note }),
+        body: JSON.stringify(body),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Erreur lors de la modification de la note');
+    if (!res.ok) throw new Error(data.message || 'Erreur lors de la modification de l\'avis');
     return data.avis as MonAvis;
 }
 

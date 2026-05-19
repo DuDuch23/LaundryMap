@@ -126,6 +126,8 @@ class ApiAvisController extends AbstractController
 
         $data = json_decode($request->getContent(), true) ?? [];
         $note = $data['note'] ?? null;
+        $commentaireProvided = array_key_exists('commentaire', $data);
+        $commentaire = $commentaireProvided ? $data['commentaire'] : null;
 
         if ($note === null) {
             return $this->json(['message' => 'La note est requise'], 400);
@@ -136,14 +138,29 @@ class ApiAvisController extends AbstractController
         }
 
         $laverieNote->setNote((int) $note)->setNoteLe(new \DateTime());
+
+        if ($commentaireProvided) {
+            $commentaireClean = is_string($commentaire) ? trim($commentaire) : null;
+            if ($commentaireClean === '' || $commentaireClean === null) {
+                $laverieNote->setCommentaire(null)->setCommenteLe(null);
+            } else {
+                if (mb_strlen($commentaireClean) > 1000) {
+                    return $this->json(['message' => 'Le commentaire ne peut pas dépasser 1000 caractères'], 400);
+                }
+                $laverieNote->setCommentaire($commentaireClean)->setCommenteLe(new \DateTime());
+            }
+        }
+
         $em->flush();
 
         return $this->json([
-            'message' => 'Note modifiée avec succès',
+            'message' => 'Avis modifié avec succès',
             'avis' => [
-                'id'     => $laverieNote->getId(),
-                'note'   => $laverieNote->getNote(),
-                'noteLe' => $laverieNote->getNoteLe()?->format('Y-m-d H:i:s'),
+                'id'          => $laverieNote->getId(),
+                'note'        => $laverieNote->getNote(),
+                'noteLe'      => $laverieNote->getNoteLe()?->format('Y-m-d H:i:s'),
+                'commentaire' => $laverieNote->getCommentaire(),
+                'commenteLe'  => $laverieNote->getCommenteLe()?->format('Y-m-d H:i:s'),
             ],
         ]);
     }
