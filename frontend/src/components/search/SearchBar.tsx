@@ -78,7 +78,7 @@ export default function SearchBar({
                       * et on retourne toujours `value` (la saisie contrôlée du parent).
                       */}
                     <ComboboxInput
-                        className="pl-9 pr-3 py-2.5 text-sm bg-transparent outline-none text-slate-800 placeholder:text-slate-400"
+                        className="!box-border pl-9 pr-3 py-2.5 text-sm bg-transparent outline-none text-slate-800 placeholder:text-slate-400"
                         placeholder={t('main.search_bar.placeholder')}
                         aria-label={t('main.search_bar.placeholder')}
                         id='search-input'
@@ -128,6 +128,7 @@ export default function SearchBar({
 
                 {/* Bouton Rechercher */}
                 <button
+                    id='search-button'
                     type="submit"
                     className="shrink-0 px-5 py-2.5 rounded-xl bg-[#14A8DE] text-white text-sm font-semibold hover:bg-[#119ac8] transition-colors"
                 >
