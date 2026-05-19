@@ -31,6 +31,14 @@ function isStandardUserToken(token: string): boolean {
     return !roles.some((role) => role.includes('PROFESSIONNEL') || role.includes('ADMIN'));
 }
 
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 export default function Home() {
     const { t } = useTranslation();
     const location = useLocation();
@@ -85,6 +93,17 @@ export default function Home() {
         if (userPos) { setMapZoom(14); lancerRecherche(userPos); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userPos]);
+
+    // Remplace la distance backend par la distance réelle depuis la position GPS de l'utilisateur
+    const laveriesWithUserDistance = useMemo<Laverie[]>(() => {
+        if (!userPos) return laveries;
+        return laveries.map((l) => ({
+            ...l,
+            distance: l.latitude !== null && l.longitude !== null
+                ? haversineKm(userPos.lat, userPos.lng, l.latitude, l.longitude)
+                : null,
+        }));
+    }, [laveries, userPos]);
 
     // ── État UI carte ─────────────────────────────────────────────────────────
     const [activeLaverieId, setActiveLaverieId] = useState<number | null>(null);
@@ -141,13 +160,13 @@ export default function Home() {
 
     // Tri : favoris en tête, puis ordre du serveur (distance / nom)
     const sortedLaveries = useMemo(() => {
-        if (!favoriteIds.length) return laveries;
-        return [...laveries].sort((a, b) => {
+        if (!favoriteIds.length) return laveriesWithUserDistance;
+        return [...laveriesWithUserDistance].sort((a, b) => {
             const aFav = favoriteIds.includes(a.id) ? 0 : 1;
             const bFav = favoriteIds.includes(b.id) ? 0 : 1;
             return aFav - bFav;
         });
-    }, [laveries, favoriteIds]);
+    }, [laveriesWithUserDistance, favoriteIds]);
 
     return (
         <div className="flex flex-col bg-slate-50 min-h-screen py-20 w-full">
@@ -220,7 +239,7 @@ export default function Home() {
                     {/* Carte — le bouton "se localiser" est géré à l'intérieur */}
                     <LaverieMap
                         centerPos={centerPos} zoom={mapZoom} userPos={userPos}
-                        laveries={laveries} activeLaverieId={activeLaverieId}
+                        laveries={laveriesWithUserDistance} activeLaverieId={activeLaverieId}
                         onMarkerClick={handleMarkerClick}
 
                         searchRadius={filtres.rayon}
