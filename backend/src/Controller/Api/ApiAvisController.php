@@ -7,6 +7,8 @@ use App\Entity\Utilisateur;
 use App\Repository\LaverieNoteRepository;
 use App\Repository\LaverieRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Pagerfanta\Doctrine\ORM\QueryAdapter;
+use Pagerfanta\Pagerfanta;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,17 +19,24 @@ class ApiAvisController extends AbstractController
 {
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     #[Route('/api/profil/avis', name: 'api_profil_avis_liste', methods: ['GET'])]
-    public function getMesAvis(LaverieNoteRepository $repo): JsonResponse
+    public function getMesAvis(Request $request, LaverieNoteRepository $repo): JsonResponse
     {
         $user = $this->getUser();
         if (!$user instanceof Utilisateur) {
             return $this->json(['message' => 'Non autorisé'], 403);
         }
 
-        $notes = $repo->findByUtilisateur($user);
-        $result = [];
+        $page = max(1, $request->query->getInt('page', 1));
+        $maxParPage = 6;
 
-        foreach ($notes as $note) {
+        $qb = $repo->createByUtilisateurQueryBuilder($user);
+
+        $pagerfanta = new Pagerfanta(new QueryAdapter($qb));
+        $pagerfanta->setMaxPerPage($maxParPage);
+        $pagerfanta->setCurrentPage(min($page, max(1, $pagerfanta->getNbPages())));
+
+        $result = [];
+        foreach ($pagerfanta->getCurrentPageResults() as $note) {
             $laverie = $note->getLaverie();
             $adresse = $laverie->getAdresse();
             $result[] = [
@@ -46,7 +55,17 @@ class ApiAvisController extends AbstractController
             ];
         }
 
-        return $this->json(['avis' => $result]);
+        return $this->json([
+            'avis' => $result,
+            'pagination' => [
+                'pageCourante'    => $pagerfanta->getCurrentPage(),
+                'totalPages'      => $pagerfanta->getNbPages(),
+                'totalResultats'  => $pagerfanta->getNbResults(),
+                'parPage'         => $maxParPage,
+                'aPageSuivante'   => $pagerfanta->hasNextPage(),
+                'aPagePrecedente' => $pagerfanta->hasPreviousPage(),
+            ],
+        ]);
     }
 
     #[IsGranted('IS_AUTHENTICATED_FULLY')]

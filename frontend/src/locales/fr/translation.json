@@ -400,6 +400,8 @@
       "bouton_annuler": "Annuler",
       "bouton_enregistrer": "Enregistrer",
       "bouton_supprimer": "Supprimer",
+      "bouton_precedent": "Précédent",
+      "bouton_suivant_pagination": "Suivant",
       "bouton_modifier_aria": "Modifier cet avis",
       "bouton_supprimer_aria": "Supprimer cet avis",
       "confirmer_suppression": "Supprimer cet avis définitivement ?",

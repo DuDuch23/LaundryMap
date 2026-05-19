@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
-import { Star, Pencil, Trash2, X, Check, ArrowRight, MessageSquare } from 'lucide-react';
+import { Star, Pencil, Trash2, X, Check, ArrowRight, ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { getMesAvis, modifierAvis, supprimerAvis, type AvisUtilisateur } from '../services/request';
+import { getMesAvis, modifierAvis, supprimerAvis, type AvisUtilisateur, type PaginationInfo } from '../services/request';
 
 function StarPicker({ value, onChange }: { value: number; onChange: (n: number) => void }) {
     const { t } = useTranslation();
@@ -288,23 +288,59 @@ function AvisCard({ avis, onUpdated, onDeleted }: {
 export default function MesAvis() {
     const { t } = useTranslation();
     const [avis, setAvis] = useState<AvisUtilisateur[]>([]);
+    const [pagination, setPagination] = useState<PaginationInfo | null>(null);
+    const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        getMesAvis()
-            .then(setAvis)
-            .catch((err) => setError(err?.message || t('main.mes_avis.chargement_erreur')))
-            .finally(() => setLoading(false));
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const handleUpdated = (updated: AvisUtilisateur) => {
-        setAvis((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+    const fetchAvis = async (targetPage: number) => {
+        try {
+            const res = await getMesAvis(targetPage);
+            // Si on demande une page qui n'existe plus (suppression du dernier avis d'une page) → reculer
+            if (res.avis.length === 0 && targetPage > 1 && res.pagination.totalPages > 0) {
+                const fallbackPage = Math.min(targetPage, res.pagination.totalPages);
+                if (fallbackPage !== targetPage) {
+                    setPage(fallbackPage);
+                    return;
+                }
+            }
+            setAvis(res.avis);
+            setPagination(res.pagination);
+        } catch (err: any) {
+            setError(err?.message || t('main.mes_avis.chargement_erreur'));
+        }
     };
 
-    const handleDeleted = (id: number) => {
-        setAvis((prev) => prev.filter((a) => a.id !== id));
+    useEffect(() => {
+        let active = true;
+        setLoading(true);
+        getMesAvis(page)
+            .then((res) => {
+                if (!active) return;
+                setAvis(res.avis);
+                setPagination(res.pagination);
+            })
+            .catch((err) => active && setError(err?.message || t('main.mes_avis.chargement_erreur')))
+            .finally(() => active && setLoading(false));
+        return () => { active = false; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [page]);
+
+    const handleUpdated = () => {
+        // Recharge pour récupérer l'ordre antichronologique recalculé côté backend
+        fetchAvis(page);
+    };
+
+    const handleDeleted = () => {
+        // Recharge ; si la page courante devient vide, fetchAvis recule automatiquement
+        fetchAvis(page);
+    };
+
+    const allerPagePrecedente = () => {
+        if (pagination?.aPagePrecedente) setPage((p) => p - 1);
+    };
+    const allerPageSuivante = () => {
+        if (pagination?.aPageSuivante) setPage((p) => p + 1);
     };
 
     return (
@@ -318,10 +354,10 @@ export default function MesAvis() {
                             {t('main.mes_avis.sous_titre')}
                         </p>
                     </div>
-                    {!loading && !error && avis.length > 0 && (
+                    {!loading && !error && pagination && pagination.totalResultats > 0 && (
                         <div className="mt-4 lg:mt-0 inline-flex items-center gap-2 rounded-full bg-white border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm self-start lg:self-auto">
                             <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                            {t('main.mes_avis.compteur', { count: avis.length })}
+                            {t('main.mes_avis.compteur', { count: pagination.totalResultats })}
                         </div>
                     )}
                 </div>
@@ -359,6 +395,39 @@ export default function MesAvis() {
                         {avis.map((a) => (
                             <AvisCard key={a.id} avis={a} onUpdated={handleUpdated} onDeleted={handleDeleted} />
                         ))}
+                    </div>
+                )}
+
+                {/* PAGINATION */}
+                {!loading && !error && pagination && pagination.totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-4 mt-10">
+                        <button
+                            onClick={allerPagePrecedente}
+                            disabled={!pagination.aPagePrecedente}
+                            className={`flex items-center gap-2 px-6 py-2 rounded-full font-medium transition-colors shadow-sm ${pagination.aPagePrecedente
+                                ? 'bg-[#22ACE2] hover:bg-blue-500 text-white cursor-pointer'
+                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            }`}
+                        >
+                            <ChevronLeft className="h-5 w-5" />
+                            {t('main.mes_avis.bouton_precedent')}
+                        </button>
+
+                        <span className="text-sm text-gray-500 font-medium">
+                            {pagination.pageCourante} / {pagination.totalPages}
+                        </span>
+
+                        <button
+                            onClick={allerPageSuivante}
+                            disabled={!pagination.aPageSuivante}
+                            className={`flex items-center gap-2 px-6 py-2 rounded-full font-medium transition-colors shadow-sm ${pagination.aPageSuivante
+                                ? 'bg-[#22ACE2] hover:bg-blue-500 text-white cursor-pointer'
+                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            }`}
+                        >
+                            {t('main.mes_avis.bouton_suivant_pagination')}
+                            <ChevronRight className="h-5 w-5" />
+                        </button>
                     </div>
                 )}
             </div>

@@ -402,6 +402,8 @@
       "bouton_annuler": "Cancel",
       "bouton_enregistrer": "Save",
       "bouton_supprimer": "Delete",
+      "bouton_precedent": "Previous",
+      "bouton_suivant_pagination": "Next",
       "bouton_modifier_aria": "Edit this review",
       "bouton_supprimer_aria": "Delete this review",
       "confirmer_suppression": "Delete this review permanently?",

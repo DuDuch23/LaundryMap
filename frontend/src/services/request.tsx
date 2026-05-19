@@ -566,15 +566,32 @@ export interface AvisUtilisateur {
     };
 }
 
-export async function getMesAvis(): Promise<AvisUtilisateur[]> {
+export interface PaginationInfo {
+    pageCourante: number;
+    totalPages: number;
+    totalResultats: number;
+    parPage: number;
+    aPageSuivante: boolean;
+    aPagePrecedente: boolean;
+}
+
+export interface MesAvisResponse {
+    avis: AvisUtilisateur[];
+    pagination: PaginationInfo;
+}
+
+export async function getMesAvis(page: number = 1): Promise<MesAvisResponse> {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('Non connecté');
-    const res = await fetch(`${API_BASE_URL}/api/profil/avis`, {
+    const res = await fetch(`${API_BASE_URL}/api/profil/avis?page=${page}`, {
         headers: { accept: 'application/json', Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error('Impossible de récupérer vos avis');
     const data = await res.json();
-    return data.avis as AvisUtilisateur[];
+    return {
+        avis: data.avis as AvisUtilisateur[],
+        pagination: data.pagination as PaginationInfo,
+    };
 }
 
 export async function creerAvis(laverieId: number, note: number, commentaire?: string | null): Promise<MonAvis> {
