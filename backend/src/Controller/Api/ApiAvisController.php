@@ -7,6 +7,8 @@ use App\Entity\Utilisateur;
 use App\Repository\LaverieNoteRepository;
 use App\Repository\LaverieRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Pagerfanta\Doctrine\ORM\QueryAdapter;
+use Pagerfanta\Pagerfanta;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,17 +19,24 @@ class ApiAvisController extends AbstractController
 {
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     #[Route('/api/profil/avis', name: 'api_profil_avis_liste', methods: ['GET'])]
-    public function getMesAvis(LaverieNoteRepository $repo): JsonResponse
+    public function getMesAvis(Request $request, LaverieNoteRepository $repo): JsonResponse
     {
         $user = $this->getUser();
         if (!$user instanceof Utilisateur) {
             return $this->json(['message' => 'Non autorisé'], 403);
         }
 
-        $notes = $repo->findByUtilisateur($user);
-        $result = [];
+        $page = max(1, $request->query->getInt('page', 1));
+        $maxParPage = 6;
 
-        foreach ($notes as $note) {
+        $qb = $repo->createByUtilisateurQueryBuilder($user);
+
+        $pagerfanta = new Pagerfanta(new QueryAdapter($qb));
+        $pagerfanta->setMaxPerPage($maxParPage);
+        $pagerfanta->setCurrentPage(min($page, max(1, $pagerfanta->getNbPages())));
+
+        $result = [];
+        foreach ($pagerfanta->getCurrentPageResults() as $note) {
             $laverie = $note->getLaverie();
             $adresse = $laverie->getAdresse();
             $result[] = [
@@ -46,7 +55,17 @@ class ApiAvisController extends AbstractController
             ];
         }
 
-        return $this->json(['avis' => $result]);
+        return $this->json([
+            'avis' => $result,
+            'pagination' => [
+                'pageCourante'    => $pagerfanta->getCurrentPage(),
+                'totalPages'      => $pagerfanta->getNbPages(),
+                'totalResultats'  => $pagerfanta->getNbResults(),
+                'parPage'         => $maxParPage,
+                'aPageSuivante'   => $pagerfanta->hasNextPage(),
+                'aPagePrecedente' => $pagerfanta->hasPreviousPage(),
+            ],
+        ]);
     }
 
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
@@ -62,9 +81,10 @@ class ApiAvisController extends AbstractController
             return $this->json(['message' => 'Non autorisé'], 403);
         }
 
-        $data      = json_decode($request->getContent(), true) ?? [];
-        $laverieId = $data['laverieId'] ?? null;
-        $note      = $data['note'] ?? null;
+        $data        = json_decode($request->getContent(), true) ?? [];
+        $laverieId   = $data['laverieId'] ?? null;
+        $note        = $data['note'] ?? null;
+        $commentaire = isset($data['commentaire']) && is_string($data['commentaire']) ? trim($data['commentaire']) : null;
 
         if (!$laverieId || $note === null) {
             return $this->json(['message' => 'laverieId et note sont requis'], 400);
@@ -72,6 +92,10 @@ class ApiAvisController extends AbstractController
 
         if ((int) $note < 1 || (int) $note > 5) {
             return $this->json(['message' => 'La note doit être comprise entre 1 et 5'], 400);
+        }
+
+        if ($commentaire !== null && mb_strlen($commentaire) > 1000) {
+            return $this->json(['message' => 'Le commentaire est trop long.'], 400);
         }
 
         $laverie = $laverieRepo->find((int) $laverieId);
@@ -83,21 +107,28 @@ class ApiAvisController extends AbstractController
             return $this->json(['message' => 'Vous avez déjà laissé un avis pour cette laverie'], 409);
         }
 
+        $maintenant = new \DateTime();
         $laverieNote = new LaverieNote();
         $laverieNote->setLaverie($laverie)
                     ->setUtilisateur($user)
                     ->setNote((int) $note)
-                    ->setNoteLe(new \DateTime());
+                    ->setNoteLe($maintenant);
+
+        if ($commentaire !== null && $commentaire !== '') {
+            $laverieNote->setCommentaire($commentaire)->setCommenteLe($maintenant);
+        }
 
         $em->persist($laverieNote);
         $em->flush();
 
         return $this->json([
-            'message' => 'Note créée avec succès',
+            'message' => 'Avis créé avec succès',
             'avis' => [
-                'id'     => $laverieNote->getId(),
-                'note'   => $laverieNote->getNote(),
-                'noteLe' => $laverieNote->getNoteLe()?->format('Y-m-d H:i:s'),
+                'id'          => $laverieNote->getId(),
+                'note'        => $laverieNote->getNote(),
+                'noteLe'      => $laverieNote->getNoteLe()?->format('c'),
+                'commentaire' => $laverieNote->getCommentaire(),
+                'commenteLe'  => $laverieNote->getCommenteLe()?->format('c'),
             ],
         ], 201);
     }
@@ -126,6 +157,8 @@ class ApiAvisController extends AbstractController
 
         $data = json_decode($request->getContent(), true) ?? [];
         $note = $data['note'] ?? null;
+        $commentaireProvided = array_key_exists('commentaire', $data);
+        $commentaire = $commentaireProvided ? $data['commentaire'] : null;
 
         if ($note === null) {
             return $this->json(['message' => 'La note est requise'], 400);
@@ -136,14 +169,29 @@ class ApiAvisController extends AbstractController
         }
 
         $laverieNote->setNote((int) $note)->setNoteLe(new \DateTime());
+
+        if ($commentaireProvided) {
+            $commentaireClean = is_string($commentaire) ? trim($commentaire) : null;
+            if ($commentaireClean === '' || $commentaireClean === null) {
+                $laverieNote->setCommentaire(null)->setCommenteLe(null);
+            } else {
+                if (mb_strlen($commentaireClean) > 1000) {
+                    return $this->json(['message' => 'Le commentaire est trop long.'], 400);
+                }
+                $laverieNote->setCommentaire($commentaireClean)->setCommenteLe(new \DateTime());
+            }
+        }
+
         $em->flush();
 
         return $this->json([
-            'message' => 'Note modifiée avec succès',
+            'message' => 'Avis modifié avec succès',
             'avis' => [
-                'id'     => $laverieNote->getId(),
-                'note'   => $laverieNote->getNote(),
-                'noteLe' => $laverieNote->getNoteLe()?->format('Y-m-d H:i:s'),
+                'id'          => $laverieNote->getId(),
+                'note'        => $laverieNote->getNote(),
+                'noteLe'      => $laverieNote->getNoteLe()?->format('Y-m-d H:i:s'),
+                'commentaire' => $laverieNote->getCommentaire(),
+                'commenteLe'  => $laverieNote->getCommenteLe()?->format('Y-m-d H:i:s'),
             ],
         ]);
     }

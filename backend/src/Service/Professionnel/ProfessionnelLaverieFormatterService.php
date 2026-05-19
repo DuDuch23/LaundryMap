@@ -49,22 +49,35 @@ class ProfessionnelLaverieFormatterService
 
         $fermeturesByDay = [];
         foreach ($laverie->getFermetures() as $fermeture) {
-            $fermeturesByDay[$fermeture->getJour()->value] = $fermeture;
+            $fermeturesByDay[$fermeture->getJour()->value][] = $fermeture;
         }
 
         $horaires = [];
         foreach ($orderedDays as $day) {
-            $fermeture = $fermeturesByDay[$day->value] ?? null;
-            $isClosedAllDay = $fermeture
-                && $fermeture->getHeureDebut()->format('H:i:s') === '00:00:00'
-                && $fermeture->getHeureFin()->format('H:i:s') === '23:59:59';
+            $dayFermetures = $fermeturesByDay[$day->value] ?? [];
 
-            $horaires[] = [
-                'jour' => $day->value,
-                'debut' => $isClosedAllDay ? '10:00' : ($fermeture ? $fermeture->getHeureDebut()->format('H:i') : '10:00'),
-                'fin' => $isClosedAllDay ? '22:00' : ($fermeture ? $fermeture->getHeureFin()->format('H:i') : '22:00'),
-                'ferme' => $isClosedAllDay,
-            ];
+            if (empty($dayFermetures)) {
+                $horaires[] = ['jour' => $day->value, 'debut' => '10:00', 'fin' => '22:00', 'ferme' => false];
+                continue;
+            }
+
+            // Single entry that covers 00:00-23:59 = closed all day convention
+            if (count($dayFermetures) === 1) {
+                $f = $dayFermetures[0];
+                if ($f->getHeureDebut()->format('H:i:s') === '00:00:00' && $f->getHeureFin()->format('H:i:s') === '23:59:59') {
+                    $horaires[] = ['jour' => $day->value, 'debut' => '10:00', 'fin' => '22:00', 'ferme' => true];
+                    continue;
+                }
+            }
+
+            foreach ($dayFermetures as $fermeture) {
+                $horaires[] = [
+                    'jour'  => $day->value,
+                    'debut' => $fermeture->getHeureDebut()->format('H:i'),
+                    'fin'   => $fermeture->getHeureFin()->format('H:i'),
+                    'ferme' => false,
+                ];
+            }
         }
 
         return $horaires;
@@ -149,22 +162,32 @@ class ProfessionnelLaverieFormatterService
             if ($laverieNote->getCommentaireSupprimeeLe() !== null || empty($laverieNote->getCommentaire())) {
                 continue;
             }
-            
+
             $utilisateur = $laverieNote->getUtilisateur();
             $nom = $utilisateur->getNom();
             $nomAbrege = $nom ? mb_substr($nom, 0, 1) . '.' : '';
-            
+            $dateSource = $laverieNote->getCommenteLe() ?? $laverieNote->getNoteLe();
+
             $commentaires[] = [
                 'id' => $laverieNote->getId(),
                 'note' => $laverieNote->getNote(),
                 'commentaire' => $laverieNote->getCommentaire(),
-                'date' => $laverieNote->getCommenteLe() ? $laverieNote->getCommenteLe()->format('c') : ($laverieNote->getNoteLe() ? $laverieNote->getNoteLe()->format('c') : null),
+                'date' => $dateSource ? $dateSource->format('c') : null,
+                '_sortKey' => $dateSource ? $dateSource->getTimestamp() : 0,
                 'utilisateur' => [
+                    'id' => $utilisateur->getId(),
                     'prenom' => $utilisateur->getPrenom(),
                     'nom' => $nomAbrege,
                 ]
             ];
         }
+
+        //TRI par date décroissante
+        usort($commentaires, static fn(array $a, array $b): int => $b['_sortKey'] <=> $a['_sortKey']);
+        foreach ($commentaires as &$c) {
+            unset($c['_sortKey']);
+        }
+
         return $commentaires;
     }
 

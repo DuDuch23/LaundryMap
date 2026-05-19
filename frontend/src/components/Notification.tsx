@@ -38,7 +38,7 @@ export default function Notification({ type, message, onClose, duration = 3000 }
     <div
       role={type === 'error' ? 'alert' : 'status'}
       aria-live={type === 'error' ? 'assertive' : 'polite'}
-      className={`fixed top-4 right-4 z-50 w-auto max-w-sm origin-top-right transform-gpu transition-all duration-200 ease-out ${
+      className={`fixed top-2 right-4 z-[10000] w-auto max-w-sm origin-top-right transform-gpu transition-all duration-200 ease-out ${
         visible ? 'translate-y-0 opacity-100' : '-translate-y-3 opacity-0'
       }`}
     >
