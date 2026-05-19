@@ -277,11 +277,11 @@ export default function FicheLaverie() {
 	}, [laverie]);
 
 	const heroImage = resolveUrl(laverie?.image || fallbackLaverieImage);
+	const logoImage = laverie?.logo ? resolveUrl(laverie.logo) : null;
 	const images = useMemo(() => {
 		if (!laverie) return [];
-		const list = laverie.images.length > 0 ? laverie.images.map((image) => resolveUrl(image.image)) : [heroImage];
-		return [...list, fallbackLaverieImage, fallbackLaverieImage].slice(0, 3);
-	}, [laverie, heroImage]);
+		return laverie.images.map((img) => resolveUrl(img.image));
+	}, [laverie]);
 
 	const horairesGroupes = useMemo(() => (laverie ? groupHoraires(laverie.horaires) : []), [laverie]);
 
@@ -697,9 +697,18 @@ export default function FicheLaverie() {
 									</span>
 								</div>
 
-								<h1 id="fiche-laverie-titre" className="mt-3 max-w-xl text-3xl font-extrabold leading-none text-white sm:text-4xl lg:text-5xl">
+								<div className="mt-3 flex items-end gap-3">
+								{logoImage && (
+									<img
+										src={logoImage}
+										alt={`Logo ${laverie.nom}`}
+										className="h-14 w-14 rounded-xl object-contain bg-white/90 p-1 shadow-md shrink-0"
+									/>
+								)}
+								<h1 id="fiche-laverie-titre" className="max-w-xl text-3xl font-extrabold leading-none text-white sm:text-4xl lg:text-5xl">
 									{laverie.nom}
 								</h1>
+							</div>
 							</div>
 						</div>
 
@@ -789,8 +798,9 @@ export default function FicheLaverie() {
 								<LayoutGrid className="h-5 w-5 text-cyan-600" aria-hidden="true" />
 						</div>
 
-						<div className="mt-5 grid grid-cols-3 gap-3">
-							{images.map((image, index) => (
+						{images.length > 0 ? (
+							<div className="mt-5 grid grid-cols-3 gap-3">
+								{images.map((image, index) => (
 									<button
 										key={`${image}-${index}`}
 										type="button"
@@ -803,8 +813,11 @@ export default function FicheLaverie() {
 									>
 										<img src={image} alt={`${laverie.nom} ${index + 1}`} className="h-28 w-full object-cover sm:h-32 lg:h-36 transition hover:scale-105" loading="lazy" decoding="async" />
 									</button>
-							))}
-						</div>
+								))}
+							</div>
+						) : (
+							<p className="mt-5 text-sm text-slate-400">Aucune photo disponible.</p>
+						)}
 					</div>
 
 						<div className="rounded-[28px] bg-white p-5 shadow-sm sm:p-6" aria-labelledby="equipements-title">
