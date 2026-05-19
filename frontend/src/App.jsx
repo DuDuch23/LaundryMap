@@ -20,8 +20,10 @@ const GestionLaveries = React.lazy(() => import('./pages/administration/GestionL
 const DetailLaverie = React.lazy(() => import('./pages/administration/DetailLaverie'));
 const EmailVerification = React.lazy(() => import('./pages/EmailVerification'));
 const AjoutLaverie = React.lazy(() => import('./pages/AjoutLaverie/AjoutLaverie'));
+const Laveries = React.lazy(() => import('./pages/Laveries'));
 
 const MesFavoris = React.lazy(() => import('./pages/MesFavoris'));
+const MesAvis = React.lazy(() => import('./pages/MesAvis'));
 const FicheLaverie = React.lazy(() => import('./pages/FicheLaverie'));
 const TermsOfUse = React.lazy(() => import('./pages/TermsOfUse'));
 const LegalNotice = React.lazy(() => import('./pages/LegalNotice'));
@@ -92,6 +94,7 @@ function App() {
               <Route path="/inscription-utilisateur" element={<InscriptionUtilisateur />} />
               <Route path="/inscription-pro" element={<InscriptionPro />} />
               <Route path="/connexion" element={<Connexion />} />
+              <Route path="/laveries" element={<Laveries />} />
               <Route path="/email-verifie" element={<EmailVerification />} />
 
               <Route path="/laveries/:id" element={<FicheLaverie />} />
@@ -100,6 +103,7 @@ function App() {
               <Route path="/propriete-intellectuelle" element={<ProprieteIntellectuelle />} />
               <Route element={<UserRoute />}>
                 <Route path="/mes-favoris" element={<MesFavoris />} />
+                <Route path="/mes-avis" element={<MesAvis />} />
               </Route>
 
             </Route>

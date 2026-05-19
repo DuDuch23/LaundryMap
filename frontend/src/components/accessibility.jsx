@@ -91,8 +91,9 @@ export function AccessibleInput({
   required = false,
   disabled = false,
   error,
-  maxLength,
+  maxLength = undefined,
   children = null,
+  ...rest
 }) {
   const isCheckbox = type === 'checkbox';
 
@@ -148,7 +149,7 @@ export function AccessibleInput({
   return (
     <div className={`flex flex-col gap-1.5 ${className ?? ''}`}>
       {label && (
-        <label htmlFor={id} className="text-sm font-medium text-gray-700">
+        <label htmlFor={id} className="text-md font-medium text-gray-700">
           {label}
           {required && <span aria-hidden="true" className="ml-0.5 text-red-600"> *</span>}
         </label>
@@ -168,6 +169,7 @@ export function AccessibleInput({
         aria-required={required}
         aria-describedby={error ? `${id}-error` : undefined}
         aria-invalid={error ? 'true' : 'false'}
+        {...rest}
         className={[
           'w-full max-w-[stretch] rounded-lg border bg-white px-3 py-2.5',
           'text-sm text-gray-900 placeholder:text-gray-400',

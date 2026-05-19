@@ -412,7 +412,7 @@ export default function AjoutLaverie() {
 
                         {wiLineConnecte && wiLineCentrales.length > 0 && (
                             <div>
-                                <p className="text-sm font-medium text-gray-700 mb-2">
+                                <p className="text-md font-medium text-gray-700 mb-2">
                                     ✓ {wiLineCentrales.length} centrale{wiLineCentrales.length > 1 ? 's' : ''} trouvée{wiLineCentrales.length > 1 ? 's' : ''} — sélectionnez celle à associer :
                                 </p>
                                 <div className="space-y-2">
@@ -496,7 +496,7 @@ export default function AjoutLaverie() {
 
                             {/* Recherche autocomplete */}
                             <div className="relative">
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                <label className="block text-md font-medium text-gray-700 mb-1.5">
                                     Rechercher une adresse
                                 </label>
                                 <div className="relative">
@@ -566,9 +566,9 @@ export default function AjoutLaverie() {
                             {JOURS.map((jour) => {
                                 const h = form.horaires[jour];
                                 return (
-                                    <div key={jour} className="py-3 first:pt-0 last:pb-0">
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <div className="w-24 text-sm font-medium text-gray-700 shrink-0">{jour}</div>
+                                    <div key={jour} className="flex items-center gap-3 flex-wrap justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-24 text-md font-medium text-gray-700 shrink-0">{jour}</div>
                                             <ToggleSwitch
                                                 checked={h.ouvert}
                                                 onChange={(val) => setHoraire(jour, val)}
@@ -653,12 +653,12 @@ export default function AjoutLaverie() {
                     <Card>
                         <SectionTitle step={7} title="Logo & photos" subtitle="JPEG, PNG ou WebP — 5 Mo max par fichier" />
                         <div className="mb-6">
-                            <p className="text-sm font-medium text-gray-700 mb-3">Logo de l'établissement</p>
+                            <p className="text-md font-medium text-gray-700 mb-3">Logo de l'établissement</p>
                             {logoUppy && <LogoUpload uppy={logoUppy} />}
                         </div>
                         <div className="border-t border-gray-100 mb-5" />
                         <div>
-                            <p className="text-sm font-medium text-gray-700 mb-3">Photos de la laverie</p>
+                            <p className="text-md font-medium text-gray-700 mb-3">Photos de la laverie</p>
                             {photosUppy && <PhotosUpload uppy={photosUppy} />}
                         </div>
                     </Card>

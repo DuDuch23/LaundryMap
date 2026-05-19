@@ -17,7 +17,7 @@ interface Props {
 }
 
 function formatDistance(km: number): string {
-    return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
+    return km < 1 ? `${Math.round(km * 100) * 10} m` : `${km.toFixed(1)} km`;
 }
 
 export default function LaverieCard({
@@ -38,7 +38,7 @@ export default function LaverieCard({
             tabIndex={0}
             onKeyDown={(e) => e.key === 'Enter' && onClick(l)}
             aria-label={`Laverie ${l.nom}`}
-            className={`relative bg-white rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 flex gap-3 p-3 ${
+            className={`relative h-[stretch] bg-white rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 flex gap-3 p-3 ${
                 active ? 'ring-2 ring-[#14A8DE] shadow-md' : 'border border-slate-100 shadow-sm'
             }`}
         >
@@ -68,7 +68,7 @@ export default function LaverieCard({
             )}
 
             {/* Image carrée */}
-            <div className="w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden bg-slate-100">
+            <div className="w-25 h-25 flex-shrink-0 rounded-xl overflow-hidden bg-slate-100">
                 <img
                     src={resolveUrl(l.image || FALLBACK_IMG)}
                     alt={l.nom}
@@ -78,25 +78,26 @@ export default function LaverieCard({
                 />
             </div>
 
-            {/* Badge note — coin haut droit de la card */}
-            <div className="absolute top-3 right-3 flex items-center gap-0.5 bg-amber-400 rounded-full px-2 py-0.5 text-xs font-semibold text-slate-900 shadow-sm">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                </svg>
-                {l.noteMoyenne > 0 ? Number(l.noteMoyenne).toFixed(1) : '—'}
-            </div>
 
             {/* Contenu */}
-            <div className="flex flex-col flex-1 min-w-0 justify-between pr-10 gap-3">
+            <div className="flex flex-col flex-1 min-w-0 justify-between gap-3">
                 {/* Nom */}
                 <div>
-                    <h3 className="font-bold text-slate-900 text-sm leading-tight line-clamp-2">
+                    <h3 className="font-bold text-slate-900 text-lg leading-tight line-clamp-2 pr-8">
                         {l.nom}
                     </h3>
+                    {/* Badge note — coin haut droit de la card */}
+                    <div className="absolute top-3 right-3 flex items-center gap-0.5 bg-amber-400 rounded-full px-2 py-0.5 text-xs font-semibold text-slate-900 shadow-sm">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                        </svg>
+                        {l.noteMoyenne > 0 ? Number(l.noteMoyenne).toFixed(1) : '—'}
+                    </div>
+
                 </div>
 
                 {/* Adresse */}
-                <p className="text-xs text-slate-400 truncate">{l.adresse}</p>
+                <p className="text-md text-slate-400 truncate">{l.adresse}</p>
 
                 {/* Badge statut + distance + lien */}
                 <div className="flex items-center justify-between">
@@ -117,7 +118,7 @@ export default function LaverieCard({
                     </span>
 
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 justify-between">
                     {l.distance !== null && (
                         <span className="text-xs text-slate-400 font-medium">
                             {formatDistance(l.distance)}
@@ -127,9 +128,9 @@ export default function LaverieCard({
                         to={`/laveries/${l.id}`}
                         onClick={(e) => e.stopPropagation()}
                         aria-label={t('main.laverie_card.voir_detail', { nom: l.nom })}
-                        className="text-xs font-semibold text-[#14A8DE] hover:text-[#119ac8] transition-colors"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#14A8DE] text-white text-sm font-semibold hover:bg-[#119ac8] active:scale-[.98] transition-all shrink-0"
                     >
-                        Voir la fiche
+                        {t('main.laverie_card.voir_fiche')}
                     </Link>
                 </div>
             </div>

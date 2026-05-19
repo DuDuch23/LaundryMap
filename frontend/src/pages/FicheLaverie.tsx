@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 import {
+	Check,
 	CheckCircle2,
 	Clock3,
 	Heart,
@@ -8,9 +9,12 @@ import {
 	MapPin,
 	MessageSquare,
 	Navigation,
+	Pencil,
 	Share2,
 	Star,
+	Trash2,
 	Weight,
+	X,
 } from 'lucide-react';
 import { AccessibleButton, SkipLink } from '../components/accessibility';
 import API_BASE_URL, { uploadPath, resolveUrl } from '../services/api';
@@ -121,6 +125,27 @@ function buildMapsLink(laverie: LaveriePublicDetail): string {
 	return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(adresse)}`;
 }
 
+function StarPicker({ value, onChange }: { value: number; onChange: (n: number) => void }) {
+	const [hovered, setHovered] = useState(0);
+	return (
+		<div className="flex gap-1.5" role="group" aria-label="Note sur 5">
+			{[1, 2, 3, 4, 5].map((star) => (
+				<button
+					key={star}
+					type="button"
+					onClick={() => onChange(star)}
+					onMouseEnter={() => setHovered(star)}
+					onMouseLeave={() => setHovered(0)}
+					aria-label={`${star} étoile${star > 1 ? 's' : ''}`}
+					className="transition-transform hover:scale-110 focus-visible:outline-none"
+				>
+					<Star className={`h-7 w-7 transition-colors ${star <= (hovered || value) ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} />
+				</button>
+			))}
+		</div>
+	);
+}
+
 export default function FicheLaverie() {
 	const { id } = useParams<{ id: string }>();
 	const [laverie, setLaverie] = useState<LaveriePublicDetail | null>(null);
@@ -136,6 +161,14 @@ export default function FicheLaverie() {
 	const { userPos } = useGeolocation();
 
 	const userToken = useMemo(() => getUserFromToken(), []);
+
+	// ── Avis ─────────────────────────────────────────────────────────────────
+	const [monAvis, setMonAvis] = useState<MonAvis | null>(null);
+	const [avisFormNote, setAvisFormNote] = useState(0);
+	const [avisFormVisible, setAvisFormVisible] = useState(false);
+	const [avisEditing, setAvisEditing] = useState(false);
+	const [avisConfirmDelete, setAvisConfirmDelete] = useState(false);
+	const [avisPending, setAvisPending] = useState(false);
 
 	const isProfessionnel = useMemo(() => {
 		return userToken ? userToken.roles.some((r: string) => r.includes('PROFESSIONNEL')) : false;
@@ -161,7 +194,11 @@ export default function FicheLaverie() {
 				}
 
 				setLaverie(data);
-				
+				if (data.monAvis) {
+					setMonAvis(data.monAvis);
+					setAvisFormNote(data.monAvis.note);
+				}
+
 				// Vérifier si l'utilisateur est connecté et si c'est un favori
 				const token = localStorage.getItem('token');
 				if (token) {
@@ -294,6 +331,55 @@ export default function FicheLaverie() {
 			window.setTimeout(() => setShareFeedback(null), 2000);
 		} finally {
 			setFavoritePending(false);
+		}
+	};
+
+	const isStandardUser = useMemo(() => {
+		const token = localStorage.getItem('token');
+		if (!token) return false;
+		try {
+			const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+			const roles: string[] = payload.roles ?? [];
+			return !roles.some((r) => r.includes('PROFESSIONNEL') || r.includes('ADMIN'));
+		} catch { return false; }
+	}, []);
+
+	const handleSubmitAvis = async () => {
+		if (!laverie || avisFormNote < 1) { toast.error('Veuillez sélectionner une note'); return; }
+		setAvisPending(true);
+		try {
+			if (monAvis) {
+				const updated = await modifierAvis(monAvis.id, avisFormNote);
+				setMonAvis(updated);
+				setAvisEditing(false);
+				toast.success('Note modifiée');
+			} else {
+				const created = await creerAvis(laverie.id, avisFormNote);
+				setMonAvis(created);
+				setAvisFormVisible(false);
+				toast.success('Note publiée');
+			}
+		} catch (err: any) {
+			toast.error(err?.message || 'Erreur');
+		} finally {
+			setAvisPending(false);
+		}
+	};
+
+	const handleDeleteAvis = async () => {
+		if (!monAvis) return;
+		setAvisPending(true);
+		try {
+			await supprimerAvis(monAvis.id);
+			setMonAvis(null);
+			setAvisFormNote(0);
+			setAvisConfirmDelete(false);
+			setAvisEditing(false);
+			toast.success('Note supprimée');
+		} catch (err: any) {
+			toast.error(err?.message || 'Erreur');
+		} finally {
+			setAvisPending(false);
 		}
 	};
 
@@ -598,21 +684,82 @@ export default function FicheLaverie() {
 					</div>
 
 					<div className="mt-5 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
-						<div className="rounded-[24px] bg-cyan-50 p-5 text-center">
-							<p className="text-sm font-medium text-slate-700">Quelle est votre note ?</p>
-							<div className="mt-3 flex justify-center gap-1 text-3xl text-cyan-500">
-								{Array.from({ length: 5 }).map((_, index) => (
-									<Star key={index} className={`h-7 w-7 ${index < Math.round(laverie.noteMoyenne ?? 0) ? 'fill-current' : 'opacity-35'}`} aria-hidden="true" />
+						{/* Panneau gauche : note moyenne + formulaire */}
+						<div className="rounded-[24px] bg-cyan-50 p-5">
+							<p className="text-center text-sm font-medium text-slate-700">Note moyenne</p>
+							<div className="mt-3 flex justify-center gap-1">
+								{Array.from({ length: 5 }, (_, i) => (
+									<Star key={i} className={`h-7 w-7 ${i < Math.round(laverie.noteMoyenne ?? 0) ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} aria-hidden="true" />
 								))}
 							</div>
-							<AccessibleButton
-								type="button"
-								onClick={() => document.getElementById('avis-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-								className="mt-4 rounded-full bg-white px-4 py-2 text-sm font-semibold text-cyan-700 shadow-sm transition hover:bg-cyan-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
-								ariaLabel={`Laisser un commentaire sur ${laverie.nom}`}
-							>
-								Laisser un commentaire
-							</AccessibleButton>
+
+							{isStandardUser && !monAvis && !avisFormVisible && (
+								<button
+									type="button"
+									onClick={() => setAvisFormVisible(true)}
+									className="mt-4 w-full rounded-full bg-white px-4 py-2 text-sm font-semibold text-cyan-700 shadow-sm transition hover:bg-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+								>
+									Laisser un avis
+								</button>
+							)}
+
+							{isStandardUser && (avisFormVisible || monAvis) && (
+								<div className="mt-4 space-y-3">
+									{monAvis && !avisEditing ? (
+										<>
+											<p className="text-xs font-semibold text-slate-500 text-center">Votre avis</p>
+											<div className="flex justify-center gap-1">
+												{Array.from({ length: 5 }, (_, i) => (
+													<Star key={i} className={`h-5 w-5 ${i < monAvis.note ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} />
+												))}
+											</div>
+											{avisConfirmDelete ? (
+												<div className="space-y-2">
+													<p className="text-xs font-medium text-rose-700 text-center">Supprimer définitivement ?</p>
+													<div className="flex gap-2 justify-center">
+														<button type="button" onClick={handleDeleteAvis} disabled={avisPending}
+															className="flex items-center gap-1 rounded-lg bg-rose-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-600 disabled:opacity-60 transition-colors">
+															<Trash2 className="h-3 w-3" /> Supprimer
+														</button>
+														<button type="button" onClick={() => setAvisConfirmDelete(false)}
+															className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+															<X className="h-3 w-3" /> Annuler
+														</button>
+													</div>
+												</div>
+											) : (
+												<div className="flex gap-2 justify-center">
+													<button type="button" onClick={() => { setAvisEditing(true); setAvisFormNote(monAvis.note); }}
+														className="flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors">
+														<Pencil className="h-3 w-3" /> Modifier
+													</button>
+													<button type="button" onClick={() => setAvisConfirmDelete(true)}
+														className="flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors">
+														<Trash2 className="h-3 w-3" /> Supprimer
+													</button>
+												</div>
+											)}
+										</>
+									) : (
+										<>
+											<p className="text-xs font-semibold text-slate-500 text-center">{monAvis ? 'Modifier votre note' : 'Votre note'}</p>
+											<div className="flex justify-center">
+												<StarPicker value={avisFormNote} onChange={setAvisFormNote} />
+											</div>
+											<div className="flex gap-2 justify-center">
+												<button type="button" onClick={handleSubmitAvis} disabled={avisPending || avisFormNote < 1}
+													className="flex items-center gap-1 rounded-lg bg-[#14A8DE] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#119ac8] disabled:opacity-60 transition-colors">
+													<Check className="h-3 w-3" /> {monAvis ? 'Enregistrer' : 'Publier'}
+												</button>
+												<button type="button" onClick={() => { setAvisFormVisible(false); setAvisEditing(false); setAvisFormNote(monAvis?.note ?? 0); }}
+													className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+													<X className="h-3 w-3" /> Annuler
+												</button>
+											</div>
+										</>
+									)}
+								</div>
+							)}
 						</div>
 
 						<div className="space-y-4">

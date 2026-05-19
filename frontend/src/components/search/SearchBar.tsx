@@ -43,7 +43,7 @@ export default function SearchBar({
 
     return (
         <form onSubmit={onSubmit} className="relative" role="search">
-            <div className="flex gap-2 bg-white rounded-2xl shadow-lg border border-slate-100 p-2">
+            <div className="flex flex-col md:flex-row gap-2 bg-white rounded-2xl shadow-lg border border-slate-100 p-2">
 
                 {/*
                   * Combobox headlessui :

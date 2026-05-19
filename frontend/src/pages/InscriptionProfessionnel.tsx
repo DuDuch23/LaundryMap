@@ -284,6 +284,9 @@ export default function InscriptionProfessionnel() {
                         onChange={handleChangeEmail}
                         placeholder={t('main.inscription_professionnel.placeholder_email')}
                         error={errors.email}
+                        autoCorrect="off"
+                        autoCapitalize="none"
+                        spellCheck={false}
                     />
                     <AccessibleInput
                         id="password"
@@ -334,7 +337,7 @@ export default function InscriptionProfessionnel() {
 
                 {/* Recherche adresse avec autocomplétion */}
                 <div className='w-full flex flex-col gap-1'>
-                    <label className='text-sm font-medium text-gray-700' htmlFor="adresse_search">
+                    <label className='text-md font-medium text-gray-700' htmlFor="adresse_search">
                         {t('main.inscription_professionnel.adresse')}
                     </label>
                     <div className='relative'>
@@ -452,7 +455,7 @@ export default function InscriptionProfessionnel() {
                     name="submit"
                     label={false}
                     type="submit"
-                    className="bg-[#22ACE2] w-full font-semibold rounded-lg hover:bg-blue-500 transition-colors shadow-sm cursor-pointer text-center w-auto"
+                    className="bg-[#22ACE2] w-auto font-semibold rounded-lg hover:bg-blue-500 transition-colors shadow-sm cursor-pointer text-center w-auto"
                     value={isLoading ? '...' : t('main.inscription_professionnel.sinscrire')}
                     onChange={false}
                     error={false}

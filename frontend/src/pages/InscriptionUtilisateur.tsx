@@ -222,6 +222,9 @@ export default function RegisterUser() {
           onChange={handleChangeEmail}
           placeholder={t("main.inscription_utilisateur.placeholder_email")}
           error={errors.email}
+          autoCorrect="off"
+          autoCapitalize="none"
+          spellCheck={false}
         />
 
         <AccessibleInput
@@ -282,7 +285,7 @@ export default function RegisterUser() {
           id="submit"
           label={false}
           type="submit"
-          className="bg-[#22ACE2] w-full font-semibold rounded-lg hover:bg-blue-500 transition-colors shadow-sm cursor-pointer text-center"
+          className="bg-[#22ACE2] w-auto font-semibold rounded-lg hover:bg-blue-500 transition-colors shadow-sm cursor-pointer text-center"
           value="S'inscrire"
           onChange={false}
           error={false}

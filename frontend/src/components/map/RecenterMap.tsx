@@ -12,7 +12,7 @@ export default function RecenterMap({ pos, zoom }: Props) {
     const map = useMap();
 
     useEffect(() => {
-        map.flyTo([pos.lat, pos.lng], zoom ?? map.getZoom(), { duration: 1.2 });
+        map.flyTo([pos.lat, pos.lng], zoom ?? map.getZoom(), { duration: 0.4 });
     }, [pos.lat, pos.lng, zoom, map]);
 
     return null;

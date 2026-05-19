@@ -126,6 +126,28 @@ class LaverieFixtures extends Fixture implements DependentFixtureInterface
         ['nom' => 'Laverie Chat Haret',        'email' => 'chat-haret@laundrymaps.fr',    'desc' => 'Laverie dans une ruelle médiévale du vieux Senlis.',        'statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 2, 'adresse_idx' => 112, 'media_idx' => 2],
         ['nom' => 'Laverie Joffre',            'email' => 'joffre-senlis@laundrymaps.fr', 'desc' => 'Laverie avenue Maréchal Joffre, proche gare de Senlis.',    'statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 0, 'adresse_idx' => 113, 'media_idx' => 3],
         ['nom' => 'Laverie Vieille de Paris',  'email' => 'vieille-paris@laundrymaps.fr', 'desc' => 'Laverie sur l\'ancienne route royale vers Paris.',           'statut' => StatutLaverieEnum::STATUT_EN_ATTENTE, 'pro_idx' => 1, 'adresse_idx' => 114, 'media_idx' => 4],
+        // Senlis (suite)
+        ['nom' => 'Laverie Maréchal Foch',     'email' => 'foch-senlis@laundrymaps.fr',     'desc' => 'Laverie avenue Maréchal Foch, artère principale de Senlis.',   'statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 2, 'adresse_idx' => 115, 'media_idx' => null],
+        ['nom' => 'Laverie Saint-Pierre',      'email' => 'st-pierre-senlis@laundrymaps.fr','desc' => 'Laverie rue Saint-Pierre, à deux pas des remparts.',            'statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 0, 'adresse_idx' => 116, 'media_idx' => null],
+        ['nom' => 'Laverie de Meaux',          'email' => 'meaux-senlis@laundrymaps.fr',    'desc' => 'Laverie rue de Meaux, quartier résidentiel de Senlis.',         'statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 1, 'adresse_idx' => 117, 'media_idx' => null],
+        ['nom' => 'Laverie de la Gare',        'email' => 'gare-senlis@laundrymaps.fr',     'desc' => 'Laverie pratique avenue de la Gare, idéale pour les voyageurs.','statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 2, 'adresse_idx' => 118, 'media_idx' => null],
+        ['nom' => 'Laverie du Châtel',         'email' => 'chatel-senlis@laundrymaps.fr',   'desc' => 'Laverie rue du Châtel, face aux vestiges médiévaux.',           'statut' => StatutLaverieEnum::STATUT_EN_ATTENTE, 'pro_idx' => 0, 'adresse_idx' => 119, 'media_idx' => null],
+        // Chantilly
+        ['nom' => 'Laverie du Connétable',     'email' => 'connetable@laundrymaps.fr',      'desc' => 'Laverie sur la rue commerçante du Connétable, Chantilly.',      'statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 1, 'adresse_idx' => 120, 'media_idx' => null],
+        ['nom' => 'Laverie Joffre Chantilly',  'email' => 'joffre-chantilly@laundrymaps.fr','desc' => 'Laverie avenue Maréchal Joffre, proche de la gare de Chantilly.','statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 2, 'adresse_idx' => 121, 'media_idx' => null],
+        ['nom' => 'Laverie Paris Chantilly',   'email' => 'paris-chantilly@laundrymaps.fr', 'desc' => 'Laverie avenue de Paris, à l\'entrée de Chantilly.',            'statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 0, 'adresse_idx' => 122, 'media_idx' => null],
+        // Creil
+        ['nom' => 'Laverie Jules Uhry',        'email' => 'uhry-creil@laundrymaps.fr',      'desc' => 'Laverie rue Jules Uhry, centre-ville de Creil.',                'statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 1, 'adresse_idx' => 123, 'media_idx' => null],
+        ['nom' => 'Laverie République Creil',  'email' => 'rep-creil@laundrymaps.fr',       'desc' => 'Laverie rue de la République, bien desservie par les transports.','statut' => StatutLaverieEnum::STATUT_EN_ATTENTE, 'pro_idx' => 2, 'adresse_idx' => 124, 'media_idx' => null],
+        // Pont-Sainte-Maxence
+        ['nom' => 'Laverie Pont-Maxence',      'email' => 'pont-maxence@laundrymaps.fr',    'desc' => 'Laverie rue de la République, Pont-Sainte-Maxence.',            'statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 0, 'adresse_idx' => 125, 'media_idx' => null],
+        ['nom' => 'Laverie Foch Maxence',      'email' => 'foch-maxence@laundrymaps.fr',    'desc' => 'Laverie avenue du Maréchal Foch, bord de l\'Oise.',             'statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 1, 'adresse_idx' => 126, 'media_idx' => null],
+        // Verberie
+        ['nom' => 'Laverie de Verberie',       'email' => 'verberie@laundrymaps.fr',        'desc' => 'Laverie rue de Paris, village de Verberie au bord de l\'Oise.', 'statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 2, 'adresse_idx' => 127, 'media_idx' => null],
+        // Nanteuil-le-Haudouin
+        ['nom' => 'Laverie Nanteuil',          'email' => 'nanteuil@laundrymaps.fr',        'desc' => 'Laverie Grande Rue, seule laverie de Nanteuil-le-Haudouin.',    'statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 0, 'adresse_idx' => 128, 'media_idx' => null],
+        // Luzarches
+        ['nom' => 'Laverie de Luzarches',      'email' => 'luzarches@laundrymaps.fr',       'desc' => 'Laverie Grande Rue, cœur du village de Luzarches.',            'statut' => StatutLaverieEnum::STATUT_VALIDEE,    'pro_idx' => 1, 'adresse_idx' => 129, 'media_idx' => null],
     ];
 
     public function load(ObjectManager $manager): void

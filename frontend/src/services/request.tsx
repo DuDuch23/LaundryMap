@@ -436,6 +436,7 @@ export interface LaveriePublicDetail {
     }>;
     commentairesCount: number;
     noteMoyenne: number | null;
+    monAvis: MonAvis | null;
     professionnel?: {
         id?: number | null;
         nom?: string | null;
@@ -539,6 +540,74 @@ export async function supprimerFavori(laverieId: number): Promise<void> {
         const error: any = new Error('Impossible de supprimer ce favori.');
         error.status = response.status;
         throw error;
+    }
+}
+
+export interface MonAvis {
+    id: number;
+    note: number;
+}
+
+export interface AvisUtilisateur {
+    id: number;
+    note: number;
+    noteLe: string | null;
+    laverie: {
+        id: number;
+        nom: string;
+        adresse: string | null;
+        codePostal: string | null;
+        ville: string | null;
+    };
+}
+
+export async function getMesAvis(): Promise<AvisUtilisateur[]> {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Non connecté');
+    const res = await fetch(`${API_BASE_URL}/api/profil/avis`, {
+        headers: { accept: 'application/json', Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Impossible de récupérer vos avis');
+    const data = await res.json();
+    return data.avis as AvisUtilisateur[];
+}
+
+export async function creerAvis(laverieId: number, note: number): Promise<MonAvis> {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Non connecté');
+    const res = await fetch(`${API_BASE_URL}/api/profil/avis`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', accept: 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ laverieId, note }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Erreur lors de la création de la note');
+    return data.avis as MonAvis;
+}
+
+export async function modifierAvis(id: number, note: number): Promise<MonAvis> {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Non connecté');
+    const res = await fetch(`${API_BASE_URL}/api/profil/avis/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', accept: 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ note }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Erreur lors de la modification de la note');
+    return data.avis as MonAvis;
+}
+
+export async function supprimerAvis(id: number): Promise<void> {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Non connecté');
+    const res = await fetch(`${API_BASE_URL}/api/profil/avis/${id}`, {
+        method: 'DELETE',
+        headers: { accept: 'application/json', Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || 'Erreur lors de la suppression de l\'avis');
     }
 }
 

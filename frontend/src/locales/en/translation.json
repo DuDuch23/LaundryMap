@@ -12,6 +12,7 @@
       "ajouter_laverie": "Add a laundromat",
       "mes_laveries": "My laundromats",
       "mes_favoris": "My favourites",
+      "mes_avis": "My reviews",
       "profil": "Profile",
       "inscription_pro_court": "Pro Sign Up",
       "inscription_pro": "Professional Sign Up",
@@ -42,7 +43,8 @@
       "ouvre_a": "opens at {{heure}}",
       "voir_detail": "View details for {{nom}}",
       "ajouter_favori": "Add {{nom}} to favourites",
-      "retirer_favori": "Remove {{nom}} from favourites"
+      "retirer_favori": "Remove {{nom}} from favourites",
+      "voir_fiche": "View details"
     },
     "search_bar": {
       "placeholder": "Search by city, postcode, address…",
@@ -69,7 +71,11 @@
       "itineraire": "Directions",
       "ouvrir_waze": "Open directions in Waze",
       "ouvrir_maps": "Open directions in Google Maps",
-      "annuler": "Cancel"
+      "annuler": "Cancel",
+      "deux_doigts": "Use 2 fingers to move the map",
+      "shift_zoom": "Shift + scroll to zoom",
+      "horaires_du_jour": "Today",
+      "ferme_aujourd_hui": "Closed today"
     },
     "mes_favoris": {
       "titre": "My favourites",

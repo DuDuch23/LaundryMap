@@ -24,7 +24,7 @@ export function CheckboxGroup({
 }: CheckboxGroupProps) {
     return (
         <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">{title}</p>
+            <p className="text-md font-medium text-gray-700 mb-2">{title}</p>
             {loading ? (
                 <div className="flex flex-wrap gap-2">
                     {Array.from({ length: 4 }).map((_, i) => (
