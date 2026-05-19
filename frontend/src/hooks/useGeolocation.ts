@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PARIS_FALLBACK } from '../constants/Laverie';
 import type { Position } from '../types/Laverie';
 
@@ -19,6 +19,20 @@ export function useGeolocation(): UseGeolocationResult {
     const [geoRefused, setGeoRefused] = useState(false);
     const [geoLoading, setGeoLoading] = useState(false);
 
+    // Load saved position from localStorage on mount
+    useEffect(() => {
+        const saved = localStorage.getItem('user_geolocation');
+        if (saved) {
+            try {
+                const pos: Position = JSON.parse(saved);
+                setUserPos(pos);
+                setCenterPos(pos);
+            } catch {
+                localStorage.removeItem('user_geolocation');
+            }
+        }
+    }, []);
+
     const requestGeolocation = () => {
         if (!navigator.geolocation || geoLoading || userPos) return;
         setGeoLoading(true);
@@ -27,6 +41,8 @@ export function useGeolocation(): UseGeolocationResult {
                 const p: Position = { lat: coords.latitude, lng: coords.longitude };
                 setUserPos(p);
                 setCenterPos(p);
+                // Save to localStorage
+                localStorage.setItem('user_geolocation', JSON.stringify(p));
                 setGeoLoading(false);
             },
             () => {

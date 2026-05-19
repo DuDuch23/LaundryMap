@@ -234,6 +234,8 @@
       "nom": "Last name",
       "email": "Email address",
       "securite": "Security",
+      "mot_de_passe_actuel": "Current password",
+      "mot_de_passe_actuel_placeholder": "Enter your current password",
       "nouveau_mot_de_passe": "New password",
       "nouveau_mot_de_passe_placeholder": "Leave blank to keep current password",
       "confirmer_mot_de_passe": "Confirm password",
@@ -265,6 +267,7 @@
       "erreur_prenom": "First name is required.",
       "erreur_mot_de_passe_court": "Password must be at least 8 characters.",
       "erreur_mot_de_passe_confirmation": "Password confirmation does not match.",
+      "erreur_mot_de_passe_actuel_required": "You must enter your current password to change your password.",
       "erreur_suppression_compte": "Unable to delete your account right now."
     },
     "ajout_laverie": {
