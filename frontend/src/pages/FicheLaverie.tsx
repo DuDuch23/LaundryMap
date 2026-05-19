@@ -19,8 +19,11 @@ import {
 import { AccessibleButton, SkipLink } from '../components/accessibility';
 import API_BASE_URL, { uploadPath, resolveUrl } from '../services/api';
 import { toast } from 'sonner';
-import { Badge } from '@/components/ui/badge';
-import { fetchPublicLaverieDetail, ajouterFavori, supprimerFavori, creerAvis, modifierAvis, supprimerAvis, type LaveriePublicDetail, type MonAvis } from '../services/request';
+import { fetchPublicLaverieDetail, ajouterFavori, supprimerFavori, type LaveriePublicDetail } from '../services/request';
+import Lightbox from 'yet-another-react-lightbox';
+import 'yet-another-react-lightbox/styles.css';
+import { useGeolocation } from '../hooks/useGeolocation';
+import { calculateHaversineDistance } from '../utils/distance';
 
 const fallbackLaverieImage = uploadPath('/uploads/laveries/default-laundry.jpg');
 
@@ -165,6 +168,10 @@ export default function FicheLaverie() {
 	const [isFavorite, setIsFavorite] = useState(false);
 	const [favoritePending, setFavoritePending] = useState(false);
 	const [accessDeniedReason, setAccessDeniedReason] = useState<string | null>(null);
+	const [lightboxOpen, setLightboxOpen] = useState(false);
+	const [lightboxIndex, setLightboxIndex] = useState(0);
+
+	const { userPos } = useGeolocation();
 
 	const userToken = useMemo(() => getUserFromToken(), []);
 
@@ -264,6 +271,27 @@ export default function FicheLaverie() {
 	}, [laverie, heroImage]);
 
 	const horairesGroupes = useMemo(() => (laverie ? groupHoraires(laverie.horaires) : []), [laverie]);
+
+	const computedDistance = useMemo(() => {
+		if (!userPos || !laverie || laverie.latitude === null || laverie.longitude === null) {
+			return null;
+		}
+		return calculateHaversineDistance(userPos.lat, userPos.lng, laverie.latitude, laverie.longitude);
+	}, [userPos, laverie]);
+
+	const displayDistance = useMemo(() => {
+		if (computedDistance !== null) {
+			return computedDistance < 1 ? `${Math.round(computedDistance * 1000)} m` : `${computedDistance.toFixed(1)} km`;
+		}
+		return formatDistance(laverie?.distance ?? null);
+	}, [computedDistance, laverie]);
+
+	const lightboxSlides = useMemo(() => {
+		return images.map((image, index) => ({
+			src: image,
+			title: `${laverie?.nom} ${index + 1}`,
+		}));
+	}, [images, laverie]);
 
 	const handleShare = async () => {
 		if (!laverie) return;
@@ -428,7 +456,17 @@ export default function FicheLaverie() {
 				<section className="overflow-hidden rounded-[28px] bg-white shadow-sm" aria-labelledby="fiche-laverie-titre">
 					<div className="grid lg:grid-cols-[1.35fr_0.95fr]">
 						<div className="relative min-h-[22rem] bg-slate-100 sm:min-h-[28rem] lg:min-h-[40rem]">
-							<img src={heroImage} alt={laverie.nom} className="h-full w-full object-cover" loading="eager" decoding="async" />
+							<button
+								type="button"
+								onClick={() => {
+									setLightboxIndex(0);
+									setLightboxOpen(true);
+								}}
+								className="h-full w-full block cursor-zoom-in text-left"
+								aria-label="Agrandir l'image"
+							>
+								<img src={heroImage} alt={laverie.nom} className="h-full w-full object-cover transition hover:opacity-95" loading="eager" decoding="async" />
+							</button>
 
 							<div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/18 to-transparent" />
 
@@ -500,7 +538,7 @@ export default function FicheLaverie() {
 								<div className="mt-5 grid grid-cols-2 gap-3">
 									<div className="rounded-2xl bg-white p-4 shadow-sm">
 										<p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Distance</p>
-										<p className="mt-2 text-base font-bold text-slate-900">{formatDistance(laverie.distance)}</p>
+										<p className="mt-2 text-base font-bold text-slate-900">{displayDistance}</p>
 									</div>
 									<div className="rounded-2xl bg-white p-4 shadow-sm">
 										<p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Avis</p>
@@ -568,9 +606,18 @@ export default function FicheLaverie() {
 
 						<div className="mt-5 grid grid-cols-3 gap-3">
 							{images.map((image, index) => (
-									<div key={`${image}-${index}`} className="overflow-hidden rounded-2xl bg-slate-100 shadow-sm">
-										<img src={image} alt={`${laverie.nom} ${index + 1}`} className="h-28 w-full object-cover sm:h-32 lg:h-36" loading="lazy" decoding="async" />
-								</div>
+									<button
+										key={`${image}-${index}`}
+										type="button"
+										onClick={() => {
+											setLightboxIndex(index);
+											setLightboxOpen(true);
+										}}
+										className="overflow-hidden rounded-2xl bg-slate-100 shadow-sm cursor-zoom-in transition hover:shadow-md block text-left"
+										aria-label={`Voir l'image ${index + 1}`}
+									>
+										<img src={image} alt={`${laverie.nom} ${index + 1}`} className="h-28 w-full object-cover sm:h-32 lg:h-36 transition hover:scale-105" loading="lazy" decoding="async" />
+									</button>
 							))}
 						</div>
 					</div>
@@ -604,10 +651,12 @@ export default function FicheLaverie() {
 											<p className="font-semibold text-slate-500">Cycle</p>
 											<p className="mt-1 font-bold text-slate-900">{equipement.duree} min</p>
 										</div>
-										<div className="rounded-xl bg-white px-3 py-2">
-											<p className="font-semibold text-slate-500">Réf.</p>
-											<p className="mt-1 font-bold text-slate-900">{equipement.equipementReference ?? '—'}</p>
-										</div>
+												{equipement.equipementReference && (
+													<div className="rounded-xl bg-white px-3 py-2">
+														<p className="font-semibold text-slate-500">Réf.</p>
+														<p className="mt-1 font-bold text-slate-900">{equipement.equipementReference}</p>
+													</div>
+												)}
 									</div>
 								</div>
 							)) : (
@@ -621,7 +670,7 @@ export default function FicheLaverie() {
 							<h3 className="text-sm font-bold text-slate-900 mb-3">Autres services proposés</h3>
 							<div className="flex flex-wrap gap-2">
 								{laverie.services && laverie.services.length > 0 ? laverie.services.map((service) => (
-									<Badge key={service.id} variant="secondary">{service.nom}</Badge>
+									<span key={service.id} className="group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border border-slate-200 px-2 py-0.5 text-xs font-medium whitespace-nowrap bg-slate-100 text-slate-700">{service.nom}</span>
 								)) : (
 									<span className="text-xs text-slate-500">Aucun service renseigné.</span>
 								)}
@@ -632,7 +681,7 @@ export default function FicheLaverie() {
 							<h3 className="text-sm font-bold text-slate-900 mb-3">Moyens de paiement acceptés</h3>
 							<div className="flex flex-wrap gap-2">
 								{laverie.paiements && laverie.paiements.length > 0 ? laverie.paiements.map((paiement) => (
-									<Badge key={paiement.id} variant="outline" className="border-cyan-200 text-cyan-700 bg-cyan-50">{paiement.nom}</Badge>
+									<span key={paiement.id} className="group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border border-cyan-200 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-cyan-700 bg-cyan-50">{paiement.nom}</span>
 								)) : (
 									<span className="text-xs text-slate-500">Aucun moyen de paiement renseigné.</span>
 								)}
@@ -781,6 +830,20 @@ export default function FicheLaverie() {
 				</div>
 			</main>
 		</div>
-		</>
+
+		{lightboxOpen && (
+			<Lightbox
+				open={lightboxOpen}
+				close={() => setLightboxOpen(false)}
+				slides={lightboxSlides}
+				index={lightboxIndex}
+				on={{
+					view: ({ index }) => {
+						setLightboxIndex(index);
+					},
+				}}
+			/>
+		)}
+	</>
 	);
 }

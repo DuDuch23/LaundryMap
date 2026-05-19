@@ -239,6 +239,8 @@
       "nom": "Nom",
       "email": "Adresse e-mail",
       "securite": "Sécurité",
+      "mot_de_passe_actuel": "Mot de passe actuel",
+      "mot_de_passe_actuel_placeholder": "Entrez votre mot de passe actuel",
       "nouveau_mot_de_passe": "Nouveau mot de passe",
       "nouveau_mot_de_passe_placeholder": "Laisser vide pour ne pas modifier",
       "confirmer_mot_de_passe": "Confirmer le mot de passe",
@@ -270,6 +272,7 @@
       "erreur_prenom": "Le prénom est requis.",
       "erreur_mot_de_passe_court": "Le mot de passe doit contenir au moins 8 caractères.",
       "erreur_mot_de_passe_confirmation": "La confirmation du mot de passe ne correspond pas.",
+      "erreur_mot_de_passe_actuel_required": "Vous devez entrer votre mot de passe actuel pour modifier votre mot de passe.",
       "erreur_suppression_compte": "Impossible de supprimer votre compte pour le moment."
     },
     "ajout_laverie": {
