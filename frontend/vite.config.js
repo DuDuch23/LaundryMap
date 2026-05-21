@@ -21,17 +21,13 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          if (!id.includes('node_modules')) return;
-          if (id.includes('@uppy'))                                                    return; // pro pages only
-          if (id.includes('leaflet'))                                                  return 'vendor-leaflet';
-          if (id.includes('@base-ui'))                                                 return 'vendor-baseui';
-          if (id.includes('yet-another-react-lightbox'))                               return 'vendor-lightbox';
-          if (id.includes('lucide-react'))                                             return 'vendor-icons';
-          // scheduler + @remix-run/* sont des deps internes de react-dom et react-router
-          // les mettre dans un chunk séparé créait des cycles → on les group avec react
-          // i18next/react-i18next restent dans index.js (interop CJS default import cross-chunk cassé)
-          if (id.includes('react') || id.includes('@remix-run') || id.includes('scheduler')) return 'vendor-react';
+        // Forme objet : Rollup gère les deps transitives automatiquement, évite les problèmes d'interop CJS cross-chunk
+        // vendor-uppy ABSENT intentionnellement : Rollup le bundle avec AjoutLaverie (lazy) → non préchargé sur la homepage
+        manualChunks: {
+          'vendor-react':    ['react', 'react-dom', 'react-router'],
+          'vendor-leaflet':  ['leaflet', 'react-leaflet'],
+          'vendor-baseui':   ['@base-ui/react'],
+          'vendor-lightbox': ['yet-another-react-lightbox'],
         },
       },
     },
