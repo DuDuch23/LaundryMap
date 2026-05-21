@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 
 import { useGeolocation }   from '../hooks/useGeolocation';
 import { useLaverieSearch } from '../hooks/useLaverieSearch';
-import LaverieMap  from '../components/map/LaverieMap';
+const LaverieMap = lazy(() => import('../components/map/LaverieMap'));
 import SearchBar   from '../components/search/SearchBar';
 import FilterPanel from '../components/search/FilterPanel';
 import LaverieGrid from '../components/laverie/LaverieGrid';
@@ -236,7 +236,8 @@ export default function Home() {
                         )}
                     </div>
 
-                    {/* Carte — le bouton "se localiser" est géré à l'intérieur */}
+                    {/* Carte — skeleton LCP visible immédiatement, carte chargée en lazy */}
+                    <Suspense fallback={<div className="mt-5 w-full h-[500px] lg:h-[800px] max-h-[80vh] rounded-xl bg-slate-200 animate-pulse" />}>
                     <LaverieMap
                         centerPos={centerPos} zoom={mapZoom} userPos={userPos}
                         laveries={laveriesWithUserDistance} activeLaverieId={activeLaverieId}
@@ -276,6 +277,7 @@ export default function Home() {
                             </div>
                         }
                     />
+                    </Suspense>
                 </div>
                 <div className='mt-6 w-full xl:w-1/2 xl:overflow-y-auto xl:max-h-[calc(100vh-5rem)] xl:sticky xl:top-20'>
                     {/* Résultats */}
