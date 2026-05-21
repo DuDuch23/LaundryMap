@@ -27,12 +27,11 @@ export default defineConfig({
           if (id.includes('leaflet'))                                                  return 'vendor-leaflet';
           if (id.includes('@base-ui'))                                                 return 'vendor-baseui';
           if (id.includes('yet-another-react-lightbox'))                               return 'vendor-lightbox';
-          if (id.includes('i18next') || id.includes('react-i18next'))                  return 'vendor-i18n';
           if (id.includes('lucide-react'))                                             return 'vendor-icons';
           // scheduler + @remix-run/* sont des deps internes de react-dom et react-router
-          // les mettre dans vendor-misc créait un cycle → on les group ici
+          // les mettre dans un chunk séparé créait des cycles → on les group avec react
+          // i18next/react-i18next restent dans index.js (interop CJS default import cross-chunk cassé)
           if (id.includes('react') || id.includes('@remix-run') || id.includes('scheduler')) return 'vendor-react';
-          // axios, sonner, headlessui, etc. → Rollup auto-chunk (évite les cycles forcés)
         },
       },
     },
