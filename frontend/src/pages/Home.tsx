@@ -280,10 +280,10 @@ export default function Home() {
                 <div className='mt-6 w-full xl:w-1/2 xl:overflow-y-auto xl:max-h-[calc(100vh-5rem)] xl:sticky xl:top-20'>
                     {/* Résultats */}
                     <div className="px-5 mt-6 pb-20">
-                        <div className="flex items-center justify-between mb-4">
+                        {/* <div className="flex items-center justify-between mb-4">
                             <h2>{t('main.home.a_proximite')}</h2>
                             <Link to="/laveries">{t('main.home.voir_tout')}</Link>
-                        </div>
+                        </div> */}
                         <LaverieGrid
                             laveries={sortedLaveries} loading={loading} searched={searched}
                             activeLaverieId={activeLaverieId} onCardClick={handleLaverieSelect}
