@@ -16,3 +16,12 @@
 ###> lexik/jwt-authentication-bundle ###
 /config/jwt/*.pem
 ###< lexik/jwt-authentication-bundle ###
+
+###> uploads utilisateurs ###
+/public/uploads/*
+!/public/uploads/.htaccess
+!/public/uploads/laveries/
+/public/uploads/laveries/*
+!/public/uploads/laveries/default-laundry.jpg
+!/public/uploads/medias/
+###< uploads utilisateurs ###
