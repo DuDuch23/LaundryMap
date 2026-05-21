@@ -15,3 +15,6 @@ Thumbs.db
 .vscode/
 *.swp
 .claude
+
+# ── Fichiers générés à la racine par erreur ──────────
+/package-lock.json
