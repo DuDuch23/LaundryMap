@@ -1275,11 +1275,11 @@ export default function FicheLaverie() {
 							maxLength={2000}
 							value={reportCommentaire}
 							onChange={(e) => setReportCommentaire(e.target.value)}
-							className="w-full rounded-md border p-2 mt-1"
+							className="mx-auto mt-1 block w-[calc(100%-1.5rem)] rounded-md border p-2"
 						/>
 					</label>
 					<div className="flex gap-2 justify-end">
-						<button onClick={handleSubmitReport} disabled={reportPending} className="rounded-md bg-rose-500 text-white px-3 py-1.5">Envoyer</button>
+						<button onClick={handleSubmitReport} disabled={reportPending} className="rounded-md bg-[#14A8DE] text-white px-3 py-1.5">Envoyer</button>
 						<button onClick={closeReport} className="rounded-md border px-3 py-1.5">Annuler</button>
 					</div>
 				</div>

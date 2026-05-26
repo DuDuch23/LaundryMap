@@ -44,6 +44,12 @@ export default function HeaderAdmin() {
             labelShort: 'Laveries',
             matchPaths: ['/admin/gestion-laveries', '/admin/laveries/'],
         },
+        {
+            to: '/admin/gestion-commentaires',
+            label: 'Gestion des commentaires',
+            labelShort: 'Commentaires',
+            matchPaths: ['/admin/gestion-commentaires', '/admin/moderation-commentaires'],
+        },
     ];
 
     const isLinkActive = (matchPaths: string[]) =>

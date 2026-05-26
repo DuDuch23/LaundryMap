@@ -1,13 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { fetchModerationCommentaires, moderationDecision } from '../../services/request';
-import { AccessibleModal } from '../../components/accessibility';
 
-export default function ModerationCommentaires() {
-    const { t } = useTranslation();
+export default function GestionCommentaires() {
     const [items, setItems] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selected, setSelected] = useState<number | null>(null);
     const [decisionPending, setDecisionPending] = useState(false);
 
     useEffect(() => {
@@ -32,11 +29,16 @@ export default function ModerationCommentaires() {
         try {
             setDecisionPending(true);
             await moderationDecision(noteId, action, action === 'delete' ? 'Supprimé via interface modération' : undefined);
-            // refresh
-            const res = await fetchModerationCommentaires();
-            setItems(res.items || []);
+            if (action === 'keep') {
+                setItems((prev) => prev.filter((item) => item.noteId !== noteId));
+                toast.success('Commentaire rétabli avec succès.');
+            } else {
+                setItems((prev) => prev.filter((item) => item.noteId !== noteId));
+                toast.success('Commentaire masqué avec succès.');
+            }
         } catch (e) {
             console.error(e);
+            toast.error('Une erreur est survenue.');
         } finally {
             setDecisionPending(false);
         }
@@ -45,22 +47,22 @@ export default function ModerationCommentaires() {
     if (loading) return <div>Chargement...</div>;
 
     return (
-        <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">Modération des commentaires</h1>
+        <div className="p-6 mt-16">
+            <h1 className="text-2xl font-bold mb-4">Gestion des commentaires</h1>
             {items.length === 0 ? (
                 <p>Aucun signalement en attente.</p>
             ) : (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                     {items.map((it: any) => (
-                        <div key={it.noteId} className="rounded-lg border p-4 bg-white">
-                            <div className="flex justify-between items-start">
-                                <div>
+                        <div key={it.noteId} className="rounded-lg border bg-white p-4">
+                            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                                <div className="min-w-0">
                                     <p className="font-semibold">Commentaire #{it.noteId} — Laverie #{it.laverieId}</p>
-                                    <p className="text-sm text-slate-700 mt-2">{it.commentaire}</p>
+                                    <p className="mt-2 text-sm text-slate-700">{it.commentaire}</p>
                                 </div>
-                                <div className="flex flex-col gap-2">
-                                    <button onClick={() => handleDecision(it.noteId, 'keep')} disabled={decisionPending} className="rounded-md border px-3 py-1.5">Garder</button>
-                                    <button onClick={() => handleDecision(it.noteId, 'delete')} disabled={decisionPending} className="rounded-md bg-rose-500 text-white px-3 py-1.5">Supprimer</button>
+                                <div className="flex flex-row gap-2 md:flex-col">
+                                    <button onClick={() => handleDecision(it.noteId, 'keep')} disabled={decisionPending} className="rounded-md border px-3 py-1.5 cursor-pointer">Garder</button>
+                                    <button onClick={() => handleDecision(it.noteId, 'delete')} disabled={decisionPending} className="rounded-md bg-red-500 px-3 py-1.5 text-white hover:bg-rose-600 cursor-pointer">Supprimer</button>
                                 </div>
                             </div>
 
