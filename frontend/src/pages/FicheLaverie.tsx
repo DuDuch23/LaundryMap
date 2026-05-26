@@ -18,10 +18,10 @@ import {
 	X,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { AccessibleButton, SkipLink } from '../components/accessibility';
+import { AccessibleButton, SkipLink, AccessibleModal } from '../components/accessibility';
 import API_BASE_URL, { uploadPath, resolveUrl } from '../services/api';
 import { toast } from 'sonner';
-import { fetchPublicLaverieDetail, ajouterFavori, supprimerFavori, creerAvis, modifierAvis, supprimerAvis, type LaveriePublicDetail, type MonAvis } from '../services/request';
+import { fetchPublicLaverieDetail, ajouterFavori, supprimerFavori, creerAvis, modifierAvis, supprimerAvis, signalerCommentaire, type LaveriePublicDetail, type MonAvis } from '../services/request';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 import { useGeolocation } from '../hooks/useGeolocation';
@@ -369,6 +369,44 @@ export default function FicheLaverie() {
 			return !roles.some((r) => r.includes('PROFESSIONNEL') || r.includes('ADMIN'));
 		} catch { return false; }
 	}, []);
+
+		// ── Signalement commentaire
+		const MOTIFS = [
+			'Propos injurieux',
+			'Contenu inapproprié',
+			'Publicité non autorisée',
+			'Autre',
+		];
+		const [reportOpen, setReportOpen] = useState(false);
+		const [reportNoteId, setReportNoteId] = useState<number | null>(null);
+		const [reportMotif, setReportMotif] = useState(MOTIFS[0]);
+		const [reportCommentaire, setReportCommentaire] = useState('');
+		const [reportPending, setReportPending] = useState(false);
+
+		const openReport = (noteId: number) => {
+			setReportNoteId(noteId);
+			setReportMotif(MOTIFS[0]);
+			setReportCommentaire('');
+			setReportOpen(true);
+		};
+		const closeReport = () => {
+			setReportOpen(false);
+			setReportNoteId(null);
+		};
+
+		const handleSubmitReport = async () => {
+			if (!reportNoteId) return;
+			try {
+				setReportPending(true);
+				await signalerCommentaire(reportNoteId, reportMotif, reportCommentaire.trim() || undefined);
+				toast.success('Signalement envoyé');
+				closeReport();
+			} catch (err: any) {
+				toast.error(err?.message || 'Erreur lors du signalement');
+			} finally {
+				setReportPending(false);
+			}
+		};
 
 	const openAvisForm = () => {
 		setAvisFormNote(monAvis?.note ?? 0);
@@ -1074,6 +1112,18 @@ export default function FicheLaverie() {
 																	</button>
 																</div>
 															)}
+
+															{!isMine && isStandardUser && !commentaire.commentaireSupprimeeLe && (
+																<button
+																	type="button"
+																	onClick={() => openReport(commentaire.id)}
+																	className="flex h-7 items-center gap-2 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+																	aria-label="Signaler ce commentaire"
+																>
+																	<MessageSquare className="h-4 w-4 text-rose-500" />
+																	<span>Signaler</span>
+																</button>
+															)}
 														</div>
 													</div>
 
@@ -1205,6 +1255,36 @@ export default function FicheLaverie() {
 				</div>
 			</main>
 		</div>
+
+		{reportOpen && (
+			<AccessibleModal isOpen={reportOpen} onClose={closeReport} title="Signaler un commentaire">
+				<div className="space-y-3">
+					<p className="text-sm text-slate-700">Choisissez le motif du signalement (obligatoire)</p>
+					<div className="space-y-2">
+						{MOTIFS.map((m) => (
+							<label key={m} className="flex items-center gap-2">
+								<input type="radio" name="motif" checked={reportMotif === m} onChange={() => setReportMotif(m)} />
+								<span className="text-sm">{m}</span>
+							</label>
+						))}
+					</div>
+					<label className="block">
+						<span className="text-sm text-slate-700">Description (facultatif)</span>
+						<textarea
+							rows={4}
+							maxLength={2000}
+							value={reportCommentaire}
+							onChange={(e) => setReportCommentaire(e.target.value)}
+							className="w-full rounded-md border p-2 mt-1"
+						/>
+					</label>
+					<div className="flex gap-2 justify-end">
+						<button onClick={handleSubmitReport} disabled={reportPending} className="rounded-md bg-rose-500 text-white px-3 py-1.5">Envoyer</button>
+						<button onClick={closeReport} className="rounded-md border px-3 py-1.5">Annuler</button>
+					</div>
+				</div>
+			</AccessibleModal>
+		)}
 
 		{lightboxOpen && (
 			<Lightbox
