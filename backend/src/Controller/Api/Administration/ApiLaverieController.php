@@ -109,6 +109,9 @@ class ApiLaverieController extends AbstractController
                 'nom' => $laverie->getProfessionnel()?->getUtilisateur()?->getNom(),
                 'prenom' => $laverie->getProfessionnel()?->getUtilisateur()?->getPrenom(),
             ],
+            'estProprietaire' => $currentUser instanceof Utilisateur
+                && $laverie->getProfessionnel() !== null
+                && $laverie->getProfessionnel()->getUtilisateur()?->getId() === $currentUser->getId(),
         ]);
     }
 

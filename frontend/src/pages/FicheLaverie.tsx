@@ -21,7 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { AccessibleButton, SkipLink } from '../components/accessibility';
 import API_BASE_URL, { uploadPath, resolveUrl } from '../services/api';
 import { toast } from 'sonner';
-import { fetchPublicLaverieDetail, ajouterFavori, supprimerFavori, creerAvis, modifierAvis, supprimerAvis, type LaveriePublicDetail, type MonAvis } from '../services/request';
+import { fetchPublicLaverieDetail, ajouterFavori, supprimerFavori, creerAvis, modifierAvis, supprimerAvis, publierReponseAvis, supprimerReponseAvis, type LaveriePublicDetail, type MonAvis } from '../services/request';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 import { useGeolocation } from '../hooks/useGeolocation';
@@ -186,6 +186,67 @@ export default function FicheLaverie() {
 	const [avisEditing, setAvisEditing] = useState(false);
 	const [avisConfirmDelete, setAvisConfirmDelete] = useState(false);
 	const [avisPending, setAvisPending] = useState(false);
+
+	// ── Réponse professionnel ───────────────────────────────────────────────────
+	const [replyingToId, setReplyingToId] = useState<number | null>(null);
+	const [replyText, setReplyText] = useState('');
+	const [replyPending, setReplyPending] = useState(false);
+	const [editingReplyId, setEditingReplyId] = useState<number | null>(null);
+	const [confirmDeleteReplyId, setConfirmDeleteReplyId] = useState<number | null>(null);
+
+	const openReply = (commentaireId: number, existingReponse?: string | null) => {
+		setReplyingToId(commentaireId);
+		setEditingReplyId(existingReponse ? commentaireId : null);
+		setReplyText(existingReponse ?? '');
+		setConfirmDeleteReplyId(null);
+	};
+
+	const closeReply = () => {
+		setReplyingToId(null);
+		setEditingReplyId(null);
+		setReplyText('');
+	};
+
+	const handleSubmitReply = async (commentaireId: number) => {
+		if (!replyText.trim()) return;
+		setReplyPending(true);
+		try {
+			const result = await publierReponseAvis(commentaireId, replyText.trim());
+			setLaverie((prev) => prev ? {
+				...prev,
+				commentaires: prev.commentaires.map((c) =>
+					c.id === commentaireId
+						? { ...c, reponse: result.reponse, reponduLe: result.reponduLe }
+						: c
+				),
+			} : prev);
+			toast.success(editingReplyId ? 'Réponse modifiée.' : 'Réponse publiée.');
+			closeReply();
+		} catch (err: any) {
+			toast.error(err?.message || 'Erreur lors de la publication de la réponse.');
+		} finally {
+			setReplyPending(false);
+		}
+	};
+
+	const handleDeleteReply = async (commentaireId: number) => {
+		setReplyPending(true);
+		try {
+			await supprimerReponseAvis(commentaireId);
+			setLaverie((prev) => prev ? {
+				...prev,
+				commentaires: prev.commentaires.map((c) =>
+					c.id === commentaireId ? { ...c, reponse: null, reponduLe: null } : c
+				),
+			} : prev);
+			toast.success('Réponse supprimée.');
+			setConfirmDeleteReplyId(null);
+		} catch (err: any) {
+			toast.error(err?.message || 'Erreur lors de la suppression de la réponse.');
+		} finally {
+			setReplyPending(false);
+		}
+	};
 
 	// ── Édition inline du commentaire propre dans la liste ───────────────────
 	const [commentEditing, setCommentEditing] = useState(false);
@@ -1037,6 +1098,9 @@ export default function FicheLaverie() {
 											const isMine = isStandardUser && monAvis !== null && commentaire.id === monAvis.id;
 											const showInlineEdit = isMine && commentEditing;
 											const showConfirmDelete = isMine && commentConfirmDelete;
+											const estProprietaire = laverie.estProprietaire === true;
+											const isReplying = replyingToId === commentaire.id;
+											const isConfirmDeleteReply = confirmDeleteReplyId === commentaire.id;
 
 											return (
 												<div key={commentaire.id} className={`rounded-2xl border p-4 bg-white shadow-sm ${isMine ? 'border-cyan-200 ring-1 ring-cyan-100' : 'border-slate-100'}`}>
@@ -1181,6 +1245,65 @@ export default function FicheLaverie() {
 													) : (
 														<p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line break-words">{commentaire.commentaire}</p>
 													)}
+
+												{commentaire.reponse && !isReplying && (
+													<div className="mt-3 rounded-xl border border-cyan-100 bg-cyan-50 px-3 py-2.5">
+														<div className="flex items-start justify-between gap-2 mb-1">
+															<p className="text-xs font-semibold text-cyan-700">Réponse du propriétaire</p>
+															{estProprietaire && !isConfirmDeleteReply && (
+																<div className="flex gap-1 shrink-0">
+																	<button type="button" onClick={() => openReply(commentaire.id, commentaire.reponse)} className="flex h-6 w-6 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 hover:bg-[#14A8DE] hover:text-white transition-colors cursor-pointer" aria-label="Modifier la réponse">
+																		<Pencil className="h-3 w-3" />
+																	</button>
+																	<button type="button" onClick={() => setConfirmDeleteReplyId(commentaire.id)} className="flex h-6 w-6 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 hover:bg-rose-500 hover:text-white transition-colors cursor-pointer" aria-label="Supprimer la réponse">
+																		<Trash2 className="h-3 w-3" />
+																	</button>
+																</div>
+															)}
+														</div>
+														<p className="text-sm text-slate-600 whitespace-pre-line break-words">{commentaire.reponse}</p>
+														{commentaire.reponduLe && <p className="mt-1 text-[11px] text-slate-400">{new Date(commentaire.reponduLe).toLocaleDateString('fr-FR')}</p>}
+													</div>
+												)}
+
+												{estProprietaire && isConfirmDeleteReply && (
+													<div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3">
+														<p className="text-sm font-medium text-rose-800">Supprimer cette réponse ?</p>
+														<div className="mt-2 flex gap-2">
+															<button type="button" onClick={() => handleDeleteReply(commentaire.id)} disabled={replyPending} className="flex items-center gap-1 rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-60 transition-colors cursor-pointer">
+																<Check className="h-3 w-3" /> Confirmer
+															</button>
+															<button type="button" onClick={() => setConfirmDeleteReplyId(null)} disabled={replyPending} className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
+																<X className="h-3 w-3" /> Annuler
+															</button>
+														</div>
+													</div>
+												)}
+
+												{estProprietaire && !commentaire.reponse && !isReplying && (
+													<button type="button" onClick={() => openReply(commentaire.id)} className="mt-3 flex items-center gap-1.5 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-700 hover:bg-[#14A8DE] hover:text-white hover:border-[#14A8DE] transition-colors cursor-pointer">
+														<MessageSquare className="h-3.5 w-3.5" /> Répondre
+													</button>
+												)}
+
+												{estProprietaire && isReplying && (
+													<div className="mt-3 space-y-2">
+														<label className="block text-xs font-semibold text-slate-600">{editingReplyId === commentaire.id ? 'Modifier la réponse' : 'Votre réponse'}</label>
+														<div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 focus-within:border-[#14A8DE] focus-within:ring-2 focus-within:ring-[#14A8DE]/20 transition-colors">
+															<textarea rows={3} maxLength={1000} value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder="Écrivez votre réponse…" className="block w-full bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none resize-none border-0 p-0" />
+														</div>
+														<p className="text-right text-[11px] text-slate-400">{replyText.length}/1000</p>
+														<div className="flex flex-wrap gap-2">
+															<button type="button" onClick={() => handleSubmitReply(commentaire.id)} disabled={replyPending || !replyText.trim()} className="flex items-center gap-1.5 rounded-lg bg-[#14A8DE] px-4 py-2 text-xs font-semibold text-white hover:bg-[#119ac8] disabled:opacity-60 transition-colors cursor-pointer">
+																<Check className="h-3.5 w-3.5" /> {editingReplyId === commentaire.id ? 'Enregistrer' : 'Publier'}
+															</button>
+															<button type="button" onClick={closeReply} disabled={replyPending} className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
+																<X className="h-3.5 w-3.5" /> Annuler
+															</button>
+														</div>
+													</div>
+												)}
+
 												</div>
 											);
 										})}

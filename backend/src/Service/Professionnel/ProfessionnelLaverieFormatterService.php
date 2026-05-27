@@ -189,6 +189,8 @@ class ProfessionnelLaverieFormatterService
                 'commentaire' => $laverieNote->getCommentaire(),
                 'date' => $dateSource ? $dateSource->format('c') : null,
                 '_sortKey' => $dateSource ? $dateSource->getTimestamp() : 0,
+                'reponse' => $laverieNote->getReponse(),
+                'reponduLe' => $laverieNote->getReponduLe()?->format('c'),
                 'utilisateur' => [
                     'id' => $utilisateur->getId(),
                     'prenom' => $utilisateur->getPrenom(),

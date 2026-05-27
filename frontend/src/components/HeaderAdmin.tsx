@@ -44,6 +44,12 @@ export default function HeaderAdmin() {
             labelShort: 'Laveries',
             matchPaths: ['/admin/gestion-laveries', '/admin/laveries/'],
         },
+        {
+            to: '/admin/mots-interdits',
+            label: 'Mots interdits',
+            labelShort: 'Mots interdits',
+            matchPaths: ['/admin/mots-interdits'],
+        },
     ];
 
     const isLinkActive = (matchPaths: string[]) =>

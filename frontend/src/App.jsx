@@ -18,6 +18,7 @@ const GestionUtilisateur = React.lazy(() => import('./pages/administration/Gesti
 const DetailUtilisateur = React.lazy(() => import('./pages/administration/DetailUtilisateur'));
 const GestionLaveries = React.lazy(() => import('./pages/administration/GestionLaveries'));
 const DetailLaverie = React.lazy(() => import('./pages/administration/DetailLaverie'));
+const MotsInterdits = React.lazy(() => import('./pages/administration/MotsInterdits'));
 const EmailVerification = React.lazy(() => import('./pages/EmailVerification'));
 const AjoutLaverie = React.lazy(() => import('./pages/AjoutLaverie/AjoutLaverie'));
 const Laveries = React.lazy(() => import('./pages/Laveries'));
@@ -114,6 +115,7 @@ function App() {
               <Route path="/admin/utilisateurs/:id" element={<DetailUtilisateur />} />
               <Route path="/admin/gestion-laveries" element={<GestionLaveries />} />
               <Route path="/admin/laveries/:id" element={<DetailLaverie />} />
+              <Route path="/admin/mots-interdits" element={<MotsInterdits />} />
             </Route>
 
             <Route element={<ProRoute />}>

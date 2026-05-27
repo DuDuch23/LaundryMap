@@ -6,6 +6,7 @@ use App\Entity\LaverieNote;
 use App\Entity\Utilisateur;
 use App\Repository\LaverieNoteRepository;
 use App\Repository\LaverieRepository;
+use App\Service\FiltreContenusService;
 use Doctrine\ORM\EntityManagerInterface;
 use Pagerfanta\Doctrine\ORM\QueryAdapter;
 use Pagerfanta\Pagerfanta;
@@ -75,6 +76,7 @@ class ApiAvisController extends AbstractController
         LaverieNoteRepository $noteRepo,
         LaverieRepository $laverieRepo,
         EntityManagerInterface $em,
+        FiltreContenusService $filtre,
     ): JsonResponse {
         $user = $this->getUser();
         if (!$user instanceof Utilisateur) {
@@ -96,6 +98,10 @@ class ApiAvisController extends AbstractController
 
         if ($commentaire !== null && mb_strlen($commentaire) > 1000) {
             return $this->json(['message' => 'Le commentaire est trop long.'], 400);
+        }
+
+        if ($commentaire !== null && $commentaire !== '' && $filtre->contientContenuOffensant($commentaire)) {
+            return $this->json(['message' => 'Votre commentaire contient des termes inappropriés et ne peut pas être publié.'], 422);
         }
 
         $laverie = $laverieRepo->find((int) $laverieId);
@@ -140,6 +146,7 @@ class ApiAvisController extends AbstractController
         Request $request,
         LaverieNoteRepository $noteRepo,
         EntityManagerInterface $em,
+        FiltreContenusService $filtre,
     ): JsonResponse {
         $user = $this->getUser();
         if (!$user instanceof Utilisateur) {
@@ -177,6 +184,9 @@ class ApiAvisController extends AbstractController
             } else {
                 if (mb_strlen($commentaireClean) > 1000) {
                     return $this->json(['message' => 'Le commentaire est trop long.'], 400);
+                }
+                if ($filtre->contientContenuOffensant($commentaireClean)) {
+                    return $this->json(['message' => 'Votre commentaire contient des termes inappropriés et ne peut pas être publié.'], 422);
                 }
                 $laverieNote->setCommentaire($commentaireClean)->setCommenteLe(new \DateTime());
             }
