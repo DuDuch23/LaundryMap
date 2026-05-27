@@ -429,6 +429,7 @@ export interface LaveriePublicDetail {
         id: number;
         note: number;
         commentaire: string;
+        commentaireSupprimeeLe?: string | null;
         date: string;
         utilisateur: {
             id?: number;

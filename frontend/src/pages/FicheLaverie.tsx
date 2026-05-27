@@ -28,6 +28,14 @@ import { useGeolocation } from '../hooks/useGeolocation';
 import { calculateHaversineDistance } from '../utils/distance';
 
 const fallbackLaverieImage = uploadPath('/uploads/laveries/default-laundry.jpg');
+const REPORT_MOTIFS = [
+	{ value: 'MOTIF_PROPOS_INJURIEUX', labelKey: 'main.fiche_laverie.signalement.motifs.propos_injurieux' },
+	{ value: 'MOTIF_CONTENU_INAPPROPRIE', labelKey: 'main.fiche_laverie.signalement.motifs.contenu_inapproprie' },
+	{ value: 'MOTIF_PUBLICITE_NON_AUTORISEE', labelKey: 'main.fiche_laverie.signalement.motifs.publicite_non_autorisee' },
+	{ value: 'MOTIF_AUTRE', labelKey: 'main.fiche_laverie.signalement.motifs.autre' },
+] as const;
+
+type ReportMotifValue = (typeof REPORT_MOTIFS)[number]['value'];
 
 interface UserTokenPayload {
 	id: number;
@@ -371,21 +379,15 @@ export default function FicheLaverie() {
 	}, []);
 
 		// ── Signalement commentaire
-		const MOTIFS = [
-			'Propos injurieux',
-			'Contenu inapproprié',
-			'Publicité non autorisée',
-			'Autre',
-		];
 		const [reportOpen, setReportOpen] = useState(false);
 		const [reportNoteId, setReportNoteId] = useState<number | null>(null);
-		const [reportMotif, setReportMotif] = useState(MOTIFS[0]);
+		const [reportMotif, setReportMotif] = useState<ReportMotifValue>(REPORT_MOTIFS[0].value);
 		const [reportCommentaire, setReportCommentaire] = useState('');
 		const [reportPending, setReportPending] = useState(false);
 
 		const openReport = (noteId: number) => {
 			setReportNoteId(noteId);
-			setReportMotif(MOTIFS[0]);
+			setReportMotif(REPORT_MOTIFS[0].value);
 			setReportCommentaire('');
 			setReportOpen(true);
 		};
@@ -399,10 +401,10 @@ export default function FicheLaverie() {
 			try {
 				setReportPending(true);
 				await signalerCommentaire(reportNoteId, reportMotif, reportCommentaire.trim() || undefined);
-				toast.success('Signalement envoyé');
+				toast.success(t('main.fiche_laverie.signalement.toast_succes'));
 				closeReport();
 			} catch (err: any) {
-				toast.error(err?.message || 'Erreur lors du signalement');
+				toast.error(err?.message || t('main.fiche_laverie.signalement.toast_erreur'));
 			} finally {
 				setReportPending(false);
 			}
@@ -1113,15 +1115,15 @@ export default function FicheLaverie() {
 																</div>
 															)}
 
-															{!isMine && isStandardUser && !commentaire.commentaireSupprimeeLe && (
+															{!isMine && isStandardUser && !(commentaire as any).commentaireSupprimeeLe && (
 																<button
 																	type="button"
 																	onClick={() => openReport(commentaire.id)}
 																	className="flex h-7 items-center gap-2 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
-																	aria-label="Signaler ce commentaire"
+																	aria-label={t('main.fiche_laverie.signalement.aria_signaler') as string}
 																>
 																	<MessageSquare className="h-4 w-4 text-rose-500" />
-																	<span>Signaler</span>
+																	<span>{t('main.fiche_laverie.signalement.bouton_signaler')}</span>
 																</button>
 															)}
 														</div>
@@ -1257,19 +1259,19 @@ export default function FicheLaverie() {
 		</div>
 
 		{reportOpen && (
-			<AccessibleModal isOpen={reportOpen} onClose={closeReport} title="Signaler un commentaire">
+			<AccessibleModal isOpen={reportOpen} onClose={closeReport} title={t('main.fiche_laverie.signalement.titre')}>
 				<div className="space-y-3">
-					<p className="text-sm text-slate-700">Choisissez le motif du signalement (obligatoire)</p>
+					<p className="text-sm text-slate-700">{t('main.fiche_laverie.signalement.choisir_motif')}</p>
 					<div className="space-y-2">
-						{MOTIFS.map((m) => (
-							<label key={m} className="flex items-center gap-2">
-								<input type="radio" name="motif" checked={reportMotif === m} onChange={() => setReportMotif(m)} />
-								<span className="text-sm">{m}</span>
+						{REPORT_MOTIFS.map((m) => (
+							<label key={m.value} className="flex items-center gap-2">
+								<input type="radio" name="motif" checked={reportMotif === m.value} onChange={() => setReportMotif(m.value)} />
+								<span className="text-sm">{t(m.labelKey)}</span>
 							</label>
 						))}
 					</div>
 					<label className="block">
-						<span className="text-sm text-slate-700">Description (facultatif)</span>
+						<span className="text-sm text-slate-700">{t('main.fiche_laverie.signalement.description_facultative')}</span>
 						<textarea
 							rows={4}
 							maxLength={2000}
@@ -1279,8 +1281,8 @@ export default function FicheLaverie() {
 						/>
 					</label>
 					<div className="flex gap-2 justify-end">
-						<button onClick={handleSubmitReport} disabled={reportPending} className="rounded-md bg-[#14A8DE] text-white px-3 py-1.5">Envoyer</button>
-						<button onClick={closeReport} className="rounded-md border px-3 py-1.5">Annuler</button>
+						<button onClick={handleSubmitReport} disabled={reportPending} className="rounded-md bg-[#14A8DE] text-white px-3 py-1.5">{t('main.fiche_laverie.signalement.bouton_envoyer')}</button>
+						<button onClick={closeReport} className="rounded-md border px-3 py-1.5">{t('main.fiche_laverie.signalement.bouton_annuler')}</button>
 					</div>
 				</div>
 			</AccessibleModal>
