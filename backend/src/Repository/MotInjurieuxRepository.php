@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\MotInjurieux;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -16,28 +17,20 @@ class MotInjurieuxRepository extends ServiceEntityRepository
         parent::__construct($registry, MotInjurieux::class);
     }
 
-    //    /**
-    //     * @return MotInjurieux[] Returns an array of MotInjurieux objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('m')
-    //            ->andWhere('m.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('m.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * Retourne un QueryBuilder trié alphabétiquement,
+     * avec un filtre LIKE optionnel sur le label.
+     */
+    public function createSearchQueryBuilder(?string $recherche = null): QueryBuilder
+    {
+        $qb = $this->createQueryBuilder('m')
+            ->orderBy('m.label', 'ASC');
 
-    //    public function findOneBySomeField($value): ?MotInjurieux
-    //    {
-    //        return $this->createQueryBuilder('m')
-    //            ->andWhere('m.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        if ($recherche !== null && $recherche !== '') {
+            $qb->andWhere('m.label LIKE :q')
+               ->setParameter('q', '%' . mb_strtolower($recherche, 'UTF-8') . '%');
+        }
+
+        return $qb;
+    }
 }

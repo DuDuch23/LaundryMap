@@ -5,6 +5,7 @@ namespace App\Controller\Api\Administration;
 use App\Entity\LaverieHistoriqueInteraction;
 use App\Entity\Utilisateur;
 use App\Repository\LaverieNoteRepository;
+use App\Repository\LaverieNoteSignalementRepository;
 use App\Repository\LaverieRepository;
 use App\Service\Professionnel\ProfessionnelLaverieFormatterService;
 use App\Enum\StatutLaverieEnum;
@@ -28,6 +29,7 @@ class ApiLaverieController extends AbstractController
         Request $request,
         LaverieRepository $laverieRepository,
         LaverieNoteRepository $laverieNoteRepository,
+        LaverieNoteSignalementRepository $signalementRepo,
         ProfessionnelLaverieFormatterService $formatter,
     ): JsonResponse {
         $laverie = $laverieRepository->find($id);
@@ -58,6 +60,18 @@ class ApiLaverieController extends AbstractController
         $services = $formatter->buildServicesResponse($laverie);
         $paiements = $formatter->buildPaiementsResponse($laverie);
         $commentaires = $formatter->buildCommentairesResponse($laverie);
+
+        $currentUser = $this->getUser();
+
+        if ($currentUser instanceof Utilisateur) {
+            $noteIds = array_column($commentaires, 'id');
+            $signaledIds = $signalementRepo->findSignaledNoteIdsByUtilisateur($noteIds, $currentUser);
+            $commentaires = array_map(static function (array $c) use ($signaledIds): array {
+                $c['dejaSignale'] = in_array($c['id'], $signaledIds, true);
+                return $c;
+            }, $commentaires);
+        }
+
         $mainImage = $gallery[0]['image'] ?? null;
 
         if ($mainImage === null && $laverie->getLogo() !== null && $formatter->isProjectManagedMediaPath($laverie->getLogo()->getEmplacement())) {
@@ -65,7 +79,6 @@ class ApiLaverieController extends AbstractController
         }
 
         $monAvis = null;
-        $currentUser = $this->getUser();
         if ($currentUser instanceof Utilisateur) {
             $userNote = $laverieNoteRepository->findOneBy(['laverie' => $laverie, 'utilisateur' => $currentUser]);
             if ($userNote) {
@@ -109,6 +122,9 @@ class ApiLaverieController extends AbstractController
                 'nom' => $laverie->getProfessionnel()?->getUtilisateur()?->getNom(),
                 'prenom' => $laverie->getProfessionnel()?->getUtilisateur()?->getPrenom(),
             ],
+            'estProprietaire' => $currentUser instanceof Utilisateur
+                && $laverie->getProfessionnel() !== null
+                && $laverie->getProfessionnel()->getUtilisateur()?->getId() === $currentUser->getId(),
         ]);
     }
 

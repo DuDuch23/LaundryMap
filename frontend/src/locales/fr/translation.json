@@ -426,6 +426,18 @@
       "toast_erreur_modification": "Erreur lors de la modification",
       "toast_erreur_suppression": "Erreur lors de la suppression"
     },
+    "gestion_commentaires": {
+      "chargement": "Chargement...",
+      "titre": "Gestion des commentaires",
+      "aucun_signalement": "Aucun signalement en attente.",
+      "commentaire_laverie": "Commentaire #{{noteId}} — Laverie #{{laverieId}}",
+      "bouton_garder": "Garder",
+      "bouton_supprimer": "Supprimer",
+      "signalements_titre": "Signalements",
+      "toast_retabli": "Commentaire rétabli avec succès.",
+      "toast_masque": "Commentaire masqué avec succès.",
+      "toast_erreur": "Une erreur est survenue."
+    },
     "fiche_laverie": {
       "avis": {
         "section_kicker": "Notes et avis",
@@ -460,6 +472,24 @@
         "toast_avis_modifie": "Avis modifié",
         "toast_avis_supprime": "Avis supprimé",
         "toast_erreur": "Erreur"
+      },
+      "signalement": {
+        "aria_signaler": "Signaler ce commentaire",
+        "bouton_signaler": "Signaler",
+        "deja_signale": "Commentaire signalé",
+        "titre": "Signaler un commentaire",
+        "choisir_motif": "Choisissez le motif du signalement (obligatoire)",
+        "description_facultative": "Description (facultatif)",
+        "bouton_envoyer": "Envoyer",
+        "bouton_annuler": "Annuler",
+        "toast_succes": "Signalement envoyé",
+        "toast_erreur": "Erreur lors du signalement",
+        "motifs": {
+          "propos_injurieux": "Propos injurieux",
+          "contenu_inapproprie": "Contenu inapproprié",
+          "publicite_non_autorisee": "Publicité non autorisée",
+          "autre": "Autre"
+        }
       }
     }
   }

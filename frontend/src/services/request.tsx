@@ -429,7 +429,11 @@ export interface LaveriePublicDetail {
         id: number;
         note: number;
         commentaire: string;
+        commentaireSupprimeeLe?: string | null;
         date: string;
+        reponse?: string | null;
+        reponduLe?: string | null;
+        dejaSignale?: boolean;
         utilisateur: {
             id?: number;
             prenom: string;
@@ -439,6 +443,7 @@ export interface LaveriePublicDetail {
     commentairesCount: number;
     noteMoyenne: number | null;
     monAvis: MonAvis | null;
+    estProprietaire?: boolean;
     professionnel?: {
         id?: number | null;
         nom?: string | null;
@@ -630,6 +635,41 @@ export async function modifierAvis(id: number, note: number, commentaire?: strin
     return data.avis as MonAvis;
 }
 
+// ── F-12 : Réponses du professionnel aux avis ────────────────────────────────
+
+export interface ReponseAvis {
+    reponse: string;
+    reponduLe: string;
+}
+
+export async function publierReponseAvis(avisId: number, reponse: string): Promise<ReponseAvis> {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Non connecté');
+    const res = await fetch(`${API_BASE_URL}/api/professionnel/avis/${avisId}/reponse`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', accept: 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ reponse }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Erreur lors de la publication de la réponse');
+    return data as ReponseAvis;
+}
+
+export async function supprimerReponseAvis(avisId: number): Promise<void> {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Non connecté');
+    const res = await fetch(`${API_BASE_URL}/api/professionnel/avis/${avisId}/reponse`, {
+        method: 'DELETE',
+        headers: { accept: 'application/json', Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || 'Erreur lors de la suppression de la réponse');
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export async function supprimerAvis(id: number): Promise<void> {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('Non connecté');
@@ -711,4 +751,116 @@ export async function geocodeSuggestions(q: string): Promise<GeoSuggestion[]> {
     if (!res.ok) return [];
     const data = await res.json();
     return (data.suggestions ?? []) as GeoSuggestion[];
+}
+
+// ── F-20 : Gestion des mots interdits (admin) ────────────────────────────────
+
+export interface MotInterdit {
+    id: number;
+    label: string;
+}
+
+function authHeaders(): Record<string, string> {
+    const token = localStorage.getItem('token');
+    return token
+        ? { 'Content-Type': 'application/json', accept: 'application/json', Authorization: `Bearer ${token}` }
+        : { 'Content-Type': 'application/json', accept: 'application/json' };
+}
+
+export interface MotsInterditsPaginatedResponse {
+    mots: MotInterdit[];
+    total: number;
+    pagination: PaginationInfo;
+}
+
+export async function fetchMotsInterdits(
+    page: number = 1,
+    q?: string,
+): Promise<MotsInterditsPaginatedResponse> {
+    const params = new URLSearchParams({ page: String(page) });
+    if (q && q.trim() !== '') params.set('q', q.trim());
+    const res = await fetch(`${API_BASE_URL}/api/admin/mots-interdits?${params}`, {
+        headers: authHeaders(),
+    });
+    if (!res.ok) throw new Error(`Erreur chargement mots interdits (HTTP ${res.status})`);
+    return res.json() as Promise<MotsInterditsPaginatedResponse>;
+}
+
+export async function creerMotInterdit(label: string): Promise<MotInterdit> {
+    const res = await fetch(`${API_BASE_URL}/api/admin/mots-interdits`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ label }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Erreur lors de l\'ajout du mot.');
+    return data as MotInterdit;
+}
+
+export async function modifierMotInterdit(id: number, label: string): Promise<MotInterdit> {
+    const res = await fetch(`${API_BASE_URL}/api/admin/mots-interdits/${id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({ label }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Erreur lors de la modification du mot.');
+    return data as MotInterdit;
+}
+
+export async function supprimerMotInterdit(id: number): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/api/admin/mots-interdits/${id}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+    });
+    if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || 'Erreur lors de la suppression du mot.');
+    }
+}
+
+export async function signalerCommentaire(noteId: number, motif: string, commentaire?: string): Promise<{ totalSignalements?: number }> {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Non connecté');
+
+    const body: any = { motif };
+    if (commentaire !== undefined) body.commentaire = commentaire;
+
+    const res = await fetch(`${API_BASE_URL}/api/laverie-notes/${noteId}/signalement`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', accept: 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || 'Erreur lors de l\'envoi du signalement');
+    return data;
+}
+
+export async function fetchModerationCommentaires(): Promise<any> {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Non connecté');
+    const res = await fetch(`${API_BASE_URL}/api/admin/moderation/commentaires`, {
+        headers: { accept: 'application/json', Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || 'Erreur chargement modération');
+    }
+    return res.json();
+}
+
+export async function moderationDecision(noteId: number, action: 'keep'|'delete', motif?: string): Promise<any> {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Non connecté');
+    const body: any = { action };
+    if (motif) body.motif = motif;
+    const res = await fetch(`${API_BASE_URL}/api/admin/moderation/commentaires/${noteId}/decision`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', accept: 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || 'Erreur décision modération');
+    return data;
 }

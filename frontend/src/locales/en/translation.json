@@ -428,6 +428,18 @@
       "toast_erreur_modification": "Error while updating",
       "toast_erreur_suppression": "Error while deleting"
     },
+    "gestion_commentaires": {
+      "chargement": "Loading...",
+      "titre": "Comment moderation",
+      "aucun_signalement": "No reports pending.",
+      "commentaire_laverie": "Comment #{{noteId}} — Laundromat #{{laverieId}}",
+      "bouton_garder": "Keep",
+      "bouton_supprimer": "Delete",
+      "signalements_titre": "Reports",
+      "toast_retabli": "Comment restored successfully.",
+      "toast_masque": "Comment hidden successfully.",
+      "toast_erreur": "An error occurred."
+    },
     "fiche_laverie": {
       "avis": {
         "section_kicker": "Ratings and reviews",
@@ -462,6 +474,24 @@
         "toast_avis_modifie": "Review updated",
         "toast_avis_supprime": "Review deleted",
         "toast_erreur": "Error"
+      },
+      "signalement": {
+        "aria_signaler": "Report this comment",
+        "bouton_signaler": "Report",
+        "deja_signale": "Comment reported",
+        "titre": "Report a comment",
+        "choisir_motif": "Choose a report reason (required)",
+        "description_facultative": "Description (optional)",
+        "bouton_envoyer": "Send",
+        "bouton_annuler": "Cancel",
+        "toast_succes": "Report sent",
+        "toast_erreur": "Error while sending report",
+        "motifs": {
+          "propos_injurieux": "Abusive language",
+          "contenu_inapproprie": "Inappropriate content",
+          "publicite_non_autorisee": "Unauthorized advertising",
+          "autre": "Other"
+        }
       }
     }
   }
