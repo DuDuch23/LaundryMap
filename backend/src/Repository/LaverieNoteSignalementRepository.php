@@ -49,6 +49,24 @@ class LaverieNoteSignalementRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
+    public function findSignaledNoteIdsByUtilisateur(array $noteIds, $utilisateur): array
+    {
+        if (empty($noteIds)) {
+            return [];
+        }
+
+        $results = $this->createQueryBuilder('s')
+            ->select('IDENTITY(s.laverieNote) as noteId')
+            ->andWhere('s.laverieNote IN (:noteIds)')
+            ->andWhere('s.utilisateur = :user')
+            ->setParameter('noteIds', $noteIds)
+            ->setParameter('user', $utilisateur)
+            ->getQuery()
+            ->getResult();
+
+        return array_map('intval', array_column($results, 'noteId'));
+    }
+
     public function findForModeration(): array
     {
         return $this->createQueryBuilder('s')

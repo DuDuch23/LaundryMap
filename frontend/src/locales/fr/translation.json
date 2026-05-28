@@ -476,6 +476,7 @@
       "signalement": {
         "aria_signaler": "Signaler ce commentaire",
         "bouton_signaler": "Signaler",
+        "deja_signale": "Commentaire signalé",
         "titre": "Signaler un commentaire",
         "choisir_motif": "Choisissez le motif du signalement (obligatoire)",
         "description_facultative": "Description (facultatif)",

@@ -478,6 +478,7 @@
       "signalement": {
         "aria_signaler": "Report this comment",
         "bouton_signaler": "Report",
+        "deja_signale": "Comment reported",
         "titre": "Report a comment",
         "choisir_motif": "Choose a report reason (required)",
         "description_facultative": "Description (optional)",

@@ -21,7 +21,7 @@ class ApiLaverieNoteSignalementController extends AbstractController
     private const AUTO_HIDE_THRESHOLD = 5;
 
     #[Route('/api/laverie-notes/{id}/signalement', name: 'api_laverie_note_signaler', methods: ['POST'])]
-    #[IsGranted('ROLE_USER')]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function signaler(
         int $id,
         Request $request,
