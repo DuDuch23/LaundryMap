@@ -429,9 +429,11 @@ export interface LaveriePublicDetail {
         id: number;
         note: number;
         commentaire: string;
+        commentaireSupprimeeLe?: string | null;
         date: string;
         reponse?: string | null;
         reponduLe?: string | null;
+        dejaSignale?: boolean;
         utilisateur: {
             id?: number;
             prenom: string;
@@ -815,4 +817,50 @@ export async function supprimerMotInterdit(id: number): Promise<void> {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message || 'Erreur lors de la suppression du mot.');
     }
+}
+
+export async function signalerCommentaire(noteId: number, motif: string, commentaire?: string): Promise<{ totalSignalements?: number }> {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Non connecté');
+
+    const body: any = { motif };
+    if (commentaire !== undefined) body.commentaire = commentaire;
+
+    const res = await fetch(`${API_BASE_URL}/api/laverie-notes/${noteId}/signalement`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', accept: 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || 'Erreur lors de l\'envoi du signalement');
+    return data;
+}
+
+export async function fetchModerationCommentaires(): Promise<any> {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Non connecté');
+    const res = await fetch(`${API_BASE_URL}/api/admin/moderation/commentaires`, {
+        headers: { accept: 'application/json', Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || 'Erreur chargement modération');
+    }
+    return res.json();
+}
+
+export async function moderationDecision(noteId: number, action: 'keep'|'delete', motif?: string): Promise<any> {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Non connecté');
+    const body: any = { action };
+    if (motif) body.motif = motif;
+    const res = await fetch(`${API_BASE_URL}/api/admin/moderation/commentaires/${noteId}/decision`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', accept: 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || 'Erreur décision modération');
+    return data;
 }

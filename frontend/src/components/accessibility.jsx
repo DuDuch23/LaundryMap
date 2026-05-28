@@ -327,7 +327,7 @@ export function AccessibleModal({ isOpen, onClose, title, children }) {
         tabIndex={-1}
         onKeyDown={handleKeyDown}
         onClick={(e) => e.stopPropagation()}
-        style={{ background: '#fff', padding: '2rem', borderRadius: '8px', maxWidth: '500px', width: '100%' }}
+        style={{ background: '#fff', padding: '2rem', borderRadius: '8px', maxWidth: '500px', width: '70%' }}
       >
         <h2 id="modal-title">{title}</h2>
 

@@ -18,16 +18,24 @@ import {
 	X,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { AccessibleButton, SkipLink } from '../components/accessibility';
+import { AccessibleButton, SkipLink, AccessibleModal } from '../components/accessibility';
 import API_BASE_URL, { uploadPath, resolveUrl } from '../services/api';
 import { toast } from 'sonner';
-import { fetchPublicLaverieDetail, ajouterFavori, supprimerFavori, creerAvis, modifierAvis, supprimerAvis, publierReponseAvis, supprimerReponseAvis, type LaveriePublicDetail, type MonAvis } from '../services/request';
+import { fetchPublicLaverieDetail, ajouterFavori, supprimerFavori, creerAvis, modifierAvis, supprimerAvis, publierReponseAvis, supprimerReponseAvis, type LaveriePublicDetail, type MonAvis, signalerCommentaire } from '../services/request';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { calculateHaversineDistance } from '../utils/distance';
 
 const fallbackLaverieImage = uploadPath('/uploads/laveries/default-laundry.jpg');
+const REPORT_MOTIFS = [
+	{ value: 'MOTIF_PROPOS_INJURIEUX', labelKey: 'main.fiche_laverie.signalement.motifs.propos_injurieux' },
+	{ value: 'MOTIF_CONTENU_INAPPROPRIE', labelKey: 'main.fiche_laverie.signalement.motifs.contenu_inapproprie' },
+	{ value: 'MOTIF_PUBLICITE_NON_AUTORISEE', labelKey: 'main.fiche_laverie.signalement.motifs.publicite_non_autorisee' },
+	{ value: 'MOTIF_AUTRE', labelKey: 'main.fiche_laverie.signalement.motifs.autre' },
+] as const;
+
+type ReportMotifValue = (typeof REPORT_MOTIFS)[number]['value'];
 
 interface UserTokenPayload {
 	id: number;
@@ -430,6 +438,40 @@ export default function FicheLaverie() {
 			return !roles.some((r) => r.includes('PROFESSIONNEL') || r.includes('ADMIN'));
 		} catch { return false; }
 	}, []);
+
+		// ── Signalement commentaire
+		const [reportOpen, setReportOpen] = useState(false);
+		const [reportNoteId, setReportNoteId] = useState<number | null>(null);
+		const [reportMotif, setReportMotif] = useState<ReportMotifValue>(REPORT_MOTIFS[0].value);
+		const [reportCommentaire, setReportCommentaire] = useState('');
+		const [reportPending, setReportPending] = useState(false);
+		const [reportedIds, setReportedIds] = useState<Set<number>>(new Set());
+
+		const openReport = (noteId: number) => {
+			setReportNoteId(noteId);
+			setReportMotif(REPORT_MOTIFS[0].value);
+			setReportCommentaire('');
+			setReportOpen(true);
+		};
+		const closeReport = () => {
+			setReportOpen(false);
+			setReportNoteId(null);
+		};
+
+		const handleSubmitReport = async () => {
+			if (!reportNoteId) return;
+			try {
+				setReportPending(true);
+				await signalerCommentaire(reportNoteId, reportMotif, reportCommentaire.trim() || undefined);
+				toast.success(t('main.fiche_laverie.signalement.toast_succes'));
+				setReportedIds(prev => new Set([...prev, reportNoteId]));
+				closeReport();
+			} catch (err: any) {
+				toast.error(err?.message || t('main.fiche_laverie.signalement.toast_erreur'));
+			} finally {
+				setReportPending(false);
+			}
+		};
 
 	const openAvisForm = () => {
 		setAvisFormNote(monAvis?.note ?? 0);
@@ -1138,6 +1180,25 @@ export default function FicheLaverie() {
 																	</button>
 																</div>
 															)}
+
+															{!isMine && (isStandardUser || isProfessionnel) && !commentaire.commentaireSupprimeeLe && (
+																commentaire.dejaSignale || reportedIds.has(commentaire.id) ? (
+																	<span className="flex h-7 items-center gap-2 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-400 select-none">
+																		<MessageSquare className="h-4 w-4 text-rose-300" />
+																		<span>{t('main.fiche_laverie.signalement.deja_signale')}</span>
+																	</span>
+																) : (
+																	<button
+																		type="button"
+																		onClick={() => openReport(commentaire.id)}
+																		className="flex h-7 items-center gap-2 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+																		aria-label={t('main.fiche_laverie.signalement.aria_signaler') as string}
+																	>
+																		<MessageSquare className="h-4 w-4 text-rose-500" />
+																		<span>{t('main.fiche_laverie.signalement.bouton_signaler')}</span>
+																	</button>
+																)
+															)}
 														</div>
 													</div>
 
@@ -1328,6 +1389,36 @@ export default function FicheLaverie() {
 				</div>
 			</main>
 		</div>
+
+		{reportOpen && (
+			<AccessibleModal isOpen={reportOpen} onClose={closeReport} title={t('main.fiche_laverie.signalement.titre')}>
+				<div className="space-y-3">
+					<p className="text-sm text-slate-700">{t('main.fiche_laverie.signalement.choisir_motif')}</p>
+					<div className="space-y-2">
+						{REPORT_MOTIFS.map((m) => (
+							<label key={m.value} className="flex items-center gap-2">
+								<input type="radio" name="motif" checked={reportMotif === m.value} onChange={() => setReportMotif(m.value)} />
+								<span className="text-sm">{t(m.labelKey)}</span>
+							</label>
+						))}
+					</div>
+					<label className="block">
+						<span className="text-sm text-slate-700">{t('main.fiche_laverie.signalement.description_facultative')}</span>
+						<textarea
+							rows={4}
+							maxLength={2000}
+							value={reportCommentaire}
+							onChange={(e) => setReportCommentaire(e.target.value)}
+							className="mx-auto mt-1 block w-[calc(100%-1.5rem)] rounded-md border p-2"
+						/>
+					</label>
+					<div className="flex gap-2 justify-end">
+						<button onClick={handleSubmitReport} disabled={reportPending} className="rounded-md bg-[#14A8DE] text-white px-3 py-1.5">{t('main.fiche_laverie.signalement.bouton_envoyer')}</button>
+						<button onClick={closeReport} className="rounded-md border px-3 py-1.5">{t('main.fiche_laverie.signalement.bouton_annuler')}</button>
+					</div>
+				</div>
+			</AccessibleModal>
+		)}
 
 		{lightboxOpen && (
 			<Lightbox

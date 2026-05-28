@@ -19,6 +19,7 @@ const DetailUtilisateur = React.lazy(() => import('./pages/administration/Detail
 const GestionLaveries = React.lazy(() => import('./pages/administration/GestionLaveries'));
 const DetailLaverie = React.lazy(() => import('./pages/administration/DetailLaverie'));
 const MotsInterdits = React.lazy(() => import('./pages/administration/MotsInterdits'));
+const GestionCommentaires = React.lazy(() => import('./pages/administration/GestionCommentaire'));
 const EmailVerification = React.lazy(() => import('./pages/EmailVerification'));
 const AjoutLaverie = React.lazy(() => import('./pages/AjoutLaverie/AjoutLaverie'));
 const Laveries = React.lazy(() => import('./pages/Laveries'));
@@ -60,6 +61,19 @@ function AuthRoute({ children }) {
   return children;
 }
 
+function getRolesFromToken(token) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      window.atob(base64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
+    );
+    return JSON.parse(jsonPayload).roles || [];
+  } catch {
+    return [];
+  }
+}
+
 function RequireAdmin({ children }) {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -76,6 +90,12 @@ function RequireAdmin({ children }) {
 
   if (!token) {
     return <Navigate to="/connexion" replace />;
+  }
+
+  const isAdmin = getRolesFromToken(token).some((role) => role.includes('ADMIN'));
+
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
   }
 
   return children;
@@ -114,9 +134,12 @@ function App() {
               <Route path="/admin/gestion-utilisateurs" element={<GestionUtilisateur />} />
               <Route path="/admin/utilisateurs/:id" element={<DetailUtilisateur />} />
               <Route path="/admin/gestion-laveries" element={<GestionLaveries />} />
+              <Route path="/admin/gestion-commentaires" element={<GestionCommentaires />} />
               <Route path="/admin/laveries/:id" element={<DetailLaverie />} />
               <Route path="/admin/mots-interdits" element={<MotsInterdits />} />
             </Route>
+
+            <Route path="/admin/moderation-commentaires" element={<Navigate to="/admin/gestion-commentaires" replace />} />
 
             <Route element={<ProRoute />}>
               <Route path="/professionnel/tableau-de-bord" element={<TableauDeBordPro />} />

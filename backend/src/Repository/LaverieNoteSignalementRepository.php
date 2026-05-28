@@ -16,6 +16,51 @@ class LaverieNoteSignalementRepository extends ServiceEntityRepository
         parent::__construct($registry, LaverieNoteSignalement::class);
     }
 
+    public function findOneByNoteAndUtilisateur($laverieNote, $utilisateur): ?LaverieNoteSignalement
+    {
+        return $this->createQueryBuilder('s')
+            ->andWhere('s.laverieNote = :note')
+            ->andWhere('s.utilisateur = :user')
+            ->setParameter('note', $laverieNote)
+            ->setParameter('user', $utilisateur)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function countRecentByUtilisateur($utilisateur, \DateTimeInterface $since): int
+    {
+        return (int) $this->createQueryBuilder('s')
+            ->select('COUNT(s.utilisateur)')
+            ->andWhere('s.utilisateur = :user')
+            ->andWhere('s.date >= :since')
+            ->setParameter('user', $utilisateur)
+            ->setParameter('since', $since)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function countByNote($laverieNote): int
+    {
+        return (int) $this->createQueryBuilder('s')
+            ->select('COUNT(s.utilisateur)')
+            ->andWhere('s.laverieNote = :note')
+            ->setParameter('note', $laverieNote)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function findForModeration(): array
+    {
+        return $this->createQueryBuilder('s')
+            ->addSelect('n')
+            ->addSelect('u')
+            ->join('s.laverieNote', 'n')
+            ->join('s.utilisateur', 'u')
+            ->orderBy('s.date', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return LaverieNoteSignalement[] Returns an array of LaverieNoteSignalement objects
     //     */

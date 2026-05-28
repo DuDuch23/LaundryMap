@@ -50,6 +50,12 @@ export default function HeaderAdmin() {
             labelShort: 'Mots interdits',
             matchPaths: ['/admin/mots-interdits'],
         },
+        {
+            to: '/admin/gestion-commentaires',
+            label: 'Gestion des commentaires',
+            labelShort: 'Commentaires',
+            matchPaths: ['/admin/gestion-commentaires', '/admin/moderation-commentaires'],
+        },
     ];
 
     const isLinkActive = (matchPaths: string[]) =>
