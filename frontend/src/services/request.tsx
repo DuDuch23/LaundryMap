@@ -837,10 +837,75 @@ export async function signalerCommentaire(noteId: number, motif: string, comment
     return data;
 }
 
-export async function fetchModerationCommentaires(): Promise<any> {
+export interface ModerationUtilisateurMini {
+    id: number;
+    prenom: string | null;
+    nom: string | null;
+    email: string;
+}
+
+export interface ModerationSignalement {
+    date: string;
+    motif: string;
+    commentaire: string | null;
+    utilisateur: ModerationUtilisateurMini | null;
+}
+
+export interface ModerationLaverieMini {
+    id: number;
+    nomEtablissement: string;
+    adresse: string;
+}
+
+export interface ModerationCommentaireItem {
+    noteId: number;
+    note: number | null;
+    commentaire: string | null;
+    commenteLe: string | null;
+    noteLe: string | null;
+    estSignale: boolean;
+    estModere: boolean;
+    nbSignalements: number;
+    commentaireSupprimeMotif: string | null;
+    commentaireSupprimeeLe: string | null;
+    auteur: ModerationUtilisateurMini;
+    laverie: ModerationLaverieMini;
+    signalements: ModerationSignalement[];
+}
+
+export interface ModerationPagination {
+    pageCourante: number;
+    totalPages: number;
+    totalResultats: number;
+    parPage: number;
+    aPageSuivante: boolean;
+    aPagePrecedente: boolean;
+}
+
+export interface ModerationListResponse {
+    items: ModerationCommentaireItem[];
+    totalSignalesEnAttente: number;
+    pagination: ModerationPagination;
+}
+
+export interface ModerationFiltres {
+    statut?: string; // signales|non_signales|modere|tous
+    ordre?: string;  // recent|ancien|plus_signale
+}
+
+export async function fetchModerationCommentaires(
+    page: number = 1,
+    filtres: ModerationFiltres = {}
+): Promise<ModerationListResponse> {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('Non connecté');
-    const res = await fetch(`${API_BASE_URL}/api/admin/moderation/commentaires`, {
+
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    if (filtres.statut) params.set('statut', filtres.statut);
+    if (filtres.ordre) params.set('ordre', filtres.ordre);
+
+    const res = await fetch(`${API_BASE_URL}/api/admin/moderation/commentaires?${params.toString()}`, {
         headers: { accept: 'application/json', Authorization: `Bearer ${token}` },
     });
     if (!res.ok) {
