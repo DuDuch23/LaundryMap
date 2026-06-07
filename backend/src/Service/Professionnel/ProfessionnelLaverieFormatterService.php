@@ -179,9 +179,24 @@ class ProfessionnelLaverieFormatterService
             }
 
             $utilisateur = $laverieNote->getUtilisateur();
-            $nom = $utilisateur->getNom();
-            $nomAbrege = $nom ? mb_substr($nom, 0, 1) . '.' : '';
+            $estBanni = $utilisateur->getStatut() === \App\Enum\StatutUtilisateurEnum::STATUT_BANNI;
             $dateSource = $laverieNote->getCommenteLe() ?? $laverieNote->getNoteLe();
+
+            if ($estBanni) {
+                $utilisateurPayload = [
+                    'id' => $utilisateur->getId(),
+                    'prenom' => 'Utilisateur',
+                    'nom' => 'inconnu',
+                ];
+            } else {
+                $nom = $utilisateur->getNom();
+                $nomAbrege = $nom ? mb_substr($nom, 0, 1) . '.' : '';
+                $utilisateurPayload = [
+                    'id' => $utilisateur->getId(),
+                    'prenom' => $utilisateur->getPrenom(),
+                    'nom' => $nomAbrege,
+                ];
+            }
 
             $commentaires[] = [
                 'id' => $laverieNote->getId(),
@@ -191,11 +206,7 @@ class ProfessionnelLaverieFormatterService
                 '_sortKey' => $dateSource ? $dateSource->getTimestamp() : 0,
                 'reponse' => $laverieNote->getReponse(),
                 'reponduLe' => $laverieNote->getReponduLe()?->format('c'),
-                'utilisateur' => [
-                    'id' => $utilisateur->getId(),
-                    'prenom' => $utilisateur->getPrenom(),
-                    'nom' => $nomAbrege,
-                ]
+                'utilisateur' => $utilisateurPayload,
             ];
         }
 

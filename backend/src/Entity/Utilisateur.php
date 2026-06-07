@@ -73,6 +73,12 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'utilisateur_supprime_le', type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $utilisateurSupprimeLe = null;
 
+    #[ORM\Column(name: 'banni_jusqua', type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $banniJusquA = null;
+
+    #[ORM\Column(name: 'banni_motif', type: 'string', length: 255, nullable: true)]
+    private ?string $banniMotif = null;
+
     #[ORM\OneToOne(mappedBy: 'utilisateur', targetEntity: Professionnel::class)]
     private ?Professionnel $professionnel = null;
 
@@ -206,6 +212,28 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     public function setUtilisateurSupprimeLe(?\DateTimeInterface $date): static
     {
         $this->utilisateurSupprimeLe = $date;
+        return $this;
+    }
+
+    public function getBanniJusquA(): ?\DateTimeInterface
+    {
+        return $this->banniJusquA;
+    }
+
+    public function setBanniJusquA(?\DateTimeInterface $date): static
+    {
+        $this->banniJusquA = $date;
+        return $this;
+    }
+
+    public function getBanniMotif(): ?string
+    {
+        return $this->banniMotif;
+    }
+
+    public function setBanniMotif(?string $motif): static
+    {
+        $this->banniMotif = $motif;
         return $this;
     }
 

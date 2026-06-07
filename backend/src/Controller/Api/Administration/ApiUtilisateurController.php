@@ -142,12 +142,20 @@ class ApiUtilisateurController extends AbstractController
             default         => 'En attente'
         };
 
+        $banniJusquA = $user->getBanniJusquA();
+        $estBanni = $user->getStatut() === \App\Enum\StatutUtilisateurEnum::STATUT_BANNI;
+
         $userData = [
             'id' => $user->getId(),
             'prenom' => $user->getPrenom(),
             'nom' => $user->getNom(),
             'email' => $user->getEmail(),
             'statut' => $statutUserReact,
+            'estBanni' => $estBanni,
+            'banniJusquA' => $banniJusquA?->format('c'),
+            'banniMotif' => $user->getBanniMotif(),
+            'estBanniDefinitif' => $estBanni && $banniJusquA === null,
+            'estBanniTemporaire' => $estBanni && $banniJusquA !== null,
         ];
 
         if ($pro) {
@@ -405,5 +413,165 @@ class ApiUtilisateurController extends AbstractController
         $mailer->send($emailMessage);
 
         return $this->json(['message' => 'Un nouveau lien de vérification a été envoyé à votre adresse e-mail.']);
+    }
+
+    #[Route('/api/admin/utilisateurs/{id}/blocage', name: 'api_admin_utilisateur_bloquer', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function bloquerUtilisateur(
+        int $id,
+        Request $request,
+        UtilisateurRepository $utilisateurRepository,
+        EntityManagerInterface $em,
+        MailerInterface $mailer,
+        LoggerInterface $logger
+    ): JsonResponse {
+        $administrateur = $this->getUser();
+        if (!$administrateur) {
+            return $this->json(['message' => 'Action non autorisée.'], 403);
+        }
+
+        $user = $utilisateurRepository->find($id);
+        if (!$user) {
+            return $this->json(['message' => 'Utilisateur introuvable.'], 404);
+        }
+
+        // Refus : bloquer un pro ou un compte supprimé
+        if ($user->getProfessionnel() !== null) {
+            return $this->json(['message' => 'Les comptes professionnels ne peuvent pas être bloqués via cette fonctionnalité.'], 400);
+        }
+        if ($user->getStatut() === \App\Enum\StatutUtilisateurEnum::STATUT_SUPPRIME) {
+            return $this->json(['message' => 'Ce compte a été supprimé et ne peut plus être bloqué.'], 400);
+        }
+        if ($user->getStatut() === \App\Enum\StatutUtilisateurEnum::STATUT_BANNI) {
+            return $this->json(['message' => 'Cet utilisateur est déjà bloqué.'], 409);
+        }
+
+        $data = json_decode($request->getContent(), true) ?? [];
+        $duree = $data['duree'] ?? null;       // 'temporaire' | 'definitif'
+        $dateFinRaw = $data['dateFin'] ?? null;
+        $motif = isset($data['motif']) ? trim((string) $data['motif']) : '';
+
+        if (!in_array($duree, ['temporaire', 'definitif'], true)) {
+            return $this->json(['message' => 'La durée doit être "temporaire" ou "definitif".'], 400);
+        }
+        if ($motif === '') {
+            return $this->json(['message' => 'Le motif est obligatoire.'], 400);
+        }
+        if (mb_strlen($motif) > 255) {
+            return $this->json(['message' => 'Le motif est trop long (255 caractères maximum).'], 400);
+        }
+
+        $banniJusquA = null;
+        if ($duree === 'temporaire') {
+            if (!$dateFinRaw) {
+                return $this->json(['message' => 'La date de fin est obligatoire pour un blocage temporaire.'], 400);
+            }
+            try {
+                $banniJusquA = new \DateTime((string) $dateFinRaw);
+            } catch (\Exception) {
+                return $this->json(['message' => 'Date de fin invalide.'], 400);
+            }
+            if ($banniJusquA <= new \DateTime()) {
+                return $this->json(['message' => 'La date de fin doit être postérieure à aujourd\'hui.'], 400);
+            }
+        }
+
+        $user->setStatut(\App\Enum\StatutUtilisateurEnum::STATUT_BANNI);
+        $user->setBanniJusquA($banniJusquA);
+        $user->setBanniMotif($motif);
+
+        $historique = new UtilisateurHistoriqueInteraction();
+        $historique->setUtilisateur($user);
+        $historique->setAdministrateur($administrateur);
+        $historique->setDate(new \DateTime());
+        $historique->setAction($duree === 'temporaire' ? 'Blocage temporaire' : 'Blocage définitif');
+        $historique->setMotifAction($motif);
+
+        $em->persist($historique);
+        $em->flush();
+
+        // Email de notification
+        try {
+            $email = (new TemplatedEmail())
+                ->from($this->getParameter('mailer_from'))
+                ->to($user->getEmail())
+                ->subject('Votre compte LaundryMap a été bloqué')
+                ->htmlTemplate('emails/blocage_utilisateur.html.twig')
+                ->context([
+                    'user' => $user,
+                    'motif' => $motif,
+                    'banniJusquA' => $banniJusquA,
+                    'estDefinitif' => $banniJusquA === null,
+                ]);
+            $mailer->send($email);
+        } catch (\Throwable $e) {
+            $logger->error('Echec envoi mail blocage utilisateur', [
+                'utilisateurId' => $user->getId(),
+                'exception' => $e,
+            ]);
+        }
+
+        return $this->json([
+            'message' => 'Utilisateur bloqué avec succès.',
+            'banniJusquA' => $banniJusquA?->format('c'),
+            'banniMotif' => $motif,
+        ]);
+    }
+
+    #[Route('/api/admin/utilisateurs/{id}/blocage', name: 'api_admin_utilisateur_debloquer', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function debloquerUtilisateur(
+        int $id,
+        UtilisateurRepository $utilisateurRepository,
+        EntityManagerInterface $em,
+        MailerInterface $mailer,
+        LoggerInterface $logger
+    ): JsonResponse {
+        $administrateur = $this->getUser();
+        if (!$administrateur) {
+            return $this->json(['message' => 'Action non autorisée.'], 403);
+        }
+
+        $user = $utilisateurRepository->find($id);
+        if (!$user) {
+            return $this->json(['message' => 'Utilisateur introuvable.'], 404);
+        }
+        if ($user->getStatut() !== \App\Enum\StatutUtilisateurEnum::STATUT_BANNI) {
+            return $this->json(['message' => 'Cet utilisateur n\'est pas bloqué.'], 400);
+        }
+
+        $user->setStatut(\App\Enum\StatutUtilisateurEnum::STATUT_VALIDE);
+        $user->setBanniJusquA(null);
+        $user->setBanniMotif(null);
+
+        $historique = new UtilisateurHistoriqueInteraction();
+        $historique->setUtilisateur($user);
+        $historique->setAdministrateur($administrateur);
+        $historique->setDate(new \DateTime());
+        $historique->setAction('Déblocage');
+        $historique->setMotifAction('Compte débloqué par un administrateur.');
+
+        $em->persist($historique);
+        $em->flush();
+
+        try {
+            $email = (new TemplatedEmail())
+                ->from($this->getParameter('mailer_from'))
+                ->to($user->getEmail())
+                ->subject('Votre compte LaundryMap a été débloqué')
+                ->htmlTemplate('emails/deblocage_utilisateur.html.twig')
+                ->context([
+                    'user' => $user,
+                    'loginUrl' => rtrim($this->getParameter('app.frontend_url'), '/') . '/connexion',
+                ]);
+            $mailer->send($email);
+        } catch (\Throwable $e) {
+            $logger->error('Echec envoi mail déblocage utilisateur', [
+                'utilisateurId' => $user->getId(),
+                'exception' => $e,
+            ]);
+        }
+
+        return $this->json(['message' => 'Utilisateur débloqué avec succès.']);
     }
 }

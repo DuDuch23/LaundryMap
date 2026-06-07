@@ -492,6 +492,32 @@
         "voir_laverie": "Voir la laverie"
       }
     },
+    "gestion_utilisateurs": {
+      "blocage": {
+        "section_titre": "Modération du compte",
+        "titre": "Bloquer cet utilisateur ?",
+        "sous_titre": "L'utilisateur ne pourra plus se connecter ni interagir avec la plateforme. Un email l'en informera.",
+        "duree_label": "Durée du blocage",
+        "temporaire": "Temporaire",
+        "definitif": "Définitif",
+        "date_fin_label": "Date de fin du blocage",
+        "date_invalide": "La date doit être postérieure à aujourd'hui.",
+        "preset_one": "+{{count}} jour",
+        "preset_other": "+{{count}} jours",
+        "motif_label": "Motif",
+        "motif_placeholder": "Expliquez pourquoi cet utilisateur est bloqué (ex : comportement abusif, signalements répétés…)",
+        "motif_obligatoire": "Le motif est obligatoire.",
+        "motif_trop_long": "Le motif est trop long (255 caractères maximum).",
+        "bouton_annuler": "Annuler",
+        "bouton_confirmer": "Confirmer le blocage",
+        "bouton_en_cours": "Blocage…",
+        "bouton_bloquer": "Bloquer cet utilisateur",
+        "bouton_debloquer": "Débloquer cet utilisateur",
+        "banni_definitif": "Compte bloqué définitivement",
+        "banni_jusquau": "Bloqué jusqu'au {{date}}",
+        "toast_erreur": "Une erreur est survenue."
+      }
+    },
     "fiche_laverie": {
       "avis": {
         "section_kicker": "Notes et avis",

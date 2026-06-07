@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Votre compte LaundryMap a été débloqué</title>
+</head>
+<body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; margin: 0; padding: 15px; -webkit-text-size-adjust: 100%; background-color: #f9f9f9;">
+    <div style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px; background-color: #ffffff; box-sizing: border-box;">
+        <h2 style="color: #34A853;">Votre compte LaundryMap a été débloqué</h2>
+
+        <p>Bonjour {{ user.prenom }} {{ user.nom }},</p>
+
+        <p>Nous vous informons que votre compte sur <strong>LaundryMap</strong> a été <strong>débloqué</strong> par notre équipe.</p>
+
+        <p>Vous pouvez à nouveau vous connecter et profiter de tous les services de la plateforme.</p>
+
+        <p style="text-align: center; margin: 30px 0;">
+            <a href="{{ loginUrl }}" style="background-color: #22ACE2; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Se connecter</a>
+        </p>
+
+        <p>Nous comptons sur vous pour respecter les règles d'utilisation de la plateforme.</p>
+
+        <p>Cordialement,<br>L'équipe LaundryMap</p>
+    </div>
+</body>
+</html>

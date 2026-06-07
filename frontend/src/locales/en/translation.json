@@ -494,6 +494,32 @@
         "voir_laverie": "View laundromat"
       }
     },
+    "gestion_utilisateurs": {
+      "blocage": {
+        "section_titre": "Account moderation",
+        "titre": "Block this user?",
+        "sous_titre": "The user will no longer be able to log in or interact with the platform. They will be notified by email.",
+        "duree_label": "Block duration",
+        "temporaire": "Temporary",
+        "definitif": "Permanent",
+        "date_fin_label": "Block end date",
+        "date_invalide": "Date must be after today.",
+        "preset_one": "+{{count}} day",
+        "preset_other": "+{{count}} days",
+        "motif_label": "Reason",
+        "motif_placeholder": "Explain why this user is being blocked (e.g. abusive behaviour, repeated reports…)",
+        "motif_obligatoire": "A reason is required.",
+        "motif_trop_long": "Reason is too long (255 characters maximum).",
+        "bouton_annuler": "Cancel",
+        "bouton_confirmer": "Confirm block",
+        "bouton_en_cours": "Blocking…",
+        "bouton_bloquer": "Block this user",
+        "bouton_debloquer": "Unblock this user",
+        "banni_definitif": "Account permanently blocked",
+        "banni_jusquau": "Blocked until {{date}}",
+        "toast_erreur": "An error occurred."
+      }
+    },
     "fiche_laverie": {
       "avis": {
         "section_kicker": "Ratings and reviews",

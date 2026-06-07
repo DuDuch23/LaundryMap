@@ -48,6 +48,7 @@ const FILTER_SECTIONS: FilterSection[] = [
             { label: 'Validée', value: 'Validée' },
             { label: 'Refusée', value: 'Refusée' },
             { label: 'En attente', value: 'En attente' },
+            { label: 'Banni', value: 'Banni' },
         ],
     },
     {

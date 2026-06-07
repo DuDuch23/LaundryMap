@@ -353,6 +353,39 @@ export async function updateUtilisateurStatut(id: number, action: 'accepter' | '
     }
 }
 
+export interface BlocageUtilisateurPayload {
+    duree: 'temporaire' | 'definitif';
+    dateFin?: string;
+    motif: string;
+}
+
+export async function bloquerUtilisateur(id: number, payload: BlocageUtilisateurPayload) {
+    try {
+        const response = await axios.post(
+            `${API_BASE_URL}/api/admin/utilisateurs/${id}/blocage`,
+            payload,
+            { headers: { 'Content-Type': 'application/json', Accept: 'application/json' } }
+        );
+        return response.data;
+    } catch (error: any) {
+        const message = error?.response?.data?.message || 'Erreur lors du blocage de l\'utilisateur.';
+        throw new Error(message);
+    }
+}
+
+export async function debloquerUtilisateur(id: number) {
+    try {
+        const response = await axios.delete(
+            `${API_BASE_URL}/api/admin/utilisateurs/${id}/blocage`,
+            { headers: { Accept: 'application/json' } }
+        );
+        return response.data;
+    } catch (error: any) {
+        const message = error?.response?.data?.message || 'Erreur lors du déblocage de l\'utilisateur.';
+        throw new Error(message);
+    }
+}
+
 export interface LaverieResume {
     id: number;
     nomEtablissement: string;
