@@ -465,6 +465,18 @@
       "filtre_ordre_recent": "Plus récent",
       "filtre_ordre_ancien": "Plus ancien",
       "filtre_ordre_plus_signale": "Plus signalés",
+      "suppression": {
+        "titre": "Supprimer ce commentaire ?",
+        "sous_titre": "Cette action masquera le commentaire du site. Vous pourrez le restaurer ultérieurement.",
+        "apercu": "Commentaire concerné",
+        "motif_label": "Motif de la suppression",
+        "motif_placeholder": "Expliquez pourquoi ce commentaire doit être supprimé (ex : propos injurieux, publicité non autorisée…)",
+        "motif_obligatoire": "Le motif est obligatoire.",
+        "motif_trop_long": "Le motif est trop long (255 caractères maximum).",
+        "bouton_annuler": "Annuler",
+        "bouton_confirmer": "Confirmer la suppression",
+        "bouton_en_cours": "Suppression…"
+      },
       "detail": {
         "titre": "Détail du commentaire",
         "fermer": "Fermer",

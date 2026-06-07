@@ -133,7 +133,14 @@ class ApiModerationController extends AbstractController
         $adminMotif = isset($payload['motif']) ? trim((string)$payload['motif']) : null;
 
         if ($action === 'delete') {
-            $note->setCommentaireSupprimeMotif($adminMotif ?: 'Supprimé par un administrateur');
+            if ($adminMotif === null || $adminMotif === '') {
+                return $this->json(['message' => 'Le motif de suppression est obligatoire.'], 400);
+            }
+            if (mb_strlen($adminMotif) > 255) {
+                return $this->json(['message' => 'Le motif est trop long (255 caractères maximum).'], 400);
+            }
+
+            $note->setCommentaireSupprimeMotif($adminMotif);
             $note->setCommentaireSupprimeeLe(new \DateTime());
             $em->persist($note);
             $em->flush();

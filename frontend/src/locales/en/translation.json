@@ -467,6 +467,18 @@
       "filtre_ordre_recent": "Most recent",
       "filtre_ordre_ancien": "Oldest",
       "filtre_ordre_plus_signale": "Most reported",
+      "suppression": {
+        "titre": "Delete this comment?",
+        "sous_titre": "This action will hide the comment from the site. You can restore it later.",
+        "apercu": "Comment concerned",
+        "motif_label": "Reason for deletion",
+        "motif_placeholder": "Explain why this comment should be deleted (e.g. abusive language, unauthorized advertising…)",
+        "motif_obligatoire": "A reason is required.",
+        "motif_trop_long": "Reason is too long (255 characters maximum).",
+        "bouton_annuler": "Cancel",
+        "bouton_confirmer": "Confirm deletion",
+        "bouton_en_cours": "Deleting…"
+      },
       "detail": {
         "titre": "Comment details",
         "fermer": "Close",

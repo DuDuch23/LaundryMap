@@ -16,6 +16,7 @@ import {
 import FilterModal, { type FilterSection, type FilterValues } from '../../components/FilterModal';
 import { CommentaireAdminListSkeleton } from '../../components/administration/AdminSkeletons';
 import ModaleDetailCommentaire from '../../components/administration/ModaleDetailCommentaire';
+import ModaleSuppressionCommentaire from '../../components/administration/ModaleSuppressionCommentaire';
 
 const FILTRES_VIDES: FilterValues = {
     statut: '',
@@ -63,6 +64,8 @@ export default function GestionCommentaires() {
 
     // Modale détail
     const [detailItem, setDetailItem] = useState<ModerationCommentaireItem | null>(null);
+    // Modale suppression (avec saisie de motif)
+    const [suppressionItem, setSuppressionItem] = useState<ModerationCommentaireItem | null>(null);
 
     const aDesFiltresActifs = Object.values(filtresActifs).some((v) => v !== '');
 
@@ -112,25 +115,37 @@ export default function GestionCommentaires() {
     }, [chargerDonnees]);
 
     const handleDecision = async (item: ModerationCommentaireItem, action: 'keep' | 'delete') => {
+        // Suppression : passe par la modale de saisie de motif
+        if (action === 'delete') {
+            setDetailItem(null);
+            setSuppressionItem(item);
+            return;
+        }
+
+        // Conserver / Restaurer : pas de confirmation, pas de toast de succès
         try {
             setDecisionPending(true);
-            await moderationDecision(
-                item.noteId,
-                action,
-                action === 'delete' ? 'Supprimé via interface modération' : undefined
-            );
-            if (action === 'delete') {
-                toast.success(t('main.gestion_commentaires.toast_masque'));
-            } else if (item.estModere) {
-                toast.success(t('main.gestion_commentaires.toast_restaure'));
-            } else {
-                toast.success(t('main.gestion_commentaires.toast_retabli'));
-            }
+            await moderationDecision(item.noteId, 'keep');
             setDetailItem(null);
             await chargerDonnees();
         } catch (e) {
             console.error(e);
             toast.error(t('main.gestion_commentaires.toast_erreur'));
+        } finally {
+            setDecisionPending(false);
+        }
+    };
+
+    const confirmerSuppression = async (motif: string) => {
+        if (!suppressionItem) return;
+        try {
+            setDecisionPending(true);
+            await moderationDecision(suppressionItem.noteId, 'delete', motif);
+            setSuppressionItem(null);
+            await chargerDonnees();
+        } catch (e: any) {
+            console.error(e);
+            toast.error(e?.message || t('main.gestion_commentaires.toast_erreur'));
         } finally {
             setDecisionPending(false);
         }
@@ -299,6 +314,13 @@ export default function GestionCommentaires() {
                     item={detailItem}
                     onDecision={handleDecision}
                     decisionPending={decisionPending}
+                />
+                <ModaleSuppressionCommentaire
+                    isOpen={suppressionItem !== null}
+                    item={suppressionItem}
+                    pending={decisionPending}
+                    onConfirm={confirmerSuppression}
+                    onCancel={() => setSuppressionItem(null)}
                 />
             </div>
         </div>
