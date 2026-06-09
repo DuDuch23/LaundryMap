@@ -53,8 +53,12 @@ export default function DetailUtilisateur() {
 
     const rechargerUser = async () => {
         if (!id) return;
-        const data = await fetchUtilisateurDetail(id);
-        setUser(data);
+        try {
+            const data = await fetchUtilisateurDetail(id);
+            setUser(data);
+        } catch (e: any) {
+            toast.error(e?.message || t('main.gestion_utilisateurs.blocage.toast_erreur'));
+        }
     };
 
     const handleConfirmerBlocage = async (payload: { duree: 'temporaire' | 'definitif'; dateFin?: string; motif: string }) => {
@@ -64,6 +68,7 @@ export default function DetailUtilisateur() {
             await bloquerUtilisateur(user.id, payload);
             setModaleBlocageOuverte(false);
             await rechargerUser();
+            toast.success(t('main.gestion_utilisateurs.blocage.toast_succes'));
         } catch (e: any) {
             toast.error(e?.message || t('main.gestion_utilisateurs.blocage.toast_erreur'));
         } finally {
@@ -73,10 +78,12 @@ export default function DetailUtilisateur() {
 
     const handleDebloquer = async () => {
         if (!user) return;
+        if (!window.confirm(t('main.gestion_utilisateurs.blocage.confirmer_deblocage') as string)) return;
         try {
             setBlocagePending(true);
             await debloquerUtilisateur(user.id);
             await rechargerUser();
+            toast.success(t('main.gestion_utilisateurs.blocage.toast_deblocage_succes'));
         } catch (e: any) {
             toast.error(e?.message || t('main.gestion_utilisateurs.blocage.toast_erreur'));
         } finally {

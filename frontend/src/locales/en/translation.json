@@ -517,7 +517,10 @@
         "bouton_debloquer": "Unblock this user",
         "banni_definitif": "Account permanently blocked",
         "banni_jusquau": "Blocked until {{date}}",
-        "toast_erreur": "An error occurred."
+        "toast_erreur": "An error occurred.",
+        "toast_succes": "User blocked successfully.",
+        "toast_deblocage_succes": "User unblocked successfully.",
+        "confirmer_deblocage": "Confirm unblocking this user?"
       }
     },
     "fiche_laverie": {

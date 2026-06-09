@@ -467,7 +467,7 @@ class ApiUtilisateurController extends AbstractController
                 return $this->json(['message' => 'La date de fin est obligatoire pour un blocage temporaire.'], 400);
             }
             try {
-                $banniJusquA = new \DateTime((string) $dateFinRaw);
+                $banniJusquA = (new \DateTime((string) $dateFinRaw))->setTime(23, 59, 59);
             } catch (\Exception) {
                 return $this->json(['message' => 'Date de fin invalide.'], 400);
             }

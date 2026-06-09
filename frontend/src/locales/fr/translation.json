@@ -515,7 +515,10 @@
         "bouton_debloquer": "Débloquer cet utilisateur",
         "banni_definitif": "Compte bloqué définitivement",
         "banni_jusquau": "Bloqué jusqu'au {{date}}",
-        "toast_erreur": "Une erreur est survenue."
+        "toast_erreur": "Une erreur est survenue.",
+        "toast_succes": "Utilisateur bloqué avec succès.",
+        "toast_deblocage_succes": "Utilisateur débloqué avec succès.",
+        "confirmer_deblocage": "Confirmer le déblocage de cet utilisateur ?"
       }
     },
     "fiche_laverie": {

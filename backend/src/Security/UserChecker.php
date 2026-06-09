@@ -34,7 +34,11 @@ class UserChecker implements UserCheckerInterface
                 $user->setStatut(StatutUtilisateurEnum::STATUT_VALIDE);
                 $user->setBanniJusquA(null);
                 $user->setBanniMotif(null);
-                $this->em->flush();
+                try {
+                    $this->em->flush();
+                } catch (\Throwable) {
+                    // flush failed — user stays banned for this request
+                }
             } else {
                 throw new CustomUserMessageAccountStatusException('ACCOUNT_BANNED');
             }

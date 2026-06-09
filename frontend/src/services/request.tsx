@@ -44,6 +44,9 @@ axios.interceptors.response.use(
             localStorage.removeItem('token');
             const currentPath = window.location.pathname;
             if (currentPath !== '/connexion') {
+                if (error.response?.data?.message === 'ACCOUNT_BANNED') {
+                    sessionStorage.setItem('auth_ban', '1');
+                }
                 window.location.href = '/connexion';
             }
         }

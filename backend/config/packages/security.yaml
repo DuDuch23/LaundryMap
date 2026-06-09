@@ -35,6 +35,7 @@ security:
             pattern: ^/api
             stateless: true
             provider: chain_provider
+            user_checker: App\Security\UserChecker
             jwt: ~
 
     access_control:
