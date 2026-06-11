@@ -245,7 +245,7 @@ export default function InscriptionProfessionnel() {
 
     }
     return (
-        <div className='w-full pt-24 px-4 pb-16 max-w-[500px]'>
+        <div className='w-full pt-24 sm:px-6 lg:px-8 !box-border px-4 pb-16 max-w-[700px]'>
             <h1 className='text-2xl font-bold text-[#22ACE2] mb-2 text-center w-full'>
                 {t('main.inscription_professionnel.titre')}
             </h1>
