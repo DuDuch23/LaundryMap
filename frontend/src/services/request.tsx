@@ -44,6 +44,9 @@ axios.interceptors.response.use(
             localStorage.removeItem('token');
             const currentPath = window.location.pathname;
             if (currentPath !== '/connexion') {
+                if (error.response?.data?.message === 'ACCOUNT_BANNED') {
+                    sessionStorage.setItem('auth_ban', '1');
+                }
                 window.location.href = '/connexion';
             }
         }
@@ -350,6 +353,39 @@ export async function updateUtilisateurStatut(id: number, action: 'accepter' | '
     } catch (error) {
         console.error(`Erreur lors de la mise à jour du statut (action: ${action}):`, error);
         throw error;
+    }
+}
+
+export interface BlocageUtilisateurPayload {
+    duree: 'temporaire' | 'definitif';
+    dateFin?: string;
+    motif: string;
+}
+
+export async function bloquerUtilisateur(id: number, payload: BlocageUtilisateurPayload) {
+    try {
+        const response = await axios.post(
+            `${API_BASE_URL}/api/admin/utilisateurs/${id}/blocage`,
+            payload,
+            { headers: { 'Content-Type': 'application/json', Accept: 'application/json' } }
+        );
+        return response.data;
+    } catch (error: any) {
+        const message = error?.response?.data?.message || 'Erreur lors du blocage de l\'utilisateur.';
+        throw new Error(message);
+    }
+}
+
+export async function debloquerUtilisateur(id: number) {
+    try {
+        const response = await axios.delete(
+            `${API_BASE_URL}/api/admin/utilisateurs/${id}/blocage`,
+            { headers: { Accept: 'application/json' } }
+        );
+        return response.data;
+    } catch (error: any) {
+        const message = error?.response?.data?.message || 'Erreur lors du déblocage de l\'utilisateur.';
+        throw new Error(message);
     }
 }
 
@@ -837,10 +873,75 @@ export async function signalerCommentaire(noteId: number, motif: string, comment
     return data;
 }
 
-export async function fetchModerationCommentaires(): Promise<any> {
+export interface ModerationUtilisateurMini {
+    id: number;
+    prenom: string | null;
+    nom: string | null;
+    email: string;
+}
+
+export interface ModerationSignalement {
+    date: string;
+    motif: string;
+    commentaire: string | null;
+    utilisateur: ModerationUtilisateurMini | null;
+}
+
+export interface ModerationLaverieMini {
+    id: number;
+    nomEtablissement: string;
+    adresse: string;
+}
+
+export interface ModerationCommentaireItem {
+    noteId: number;
+    note: number | null;
+    commentaire: string | null;
+    commenteLe: string | null;
+    noteLe: string | null;
+    estSignale: boolean;
+    estModere: boolean;
+    nbSignalements: number;
+    commentaireSupprimeMotif: string | null;
+    commentaireSupprimeeLe: string | null;
+    auteur: ModerationUtilisateurMini;
+    laverie: ModerationLaverieMini;
+    signalements: ModerationSignalement[];
+}
+
+export interface ModerationPagination {
+    pageCourante: number;
+    totalPages: number;
+    totalResultats: number;
+    parPage: number;
+    aPageSuivante: boolean;
+    aPagePrecedente: boolean;
+}
+
+export interface ModerationListResponse {
+    items: ModerationCommentaireItem[];
+    totalSignalesEnAttente: number;
+    pagination: ModerationPagination;
+}
+
+export interface ModerationFiltres {
+    statut?: string; // signales|non_signales|modere|tous
+    ordre?: string;  // recent|ancien|plus_signale
+}
+
+export async function fetchModerationCommentaires(
+    page: number = 1,
+    filtres: ModerationFiltres = {}
+): Promise<ModerationListResponse> {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('Non connecté');
-    const res = await fetch(`${API_BASE_URL}/api/admin/moderation/commentaires`, {
+
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    if (filtres.statut) params.set('statut', filtres.statut);
+    if (filtres.ordre) params.set('ordre', filtres.ordre);
+
+    const res = await fetch(`${API_BASE_URL}/api/admin/moderation/commentaires?${params.toString()}`, {
         headers: { accept: 'application/json', Authorization: `Bearer ${token}` },
     });
     if (!res.ok) {

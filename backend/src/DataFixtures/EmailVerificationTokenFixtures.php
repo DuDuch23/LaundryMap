@@ -13,11 +13,15 @@ class EmailVerificationTokenFixtures extends Fixture implements DependentFixture
     /*
      *
      * Index correspondent à UtilisateurFixtures :
-     *   0 = Marc Dupont    (pro validé)
-     *   1 = Sophie Martin  (pro validé)
-     *   2 = Jean Leclerc   (pro en attente de validation admin)
-     *   3 = Alice Bernard  (user simple validé)
-     *   4 = Thomas Roux    (user simple)
+     *   0 = Marc Dupont      (pro validé)
+     *   1 = Sophie Martin    (pro validé)
+     *   2 = Jean Leclerc     (pro en attente de validation admin)
+     *   3 = Alice Bernard    (user simple validé)
+     *   4 = Thomas Roux      (user simple en attente)
+     *   5 = Lucas Moreau     (user simple validé)
+     *   6 = Camille Petit    (user simple validé)
+     *   7 = Julie Lefèvre    (user simple validé)
+     *   8 = Maxime Durand    (user simple validé)
      */
     private const TOKENS = [
         ['utilisateur_idx' => 0],
@@ -25,6 +29,10 @@ class EmailVerificationTokenFixtures extends Fixture implements DependentFixture
         ['utilisateur_idx' => 2],
         ['utilisateur_idx' => 3],
         ['utilisateur_idx' => 4],
+        ['utilisateur_idx' => 5],
+        ['utilisateur_idx' => 6],
+        ['utilisateur_idx' => 7],
+        ['utilisateur_idx' => 8],
     ];
 
     public function load(ObjectManager $manager): void

@@ -32,6 +32,14 @@ export default function PageConnexion() {
   const [messageSucces, setMessageSucces] = useState<string>("");
 
   useEffect(() => {
+    const banned = sessionStorage.getItem('auth_ban');
+    if (banned) {
+      sessionStorage.removeItem('auth_ban');
+      setErreurGenerale(t('main.connexion.erreur_compte_banni') as string);
+    }
+  }, [t]);
+
+  useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const hash = window.location.hash.startsWith("#")
       ? window.location.hash.slice(1)

@@ -242,7 +242,7 @@ export default function LaverieMap({
                             <Link
                                 to={`/laveries/${l.id}`}
                                 aria-label={t('main.laverie_card.voir_detail', { nom: l.nom })}
-                                className="mt-3 flex items-center justify-center gap-1 w-auto px-3 py-2 rounded-lg bg-[#14A8DE] text-white text-sm font-semibold hover:bg-[#119ac8] transition-colors"
+                                className="mt-3 flex items-center justify-center gap-1 w-auto px-3 py-2 rounded-lg bg-[#14A8DE] !text-white text-sm font-semibold hover:bg-[#119ac8] transition-colors"
                             >
                                 {t('main.laverie_card.voir_fiche')}
                             </Link>

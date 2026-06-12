@@ -49,7 +49,9 @@ class LaverieNoteFixtures extends Fixture implements DependentFixtureInterface
     public function load(ObjectManager $manager): void
     {
         $laveriesCount = $this->getLaveriesCount();
-        $usersCount = 5;
+        // On ne crée des avis qu'avec des utilisateurs standards (pas les comptes rattachés à un Professionnel).
+        $standardUserIndices = UtilisateurFixtures::STANDARD_USER_INDICES;
+        $usersCount = count($standardUserIndices);
         $referenceIndex = 0;
 
         for ($laverieIdx = 0; $laverieIdx < $laveriesCount; $laverieIdx++) {
@@ -57,7 +59,7 @@ class LaverieNoteFixtures extends Fixture implements DependentFixtureInterface
             $pattern = $this->notePatterns[$laverieIdx % count($this->notePatterns)];
 
             for ($slot = 0; $slot < 5; $slot++) {
-                $utilisateurIdx = ($laverieIdx + $slot) % $usersCount;
+                $utilisateurIdx = $standardUserIndices[($laverieIdx + $slot) % $usersCount];
                 $utilisateur = $this->getReference(UtilisateurFixtures::UTILISATEUR_REFERENCE_PREFIX . $utilisateurIdx, Utilisateur::class);
                 $noteValue = $pattern[$slot];
 

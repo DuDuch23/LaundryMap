@@ -6,6 +6,8 @@ use App\Entity\LaverieNote;
 use App\Repository\LaverieNoteRepository;
 use App\Repository\LaverieNoteSignalementRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Pagerfanta\Doctrine\ORM\QueryAdapter;
+use Pagerfanta\Pagerfanta;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,40 +16,102 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class ApiModerationController extends AbstractController
 {
+    private const PAR_PAGE = 10;
+
     #[Route('/api/admin/moderation/commentaires', name: 'api_admin_moderation_commentaires', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN')]
-    public function liste(LaverieNoteSignalementRepository $signalementRepo, Request $request): JsonResponse
+    public function liste(Request $request, LaverieNoteRepository $noteRepo): JsonResponse
     {
-        $rows = $signalementRepo->findForModeration();
+        $page = max(1, $request->query->getInt('page', 1));
+        $statut = $request->query->get('statut');
+        $ordre = $request->query->get('ordre');
 
-        $result = [];
-        foreach ($rows as $s) {
-            $note = $s->getLaverieNote();
-            $nid = $note->getId();
-            if (!isset($result[$nid])) {
-                $result[$nid] = [
-                    'noteId' => $nid,
-                    'laverieId' => $note->getLaverie()->getId(),
-                    'commentaire' => $note->getCommentaire(),
-                    'auteurId' => $note->getUtilisateur()->getId(),
-                    'commentaireSupprimeMotif' => $note->getCommentaireSupprimeMotif(),
-                    'commentaireSupprimeeLe' => $note->getCommentaireSupprimeeLe()?->format('c'),
-                    'signalements' => [],
-                ];
-            }
+        $qb = $noteRepo->createModerationQueryBuilder($statut, $ordre);
+        $adapter = new QueryAdapter($qb);
+        $pagerfanta = new Pagerfanta($adapter);
+        $pagerfanta->setMaxPerPage(self::PAR_PAGE);
 
-            $result[$nid]['signalements'][] = [
+        if ($page > max(1, $pagerfanta->getNbPages())) {
+            $page = max(1, $pagerfanta->getNbPages());
+        }
+        $pagerfanta->setCurrentPage($page);
+
+        $items = [];
+        foreach ($pagerfanta->getCurrentPageResults() as $note) {
+            /** @var LaverieNote $note */
+            $items[] = $this->formatNote($note);
+        }
+
+        return $this->json([
+            'items' => $items,
+            'totalSignalesEnAttente' => $noteRepo->countSignalesEnAttente(),
+            'pagination' => [
+                'pageCourante' => $pagerfanta->getCurrentPage(),
+                'totalPages' => $pagerfanta->getNbPages(),
+                'totalResultats' => $pagerfanta->getNbResults(),
+                'parPage' => self::PAR_PAGE,
+                'aPageSuivante' => $pagerfanta->hasNextPage(),
+                'aPagePrecedente' => $pagerfanta->hasPreviousPage(),
+            ],
+        ]);
+    }
+
+    private function formatNote(LaverieNote $note): array
+    {
+        $auteur = $note->getUtilisateur();
+        $laverie = $note->getLaverie();
+        $adresse = $laverie->getAdresse();
+        $adresseTexte = 'Adresse non renseignée';
+        if ($adresse) {
+            $adresseTexte = sprintf('%s, %s %s', $adresse->getAdresse(), $adresse->getCodePostal(), $adresse->getVille());
+        }
+
+        $signalements = [];
+        foreach ($note->getSignalements() as $s) {
+            $signaleur = $s->getUtilisateur();
+            $signalements[] = [
                 'date' => $s->getDate()->format('c'),
                 'motif' => $s->getMotif()->value,
                 'commentaire' => $s->getCommentaire(),
-                'utilisateurId' => $s->getUtilisateur()->getId(),
+                'utilisateur' => $signaleur ? [
+                    'id' => $signaleur->getId(),
+                    'prenom' => $signaleur->getPrenom(),
+                    'nom' => $signaleur->getNom(),
+                    'email' => $signaleur->getEmail(),
+                ] : null,
             ];
         }
 
-        // Reindex
-        $payload = array_values($result);
+        // Tri antichronologique
+        usort($signalements, fn($a, $b) => strcmp($b['date'], $a['date']));
 
-        return $this->json(['items' => $payload]);
+        $nbSignalements = count($signalements);
+        $estModere = $note->getCommentaireSupprimeeLe() !== null;
+
+        return [
+            'noteId' => $note->getId(),
+            'note' => $note->getNote(),
+            'commentaire' => $note->getCommentaire(),
+            'commenteLe' => $note->getCommenteLe()?->format('c'),
+            'noteLe' => $note->getNoteLe()?->format('c'),
+            'estSignale' => $nbSignalements > 0,
+            'estModere' => $estModere,
+            'nbSignalements' => $nbSignalements,
+            'commentaireSupprimeMotif' => $note->getCommentaireSupprimeMotif(),
+            'commentaireSupprimeeLe' => $note->getCommentaireSupprimeeLe()?->format('c'),
+            'auteur' => [
+                'id' => $auteur->getId(),
+                'prenom' => $auteur->getPrenom(),
+                'nom' => $auteur->getNom(),
+                'email' => $auteur->getEmail(),
+            ],
+            'laverie' => [
+                'id' => $laverie->getId(),
+                'nomEtablissement' => $laverie->getNomEtablissement(),
+                'adresse' => $adresseTexte,
+            ],
+            'signalements' => $signalements,
+        ];
     }
 
     #[Route('/api/admin/moderation/commentaires/{noteId}/decision', name: 'api_admin_moderation_commentaire_decision', methods: ['POST'])]
@@ -69,7 +133,14 @@ class ApiModerationController extends AbstractController
         $adminMotif = isset($payload['motif']) ? trim((string)$payload['motif']) : null;
 
         if ($action === 'delete') {
-            $note->setCommentaireSupprimeMotif($adminMotif ?: 'Supprimé par un administrateur');
+            if ($adminMotif === null || $adminMotif === '') {
+                return $this->json(['message' => 'Le motif de suppression est obligatoire.'], 400);
+            }
+            if (mb_strlen($adminMotif) > 255) {
+                return $this->json(['message' => 'Le motif est trop long (255 caractères maximum).'], 400);
+            }
+
+            $note->setCommentaireSupprimeMotif($adminMotif);
             $note->setCommentaireSupprimeeLe(new \DateTime());
             $em->persist($note);
             $em->flush();

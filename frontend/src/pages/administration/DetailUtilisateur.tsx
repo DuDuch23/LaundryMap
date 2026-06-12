@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
-import { ArrowLeft, UserRound, MoreHorizontal } from 'lucide-react';
-import { fetchUtilisateurDetail, updateUtilisateurStatut } from '../../services/request';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { ArrowLeft, UserRound, MoreHorizontal, Ban, ShieldCheck } from 'lucide-react';
+import { fetchUtilisateurDetail, updateUtilisateurStatut, bloquerUtilisateur, debloquerUtilisateur } from '../../services/request';
 import { UtilisateurAdminDetailSkeleton } from '../../components/administration/AdminSkeletons';
+import ModaleBlocageUtilisateur from '../../components/administration/ModaleBlocageUtilisateur';
 import { resolveUrl } from '../../services/api';
 
 const IMAGE_LAVERIE_PAR_DEFAUT = '/uploads/laveries/default-laundry.jpg';
@@ -24,6 +27,11 @@ interface UserDetail {
     statut: string;
     ville?: string;
     codePostal?: string;
+    estBanni?: boolean;
+    banniJusquA?: string | null;
+    banniMotif?: string | null;
+    estBanniDefinitif?: boolean;
+    estBanniTemporaire?: boolean;
     professionnel?: {
         id: number;
         siren: string;
@@ -33,12 +41,66 @@ interface UserDetail {
 }
 
 export default function DetailUtilisateur() {
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
     const [user, setUser] = useState<UserDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [commentaire, setCommentaire] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
+    const [modaleBlocageOuverte, setModaleBlocageOuverte] = useState<boolean>(false);
+    const [blocagePending, setBlocagePending] = useState<boolean>(false);
+
+    const rechargerUser = async () => {
+        if (!id) return;
+        try {
+            const data = await fetchUtilisateurDetail(id);
+            setUser(data);
+        } catch (e: any) {
+            toast.error(e?.message || t('main.gestion_utilisateurs.blocage.toast_erreur'));
+        }
+    };
+
+    const handleConfirmerBlocage = async (payload: { duree: 'temporaire' | 'definitif'; dateFin?: string; motif: string }) => {
+        if (!user) return;
+        try {
+            setBlocagePending(true);
+            await bloquerUtilisateur(user.id, payload);
+            setModaleBlocageOuverte(false);
+            await rechargerUser();
+            toast.success(t('main.gestion_utilisateurs.blocage.toast_succes'));
+        } catch (e: any) {
+            toast.error(e?.message || t('main.gestion_utilisateurs.blocage.toast_erreur'));
+        } finally {
+            setBlocagePending(false);
+        }
+    };
+
+    const handleDebloquer = async () => {
+        if (!user) return;
+        if (!window.confirm(t('main.gestion_utilisateurs.blocage.confirmer_deblocage') as string)) return;
+        try {
+            setBlocagePending(true);
+            await debloquerUtilisateur(user.id);
+            await rechargerUser();
+            toast.success(t('main.gestion_utilisateurs.blocage.toast_deblocage_succes'));
+        } catch (e: any) {
+            toast.error(e?.message || t('main.gestion_utilisateurs.blocage.toast_erreur'));
+        } finally {
+            setBlocagePending(false);
+        }
+    };
+
+    const formatDateCourte = (iso?: string | null): string => {
+        if (!iso) return '—';
+        try {
+            return new Date(iso).toLocaleDateString(i18n.language === 'fr' ? 'fr-FR' : 'en-US', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+            });
+        } catch {
+            return iso;
+        }
+    };
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -242,7 +304,65 @@ export default function DetailUtilisateur() {
                         Refuser
                     </button>
                 </div>
+
+                {/* SECTION : MODÉRATION DU COMPTE (US37) — uniquement utilisateurs standards (pas pro) */}
+                {!user.professionnel && (
+                    <div className="mt-8 pt-6 border-t border-gray-200">
+                        <h2 className="font-bold text-sm underline underline-offset-4 decoration-1 mb-4">
+                            {t('main.gestion_utilisateurs.blocage.section_titre')}
+                        </h2>
+
+                        {user.estBanni ? (
+                            <div className="rounded-2xl border border-gray-300 bg-gray-100 p-4">
+                                <div className="flex items-start gap-3 mb-3">
+                                    <div className="w-10 h-10 rounded-full bg-gray-800 text-white inline-flex items-center justify-center shrink-0">
+                                        <Ban size={20} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-semibold text-slate-900">
+                                            {user.estBanniDefinitif
+                                                ? t('main.gestion_utilisateurs.blocage.banni_definitif')
+                                                : t('main.gestion_utilisateurs.blocage.banni_jusquau', { date: formatDateCourte(user.banniJusquA) })}
+                                        </p>
+                                        {user.banniMotif && (
+                                            <p className="text-sm text-gray-600 mt-1">
+                                                <span className="font-medium">{t('main.gestion_utilisateurs.blocage.motif_label')} : </span>
+                                                <i>{user.banniMotif}</i>
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={handleDebloquer}
+                                    disabled={blocagePending}
+                                    className="w-full inline-flex items-center justify-center gap-2 bg-[#34A853] hover:bg-green-600 text-white font-medium py-2.5 rounded-full shadow-sm transition-colors cursor-pointer disabled:opacity-50"
+                                >
+                                    <ShieldCheck size={16} />
+                                    {t('main.gestion_utilisateurs.blocage.bouton_debloquer')}
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => setModaleBlocageOuverte(true)}
+                                disabled={blocagePending}
+                                className="w-full inline-flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white font-medium py-2.5 rounded-full shadow-sm transition-colors cursor-pointer disabled:opacity-50"
+                            >
+                                <Ban size={16} />
+                                {t('main.gestion_utilisateurs.blocage.bouton_bloquer')}
+                            </button>
+                        )}
+                    </div>
+                )}
             </div>
+
+            {/* MODALE BLOCAGE */}
+            <ModaleBlocageUtilisateur
+                isOpen={modaleBlocageOuverte}
+                user={user ? { id: user.id, prenom: user.prenom, nom: user.nom, email: user.email } : null}
+                pending={blocagePending}
+                onConfirm={handleConfirmerBlocage}
+                onCancel={() => setModaleBlocageOuverte(false)}
+            />
         </div>
     );
 }
