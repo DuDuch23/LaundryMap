@@ -21,7 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { AccessibleButton, SkipLink, AccessibleModal } from '../components/accessibility';
 import API_BASE_URL, { uploadPath, resolveUrl } from '../services/api';
 import { toast } from 'sonner';
-import { fetchPublicLaverieDetail, ajouterFavori, supprimerFavori, creerAvis, modifierAvis, supprimerAvis, publierReponseAvis, supprimerReponseAvis, type LaveriePublicDetail, type MonAvis, signalerCommentaire } from '../services/request';
+import { fetchPublicLaverieDetail, ajouterFavori, supprimerFavori, creerAvis, modifierAvis, supprimerAvis, publierReponseAvis, supprimerReponseAvis, type LaveriePublicDetail, type MonAvis, signalerCommentaire, signalerReponse } from '../services/request';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 import { useGeolocation } from '../hooks/useGeolocation';
@@ -446,6 +446,13 @@ export default function FicheLaverie() {
 		const [reportCommentaire, setReportCommentaire] = useState('');
 		const [reportPending, setReportPending] = useState(false);
 		const [reportedIds, setReportedIds] = useState<Set<number>>(new Set());
+		const [reportedReponseIds, setReportedReponseIds] = useState<Set<number>>(new Set());
+
+		const [reportReponseOpen, setReportReponseOpen] = useState(false);
+		const [reportReponseNoteId, setReportReponseNoteId] = useState<number | null>(null);
+		const [reportReponseMotif, setReportReponseMotif] = useState<ReportMotifValue>(REPORT_MOTIFS[0].value);
+		const [reportReponseCommentaire, setReportReponseCommentaire] = useState('');
+		const [reportReponsePending, setReportReponsePending] = useState(false);
 
 		const openReport = (noteId: number) => {
 			setReportNoteId(noteId);
@@ -470,6 +477,31 @@ export default function FicheLaverie() {
 				toast.error(err?.message || t('main.fiche_laverie.signalement.toast_erreur'));
 			} finally {
 				setReportPending(false);
+			}
+		};
+
+		const openReportReponse = (noteId: number) => {
+			setReportReponseNoteId(noteId);
+			setReportReponseMotif(REPORT_MOTIFS[0].value);
+			setReportReponseCommentaire('');
+			setReportReponseOpen(true);
+		};
+		const closeReportReponse = () => {
+			setReportReponseOpen(false);
+			setReportReponseNoteId(null);
+		};
+		const handleSubmitReportReponse = async () => {
+			if (!reportReponseNoteId) return;
+			try {
+				setReportReponsePending(true);
+				await signalerReponse(reportReponseNoteId, reportReponseMotif, reportReponseCommentaire.trim() || undefined);
+				toast.success(t('main.fiche_laverie.signalement.toast_succes'));
+				setReportedReponseIds(prev => new Set([...prev, reportReponseNoteId]));
+				closeReportReponse();
+			} catch (err: any) {
+				toast.error(err?.message || t('main.fiche_laverie.signalement.toast_erreur'));
+			} finally {
+				setReportReponsePending(false);
 			}
 		};
 
@@ -686,16 +718,189 @@ export default function FicheLaverie() {
 
 	if (loading) {
 		return (
-			<div className="min-h-screen bg-slate-50 px-5 pb-16 pt-20 lg:px-5">
-				<div className="mx-auto max-w-[1280px] overflow-hidden rounded-[28px] bg-white shadow-sm" aria-busy="true" aria-live="polite" role="status">
-					<div className="animate-pulse">
-						<div className="h-72 bg-slate-200 sm:h-[28rem]" />
-						<div className="p-5 sm:p-8">
-							<div className="h-6 w-2/3 rounded-full bg-slate-200" />
-							<div className="mt-4 h-4 w-full rounded-full bg-slate-100" />
-							<div className="mt-2 h-4 w-5/6 rounded-full bg-slate-100" />
+			<div className="bg-slate-50 px-5 pb-16 pt-16 sm:pt-20 lg:px-5 lg:pt-24" aria-busy="true" role="status" aria-label="Chargement de la fiche laverie">
+				<div className="mx-auto max-w-[1280px] pt-10 animate-pulse">
+
+					{/* Carte principale */}
+					<div className="overflow-hidden rounded-[28px] bg-white shadow-sm">
+						<div className="grid lg:grid-cols-[1.35fr_0.95fr]">
+
+							{/* Image hero */}
+							<div className="min-h-[22rem] bg-slate-200 sm:min-h-[28rem] lg:min-h-[40rem]" />
+
+							{/* Panneau droit */}
+							<div className="flex flex-col gap-5">
+								{/* Adresse */}
+								<div className="px-5 pt-4 sm:px-8 sm:pt-5">
+									<div className="flex items-center gap-2">
+										<div className="h-4 w-4 shrink-0 rounded-full bg-slate-200" />
+										<div className="h-4 w-4/5 rounded-full bg-slate-200" />
+									</div>
+								</div>
+
+								<div className="flex flex-col gap-5 p-5 sm:p-6 lg:p-8">
+									{/* Carte présentation */}
+									<div className="rounded-[24px] border border-slate-100 bg-slate-50 p-5">
+										<div className="h-2.5 w-24 rounded-full bg-slate-200" />
+										<div className="mt-3 space-y-2">
+											<div className="h-3.5 w-full rounded-full bg-slate-200" />
+											<div className="h-3.5 w-5/6 rounded-full bg-slate-200" />
+											<div className="h-3.5 w-3/5 rounded-full bg-slate-200" />
+										</div>
+										<div className="mt-5 grid grid-cols-2 gap-3">
+											{Array.from({ length: 4 }).map((_, i) => (
+												<div key={i} className="rounded-2xl bg-white p-4 shadow-sm">
+													<div className="h-2.5 w-14 rounded-full bg-slate-200" />
+													<div className="mt-2 h-5 w-10 rounded-full bg-slate-200" />
+												</div>
+											))}
+										</div>
+									</div>
+
+									{/* Carte horaires */}
+									<div className="rounded-[24px] border border-slate-100 bg-white p-5">
+										<div className="h-2.5 w-20 rounded-full bg-slate-200" />
+										<div className="mt-4 space-y-3">
+											{Array.from({ length: 4 }).map((_, i) => (
+												<div key={i} className="flex items-start justify-between gap-4 rounded-2xl bg-slate-50 px-4 py-3">
+													<div className="space-y-1.5">
+														<div className="h-3.5 w-28 rounded-full bg-slate-200" />
+														<div className="h-2.5 w-16 rounded-full bg-slate-200" />
+													</div>
+													<div className="h-3.5 w-20 rounded-full bg-slate-200" />
+												</div>
+											))}
+										</div>
+									</div>
+								</div>
+							</div>
 						</div>
 					</div>
+
+					{/* Galerie + Équipements */}
+					<div className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+						{/* Galerie */}
+						<div className="rounded-[28px] bg-white p-5 shadow-sm sm:p-6">
+							<div className="flex items-center justify-between gap-3">
+								<div className="space-y-2">
+									<div className="h-2.5 w-14 rounded-full bg-slate-200" />
+									<div className="h-5 w-44 rounded-full bg-slate-200" />
+								</div>
+								<div className="h-5 w-5 rounded-full bg-slate-200" />
+							</div>
+							<div className="mt-5 grid grid-cols-3 gap-3">
+								{Array.from({ length: 6 }).map((_, i) => (
+									<div key={i} className="h-28 rounded-2xl bg-slate-200 sm:h-32 lg:h-36" />
+								))}
+							</div>
+						</div>
+
+						{/* Équipements */}
+						<div className="rounded-[28px] bg-white p-5 shadow-sm sm:p-6">
+							<div className="space-y-2">
+								<div className="h-2.5 w-24 rounded-full bg-slate-200" />
+								<div className="h-5 w-48 rounded-full bg-slate-200" />
+							</div>
+							<div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+								{Array.from({ length: 4 }).map((_, i) => (
+									<div key={i} className="rounded-2xl border border-slate-100 p-4">
+										<div className="flex items-center gap-3">
+											<div className="h-10 w-10 shrink-0 rounded-xl bg-slate-200" />
+											<div className="space-y-1.5">
+												<div className="h-3.5 w-24 rounded-full bg-slate-200" />
+												<div className="h-2.5 w-16 rounded-full bg-slate-200" />
+											</div>
+										</div>
+										<div className="mt-4 grid grid-cols-2 gap-2">
+											{Array.from({ length: 3 }).map((_, j) => (
+												<div key={j} className="rounded-xl bg-slate-50 px-3 py-2">
+													<div className="h-2.5 w-12 rounded-full bg-slate-200" />
+													<div className="mt-1 h-3.5 w-8 rounded-full bg-slate-200" />
+												</div>
+											))}
+										</div>
+									</div>
+								))}
+							</div>
+							<div className="mt-8">
+								<div className="mb-3 h-3.5 w-36 rounded-full bg-slate-200" />
+								<div className="flex flex-wrap gap-2">
+									{[64, 80, 56, 96].map((w, i) => (
+										<div key={i} className="h-5 rounded-full bg-slate-200" style={{ width: w }} />
+									))}
+								</div>
+							</div>
+							<div className="mt-6">
+								<div className="mb-3 h-3.5 w-48 rounded-full bg-slate-200" />
+								<div className="flex flex-wrap gap-2">
+									{[72, 60, 88].map((w, i) => (
+										<div key={i} className="h-5 rounded-full bg-slate-200" style={{ width: w }} />
+									))}
+								</div>
+							</div>
+						</div>
+					</div>
+
+					{/* Section avis */}
+					<div className="mt-8 rounded-[28px] bg-white p-5 shadow-sm sm:p-6">
+						<div className="flex items-center justify-between gap-3">
+							<div className="space-y-2">
+								<div className="h-2.5 w-14 rounded-full bg-slate-200" />
+								<div className="h-5 w-40 rounded-full bg-slate-200" />
+							</div>
+							<div className="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-2">
+								<div className="h-4 w-4 rounded-full bg-slate-200" />
+								<div className="h-4 w-12 rounded-full bg-slate-200" />
+							</div>
+						</div>
+
+						<div className="mt-5 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
+							{/* Panneau note */}
+							<div className="rounded-[24px] bg-cyan-50/50 p-5">
+								<div className="mx-auto h-3.5 w-32 rounded-full bg-slate-200" />
+								<div className="mt-3 flex justify-center gap-1">
+									{Array.from({ length: 5 }).map((_, i) => (
+										<div key={i} className="h-7 w-7 rounded-full bg-slate-200" />
+									))}
+								</div>
+								<div className="mt-4 h-9 w-full rounded-full bg-slate-200" />
+							</div>
+
+							{/* Liste commentaires */}
+							<div className="space-y-4">
+								<div className="flex items-start justify-between gap-3 px-2">
+									<div className="space-y-1.5">
+										<div className="h-3.5 w-36 rounded-full bg-slate-200" />
+										<div className="h-2.5 w-24 rounded-full bg-slate-200" />
+									</div>
+									<div className="h-4 w-4 rounded-full bg-slate-200" />
+								</div>
+								<div className="space-y-3">
+									{Array.from({ length: 3 }).map((_, i) => (
+										<div key={i} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+											<div className="mb-3 flex items-start justify-between gap-3">
+												<div className="space-y-1.5">
+													<div className="h-3.5 w-28 rounded-full bg-slate-200" />
+													<div className="h-2.5 w-16 rounded-full bg-slate-200" />
+												</div>
+												<div className="flex gap-0.5">
+													{Array.from({ length: 5 }).map((_, j) => (
+														<div key={j} className="h-3.5 w-3.5 rounded-full bg-slate-200" />
+													))}
+												</div>
+											</div>
+											<div className="space-y-2">
+												<div className="h-3.5 w-full rounded-full bg-slate-200" />
+												<div className="h-3.5 w-4/5 rounded-full bg-slate-200" />
+												<div className="h-3.5 w-3/5 rounded-full bg-slate-200" />
+											</div>
+										</div>
+									))}
+								</div>
+							</div>
+						</div>
+					</div>
+
 				</div>
 			</div>
 		);
@@ -1005,7 +1210,7 @@ export default function FicheLaverie() {
 
 					<div className="mt-5 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
 						{/* Panneau gauche : note moyenne + formulaire */}
-						<div className="rounded-[24px] bg-cyan-50 p-5">
+						<div className="rounded-[24px] bg-cyan-50 p-5 h-[fit-content] shadow-sm">
 							<p className="text-center text-sm font-medium text-slate-700">{t('main.fiche_laverie.avis.note_moyenne')}</p>
 							<div className="mt-3 flex justify-center gap-1">
 								{Array.from({ length: 5 }, (_, i) => (
@@ -1311,16 +1516,36 @@ export default function FicheLaverie() {
 													<div className="mt-3 rounded-xl border border-cyan-100 bg-cyan-50 px-3 py-2.5">
 														<div className="flex items-start justify-between gap-2 mb-1">
 															<p className="text-xs font-semibold text-cyan-700">Réponse du propriétaire</p>
-															{estProprietaire && !isConfirmDeleteReply && (
-																<div className="flex gap-1 shrink-0">
-																	<button type="button" onClick={() => openReply(commentaire.id, commentaire.reponse)} className="flex h-6 w-6 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 hover:bg-[#14A8DE] hover:text-white transition-colors cursor-pointer" aria-label="Modifier la réponse">
-																		<Pencil className="h-3 w-3" />
-																	</button>
-																	<button type="button" onClick={() => setConfirmDeleteReplyId(commentaire.id)} className="flex h-6 w-6 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 hover:bg-rose-500 hover:text-white transition-colors cursor-pointer" aria-label="Supprimer la réponse">
-																		<Trash2 className="h-3 w-3" />
-																	</button>
-																</div>
-															)}
+															<div className="flex items-center gap-1 shrink-0">
+																{estProprietaire && !isConfirmDeleteReply && (
+																	<>
+																		<button type="button" onClick={() => openReply(commentaire.id, commentaire.reponse)} className="flex h-6 w-6 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 hover:bg-[#14A8DE] hover:text-white transition-colors cursor-pointer" aria-label="Modifier la réponse">
+																			<Pencil className="h-3 w-3" />
+																		</button>
+																		<button type="button" onClick={() => setConfirmDeleteReplyId(commentaire.id)} className="flex h-6 w-6 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 hover:bg-rose-500 hover:text-white transition-colors cursor-pointer" aria-label="Supprimer la réponse">
+																			<Trash2 className="h-3 w-3" />
+																		</button>
+																	</>
+																)}
+																{!estProprietaire && (isStandardUser || isProfessionnel) && (
+																	commentaire.dejaSignaleReponse || reportedReponseIds.has(commentaire.id) ? (
+																		<span className="flex h-6 items-center gap-1 rounded-lg bg-cyan-100 px-2 text-[11px] font-medium text-slate-400 select-none">
+																			<MessageSquare className="h-3 w-3 text-rose-300" />
+																			{t('main.fiche_laverie.signalement.deja_signale')}
+																		</span>
+																	) : (
+																		<button
+																			type="button"
+																			onClick={() => openReportReponse(commentaire.id)}
+																			className="flex h-6 items-center gap-1 rounded-lg bg-white border border-cyan-200 px-2 text-[11px] font-semibold text-slate-600 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-600 transition-colors cursor-pointer"
+																			aria-label="Signaler cette réponse"
+																		>
+																			<MessageSquare className="h-3 w-3 text-rose-400" />
+																			Signaler
+																		</button>
+																	)
+																)}
+															</div>
 														</div>
 														<p className="text-sm text-slate-600 whitespace-pre-line break-words">{commentaire.reponse}</p>
 														{commentaire.reponduLe && <p className="mt-1 text-[11px] text-slate-400">{new Date(commentaire.reponduLe).toLocaleDateString('fr-FR')}</p>}
@@ -1389,6 +1614,36 @@ export default function FicheLaverie() {
 				</div>
 			</main>
 		</div>
+
+		{reportReponseOpen && (
+			<AccessibleModal isOpen={reportReponseOpen} onClose={closeReportReponse} title="Signaler la réponse">
+				<div className="space-y-3">
+					<p className="text-sm text-slate-700">{t('main.fiche_laverie.signalement.choisir_motif')}</p>
+					<div className="space-y-2">
+						{REPORT_MOTIFS.map((m) => (
+							<label key={m.value} className="flex items-center gap-2">
+								<input type="radio" name="motif-reponse" checked={reportReponseMotif === m.value} onChange={() => setReportReponseMotif(m.value)} />
+								<span className="text-sm">{t(m.labelKey)}</span>
+							</label>
+						))}
+					</div>
+					<label className="block">
+						<span className="text-sm text-slate-700">{t('main.fiche_laverie.signalement.description_facultative')}</span>
+						<textarea
+							rows={4}
+							maxLength={2000}
+							value={reportReponseCommentaire}
+							onChange={(e) => setReportReponseCommentaire(e.target.value)}
+							className="mx-auto mt-1 block w-[calc(100%-1.5rem)] rounded-md border p-2"
+						/>
+					</label>
+					<div className="flex gap-2 justify-end">
+						<button onClick={handleSubmitReportReponse} disabled={reportReponsePending} className="rounded-md bg-[#14A8DE] text-white px-3 py-1.5">{t('main.fiche_laverie.signalement.bouton_envoyer')}</button>
+						<button onClick={closeReportReponse} className="rounded-md border px-3 py-1.5">{t('main.fiche_laverie.signalement.bouton_annuler')}</button>
+					</div>
+				</div>
+			</AccessibleModal>
+		)}
 
 		{reportOpen && (
 			<AccessibleModal isOpen={reportOpen} onClose={closeReport} title={t('main.fiche_laverie.signalement.titre')}>

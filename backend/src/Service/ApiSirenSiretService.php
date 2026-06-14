@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use Exception;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class ApiSirenSiretService
@@ -31,7 +32,7 @@ class ApiSirenSiretService
 
             return false;
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             dump($e->getMessage());
             return false;
         }
@@ -64,7 +65,7 @@ class ApiSirenSiretService
 
             return false;
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             dump($e->getMessage());
             return false;
         }

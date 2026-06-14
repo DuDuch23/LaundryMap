@@ -470,6 +470,7 @@ export interface LaveriePublicDetail {
         reponse?: string | null;
         reponduLe?: string | null;
         dejaSignale?: boolean;
+        dejaSignaleReponse?: boolean;
         utilisateur: {
             id?: number;
             prenom: string;
@@ -859,7 +860,25 @@ export async function signalerCommentaire(noteId: number, motif: string, comment
     const token = localStorage.getItem('token');
     if (!token) throw new Error('Non connecté');
 
-    const body: any = { motif };
+    const body: Record<string, string> = { motif, cible: 'commentaire' };
+    if (commentaire !== undefined) body.commentaire = commentaire;
+
+    const res = await fetch(`${API_BASE_URL}/api/laverie-notes/${noteId}/signalement`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', accept: 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || 'Erreur lors de l\'envoi du signalement');
+    return data;
+}
+
+export async function signalerReponse(noteId: number, motif: string, commentaire?: string): Promise<{ totalSignalements?: number }> {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Non connecté');
+
+    const body: Record<string, string> = { motif, cible: 'reponse' };
     if (commentaire !== undefined) body.commentaire = commentaire;
 
     const res = await fetch(`${API_BASE_URL}/api/laverie-notes/${noteId}/signalement`, {
