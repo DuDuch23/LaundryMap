@@ -40,8 +40,9 @@ COPY . .
 # Générer l'autoloader Symfony
 RUN composer dump-autoload --optimize
 
-# Permissions pour Symfony (var/, cache/, log/)
-RUN chown -R www-data:www-data /var/www/html/var \
+# Permissions pour Symfony (var/ est dans .gitignore — on le crée avant chown)
+RUN mkdir -p /var/www/html/var \
+    && chown -R www-data:www-data /var/www/html/var \
     && chmod -R 775 /var/www/html/var
 
 # Augmenter les limites d'upload PHP
@@ -50,7 +51,7 @@ RUN printf "upload_max_filesize = 64M\npost_max_size = 128M\nmax_file_uploads = 
 
 # Entrypoint — génère les clés JWT au premier démarrage
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN sed -i 's/\r//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 EXPOSE 9000
 

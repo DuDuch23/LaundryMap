@@ -70,11 +70,12 @@ services:
     restart: "no"
     # Supprime le cache dev (peut contenir des fichiers temporaires Windows incompatibles Linux)
     # puis applique les migrations
-    command: sh -c "rm -rf /var/www/html/var/cache/dev && php bin/console doctrine:migrations:migrate --no-interaction"
+    command: sh -c "rm -rf /var/www/html/var/cache/dev && php bin/console doctrine:migrations:migrate --no-interaction && php bin/console doctrine:fixtures:load --no-interaction"
     environment:
       <<: *php-env
     volumes:
       - ./backend:/var/www/html
+      - php_vendor:/var/www/html/vendor
     depends_on:
       db:
         condition: service_healthy
@@ -94,6 +95,7 @@ services:
       <<: *php-env
     volumes:
       - ./backend:/var/www/html
+      - php_vendor:/var/www/html/vendor
     depends_on:
       db:
         condition: service_healthy
@@ -167,6 +169,7 @@ services:
 # ─────────────────────────────────────────
 volumes:
   db_data:
+  php_vendor:
 
 networks:
   laundrymap:
