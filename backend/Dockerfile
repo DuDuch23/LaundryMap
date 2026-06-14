@@ -3,12 +3,13 @@
 # ─────────────────────────────────────────
 FROM php:8.4-fpm-alpine
 
-# Dépendances système
+# Dépendances système (openssl requis pour la génération des clés JWT)
 RUN apk add --no-cache \
     bash \
     git \
     unzip \
     curl \
+    openssl \
     icu-dev \
     libzip-dev \
     oniguruma-dev
@@ -43,11 +44,15 @@ RUN composer dump-autoload --optimize
 RUN chown -R www-data:www-data /var/www/html/var \
     && chmod -R 775 /var/www/html/var
 
-# Augmenter les limites d'upload PHP (nginx est déjà à 64M)
+# Augmenter les limites d'upload PHP
 RUN printf "upload_max_filesize = 64M\npost_max_size = 128M\nmax_file_uploads = 20\n" \
     > /usr/local/etc/php/conf.d/uploads.ini
 
-# PHP-FPM écoute sur le port 9000
+# Entrypoint — génère les clés JWT au premier démarrage
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 EXPOSE 9000
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["php-fpm"]

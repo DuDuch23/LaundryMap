@@ -4,6 +4,7 @@ namespace App\Controller\Api;
 
 use App\Entity\Utilisateur;
 use App\Repository\LaverieNoteRepository;
+use App\Service\FiltreContenusService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -12,6 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Throwable;
 
 /**
  * Réponse aux avis par le professionnel.
@@ -21,6 +23,7 @@ class ApiReponseAvisController extends AbstractController
 {
     public function __construct(
         private readonly MailerInterface $mailer,
+        private readonly FiltreContenusService $filtre,
     ) {}
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -115,6 +118,10 @@ class ApiReponseAvisController extends AbstractController
             return $this->json(['message' => 'La réponse est trop longue (500 caractères maximum).'], 400);
         }
 
+        if ($this->filtre->contientContenuOffensant($reponse)) {
+            return $this->json(['message' => 'Votre réponse contient des termes inappropriés et ne peut pas être publiée.'], 422);
+        }
+
         $isNew = ($laverieNote->getReponse() === null);
 
         $laverieNote->setReponse($reponse)->setReponduLe(new \DateTime());
@@ -123,7 +130,7 @@ class ApiReponseAvisController extends AbstractController
         // Notification email (non bloquante)
         try {
             $this->envoyerNotification($laverieNote, $reponse, $isNew);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             // L'échec d'envoi d'email ne doit pas faire échouer la réponse HTTP
         }
 

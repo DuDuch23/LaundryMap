@@ -18,6 +18,7 @@ use App\Repository\ProfessionnelRepository;
 use App\Service\Professionnel\ProfessionnelLaverieFormatterService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
+use Throwable;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -318,7 +319,7 @@ class ApiProfilController extends AbstractController
 
             $entityManager->persist($favori);
             $entityManager->flush();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $logger->error('Echec ajout favori', [
                 'utilisateur_id' => $utilisateur->getId(),
                 'laverie_id' => $laverie->getId(),

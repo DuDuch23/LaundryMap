@@ -16,13 +16,15 @@ class LaverieNoteSignalementRepository extends ServiceEntityRepository
         parent::__construct($registry, LaverieNoteSignalement::class);
     }
 
-    public function findOneByNoteAndUtilisateur($laverieNote, $utilisateur): ?LaverieNoteSignalement
+    public function findOneByNoteAndUtilisateur($laverieNote, $utilisateur, string $cible = LaverieNoteSignalement::CIBLE_COMMENTAIRE): ?LaverieNoteSignalement
     {
         return $this->createQueryBuilder('s')
             ->andWhere('s.laverieNote = :note')
             ->andWhere('s.utilisateur = :user')
+            ->andWhere('s.cible = :cible')
             ->setParameter('note', $laverieNote)
             ->setParameter('user', $utilisateur)
+            ->setParameter('cible', $cible)
             ->getQuery()
             ->getOneOrNullResult();
     }
@@ -30,7 +32,7 @@ class LaverieNoteSignalementRepository extends ServiceEntityRepository
     public function countRecentByUtilisateur($utilisateur, \DateTimeInterface $since): int
     {
         return (int) $this->createQueryBuilder('s')
-            ->select('COUNT(s.utilisateur)')
+            ->select('COUNT(s.cible)')
             ->andWhere('s.utilisateur = :user')
             ->andWhere('s.date >= :since')
             ->setParameter('user', $utilisateur)
@@ -39,14 +41,22 @@ class LaverieNoteSignalementRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
-    public function countByNote($laverieNote): int
+    public function countByNoteAndCible($laverieNote, string $cible): int
     {
         return (int) $this->createQueryBuilder('s')
-            ->select('COUNT(s.utilisateur)')
+            ->select('COUNT(s.cible)')
             ->andWhere('s.laverieNote = :note')
+            ->andWhere('s.cible = :cible')
             ->setParameter('note', $laverieNote)
+            ->setParameter('cible', $cible)
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+    /** @deprecated Utiliser countByNoteAndCible() */
+    public function countByNote($laverieNote): int
+    {
+        return $this->countByNoteAndCible($laverieNote, LaverieNoteSignalement::CIBLE_COMMENTAIRE);
     }
 
     public function findSignaledNoteIdsByUtilisateur(array $noteIds, $utilisateur): array
@@ -59,8 +69,30 @@ class LaverieNoteSignalementRepository extends ServiceEntityRepository
             ->select('IDENTITY(s.laverieNote) as noteId')
             ->andWhere('s.laverieNote IN (:noteIds)')
             ->andWhere('s.utilisateur = :user')
+            ->andWhere('s.cible = :cible')
             ->setParameter('noteIds', $noteIds)
             ->setParameter('user', $utilisateur)
+            ->setParameter('cible', LaverieNoteSignalement::CIBLE_COMMENTAIRE)
+            ->getQuery()
+            ->getResult();
+
+        return array_map('intval', array_column($results, 'noteId'));
+    }
+
+    public function findSignaledReponseIdsByUtilisateur(array $noteIds, $utilisateur): array
+    {
+        if (empty($noteIds)) {
+            return [];
+        }
+
+        $results = $this->createQueryBuilder('s')
+            ->select('IDENTITY(s.laverieNote) as noteId')
+            ->andWhere('s.laverieNote IN (:noteIds)')
+            ->andWhere('s.utilisateur = :user')
+            ->andWhere('s.cible = :cible')
+            ->setParameter('noteIds', $noteIds)
+            ->setParameter('user', $utilisateur)
+            ->setParameter('cible', LaverieNoteSignalement::CIBLE_REPONSE)
             ->getQuery()
             ->getResult();
 
@@ -78,29 +110,4 @@ class LaverieNoteSignalementRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
-
-    //    /**
-    //     * @return LaverieNoteSignalement[] Returns an array of LaverieNoteSignalement objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('l')
-    //            ->andWhere('l.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('l.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?LaverieNoteSignalement
-    //    {
-    //        return $this->createQueryBuilder('l')
-    //            ->andWhere('l.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
 }

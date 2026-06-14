@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Throwable;
 
 class ApiGoogleOAuthController extends AbstractController
 {
@@ -195,7 +196,7 @@ class ApiGoogleOAuthController extends AbstractController
                 $this->buildFrontendSuccessUrl($jwt, $request),
                 $request
             );
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return $this->redirectWithClearedOauthState(
                 $this->buildFrontendErrorUrl('echec_authentification_google', $request),
                 $request

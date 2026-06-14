@@ -16,10 +16,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Exception;
 use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\MailerException\TransportExceptionInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 class ApiUtilisateurController extends AbstractController
 {
@@ -287,7 +289,7 @@ class ApiUtilisateurController extends AbstractController
 
             try {
                 $mailer->send($email);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $logger->error('Echec envoi mail validation utilisateur', [
                     'utilisateurId' => $user->getId(),
                     'exception' => $e,
@@ -311,7 +313,7 @@ class ApiUtilisateurController extends AbstractController
 
             try {
                 $mailer->send($email);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $logger->error('Echec envoi mail refus utilisateur', [
                     'utilisateurId' => $user->getId(),
                     'exception' => $e,
@@ -468,7 +470,7 @@ class ApiUtilisateurController extends AbstractController
             }
             try {
                 $banniJusquA = (new \DateTime((string) $dateFinRaw))->setTime(23, 59, 59);
-            } catch (\Exception) {
+            } catch (Exception) {
                 return $this->json(['message' => 'Date de fin invalide.'], 400);
             }
             if ($banniJusquA <= new \DateTime()) {
@@ -504,7 +506,7 @@ class ApiUtilisateurController extends AbstractController
                     'estDefinitif' => $banniJusquA === null,
                 ]);
             $mailer->send($email);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $logger->error('Echec envoi mail blocage utilisateur', [
                 'utilisateurId' => $user->getId(),
                 'exception' => $e,
@@ -565,7 +567,7 @@ class ApiUtilisateurController extends AbstractController
                     'loginUrl' => rtrim($this->getParameter('app.frontend_url'), '/') . '/connexion',
                 ]);
             $mailer->send($email);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $logger->error('Echec envoi mail déblocage utilisateur', [
                 'utilisateurId' => $user->getId(),
                 'exception' => $e,

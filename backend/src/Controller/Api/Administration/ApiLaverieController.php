@@ -20,6 +20,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 class ApiLaverieController extends AbstractController
 {
@@ -66,8 +67,10 @@ class ApiLaverieController extends AbstractController
         if ($currentUser instanceof Utilisateur) {
             $noteIds = array_column($commentaires, 'id');
             $signaledIds = $signalementRepo->findSignaledNoteIdsByUtilisateur($noteIds, $currentUser);
-            $commentaires = array_map(static function (array $c) use ($signaledIds): array {
+            $signaledReponseIds = $signalementRepo->findSignaledReponseIdsByUtilisateur($noteIds, $currentUser);
+            $commentaires = array_map(static function (array $c) use ($signaledIds, $signaledReponseIds): array {
                 $c['dejaSignale'] = in_array($c['id'], $signaledIds, true);
+                $c['dejaSignaleReponse'] = in_array($c['id'], $signaledReponseIds, true);
                 return $c;
             }, $commentaires);
         }
@@ -335,7 +338,7 @@ class ApiLaverieController extends AbstractController
         try {
             $em->persist($historique);
             $em->flush();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $logger->error('Echec flush statut laverie', ['laverieId' => $id, 'exception' => $e]);
             return $this->json(['message' => 'Erreur lors de la mise à jour en base de données.'], 500);
         }
@@ -367,7 +370,7 @@ class ApiLaverieController extends AbstractController
                     ]);
             }
             $mailer->send($email);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $logger->error('Echec envoi mail statut laverie', ['laverieId' => $id, 'action' => $action, 'exception' => $e]);
         }
 

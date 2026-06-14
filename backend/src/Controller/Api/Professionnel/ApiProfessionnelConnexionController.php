@@ -10,6 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Exception;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -66,7 +67,7 @@ class ApiProfessionnelConnexionController extends AbstractController
                     'prenom' => $utilisateur->getPrenom(),
                 ],
             ], 200);
-        } catch (\Exception $e) {
+        } catch (Exception) {
             return $this->json([
                 'erreur' => 'Erreur lors de la connexion',
             ], 500);

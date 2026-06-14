@@ -15,6 +15,8 @@ use App\Service\ApiSirenSiretService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Exception;
+use Throwable;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -166,7 +168,7 @@ class ApiProfessionnelInscriptionController extends AbstractController
 
             try {
                 $mailer->send($emailMessage);
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $logger->error('Echec envoi mail confirmation inscription pro', [
                     'utilisateurId' => $utilisateur->getId(),
                     'exception'     => $e,
@@ -179,7 +181,7 @@ class ApiProfessionnelInscriptionController extends AbstractController
                 [],
                 ['groups' => ['professionnel:read']]
             );
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->json([
                 'erreur' => $e->getMessage(),
                 'fichier' => $e->getFile(),

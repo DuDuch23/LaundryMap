@@ -10,6 +10,9 @@ use App\Enum\MotifEnum;
 #[ORM\Table(name: 'laverie_note_signalement')]
 class LaverieNoteSignalement
 {
+    public const CIBLE_COMMENTAIRE = 'commentaire';
+    public const CIBLE_REPONSE     = 'reponse';
+
     #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: LaverieNote::class, inversedBy: 'signalements')]
     #[ORM\JoinColumn(name: 'laverie_note_id', referencedColumnName: 'id', nullable: true)]
@@ -19,6 +22,10 @@ class LaverieNoteSignalement
     #[ORM\ManyToOne(targetEntity: Utilisateur::class)]
     #[ORM\JoinColumn(name: 'utilisateur_id', referencedColumnName: 'id', nullable: true)]
     private ?Utilisateur $utilisateur = null;
+
+    #[ORM\Id]
+    #[ORM\Column(type: 'string', length: 20)]
+    private string $cible = self::CIBLE_COMMENTAIRE;
 
     #[ORM\Column(type: 'datetime')]
     private \DateTimeInterface $date;
@@ -48,6 +55,17 @@ class LaverieNoteSignalement
     public function setUtilisateur(?Utilisateur $utilisateur): static
     {
         $this->utilisateur = $utilisateur;
+        return $this;
+    }
+
+    public function getCible(): string
+    {
+        return $this->cible;
+    }
+
+    public function setCible(string $cible): static
+    {
+        $this->cible = $cible;
         return $this;
     }
 
