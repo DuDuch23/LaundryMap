@@ -42,6 +42,7 @@ export default function TableauDeBordPro() {
   const [error, setError] = useState(null);
   const [notification, setNotification] = useState(null);
   const [deleting, setDeleting] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [uploadingProfilePhoto, setUploadingProfilePhoto] = useState(false);
   const [removingProfilePhoto, setRemovingProfilePhoto] = useState(false);
 
@@ -459,24 +460,58 @@ export default function TableauDeBordPro() {
                     </div>
 
                     <div className="mt-4 flex gap-2">
-                      <Link
-                        to={`/professionnel/laveries/${laundry.id}/modifier`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex-1 rounded-xl bg-cyan-500 px-3 py-2.5 text-center text-xs font-semibold text-white transition hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed sm:text-sm"
-                      >
-                        Modifier
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteLaverie(laundry.id);
-                        }}
-                        disabled={deleting === laundry.id}
-                        className="flex-1 rounded-xl bg-rose-50 px-3 py-2.5 text-xs font-semibold text-rose-600 transition hover:bg-rose-100 disabled:opacity-50 disabled:cursor-not-allowed sm:text-sm cursor-pointer"
-                      >
-                        {deleting === laundry.id ? 'Suppression...' : 'Supprimer'}
-                      </button>
+                      {confirmDeleteId === laundry.id ? (
+                        <div className="flex-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5">
+                          <p className="mb-2 text-xs font-semibold text-rose-700 text-center">
+                            Supprimer cette laverie ?
+                          </p>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setConfirmDeleteId(null);
+                              }}
+                              className="flex-1 rounded-lg border border-gray-300 px-2 py-1.5 text-xs font-medium text-gray-600 transition hover:border-gray-400 hover:text-gray-800 cursor-pointer"
+                            >
+                              Annuler
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setConfirmDeleteId(null);
+                                handleDeleteLaverie(laundry.id);
+                              }}
+                              disabled={deleting === laundry.id}
+                              className="flex-1 rounded-lg bg-rose-600 px-2 py-1.5 text-xs font-semibold text-white transition hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                            >
+                              {deleting === laundry.id ? 'Suppression...' : 'Confirmer'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <Link
+                            to={`/professionnel/laveries/${laundry.id}/modifier`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex-1 rounded-xl bg-cyan-500 px-3 py-2.5 text-center text-xs font-semibold text-white transition hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed sm:text-sm"
+                          >
+                            Modifier
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setConfirmDeleteId(laundry.id);
+                            }}
+                            disabled={deleting === laundry.id}
+                            className="flex-1 rounded-xl bg-rose-50 px-3 py-2.5 text-xs font-semibold text-rose-600 transition hover:bg-rose-100 disabled:opacity-50 disabled:cursor-not-allowed sm:text-sm cursor-pointer"
+                          >
+                            Supprimer
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </article>

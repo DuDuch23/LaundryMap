@@ -1197,15 +1197,17 @@ export default function FicheLaverie() {
 				</section>
 
 				<section className="mt-8 rounded-[28px] bg-white p-5 shadow-sm sm:p-6" aria-labelledby="avis-title">
-					<div className="flex items-center justify-between gap-3">
+					<div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
 						<div>
 							<p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{t('main.fiche_laverie.avis.section_kicker')}</p>
 							<h2 id="avis-title" className="mt-2 text-lg font-bold text-slate-900">{t('main.fiche_laverie.avis.section_titre')}</h2>
 						</div>
-						<div className="flex items-center gap-2 rounded-full bg-amber-50 px-3 py-2 text-sm font-semibold text-slate-900">
-							<Star className="h-4 w-4 text-amber-500" aria-hidden="true" />
-							{(laverie.noteMoyenne ?? 0).toFixed(1)} / 5
-						</div>
+						{laverie.noteMoyenne !== null && (
+							<div className="flex items-center gap-2 rounded-full bg-amber-50 px-3 py-2 text-sm font-semibold text-slate-900">
+								<Star className="h-4 w-4 text-amber-500" aria-hidden="true" />
+								{(laverie.noteMoyenne ?? 0).toFixed(1)} / 5
+							</div>
+						)}
 					</div>
 
 					<div className="mt-5 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
