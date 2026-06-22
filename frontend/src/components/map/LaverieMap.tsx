@@ -45,6 +45,14 @@ const userIcon = L.divIcon({
     iconAnchor: [8, 8],
 });
 
+function ClearLeafletPrefix() {
+    const map = useMap();
+    useEffect(() => {
+        map.attributionControl.setPrefix('');
+    }, [map]);
+    return null;
+}
+
 function FullscreenSyncController() {
     const map = useMap();
     useEffect(() => {
@@ -181,6 +189,7 @@ export default function LaverieMap({
             >
                 <MapInteractionController isFullscreen={isFullscreen} />
                 <FullscreenSyncController />
+                <ClearLeafletPrefix />
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

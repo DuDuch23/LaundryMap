@@ -180,9 +180,16 @@ class ProfessionnelLaverieFormatterService
 
             $utilisateur = $laverieNote->getUtilisateur();
             $estBanni = $utilisateur->getStatut() === \App\Enum\StatutUtilisateurEnum::STATUT_BANNI;
+            $estSupprime = $utilisateur->getUtilisateurSupprimeLe() !== null;
             $dateSource = $laverieNote->getCommenteLe() ?? $laverieNote->getNoteLe();
 
-            if ($estBanni) {
+            if ($estSupprime) {
+                $utilisateurPayload = [
+                    'id' => null,
+                    'prenom' => 'Utilisateur',
+                    'nom' => 'introuvable',
+                ];
+            } elseif ($estBanni) {
                 $utilisateurPayload = [
                     'id' => $utilisateur->getId(),
                     'prenom' => 'Utilisateur',

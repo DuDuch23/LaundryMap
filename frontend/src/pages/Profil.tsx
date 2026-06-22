@@ -34,6 +34,8 @@ export default function Profil() {
   const [motDePasseActuel, setMotDePasseActuel] = useState('');
   const [motDePasse, setMotDePasse] = useState('');
   const [confirmationMotDePasse, setConfirmationMotDePasse] = useState('');
+  const [showModaleSuppressionCompte, setShowModaleSuppressionCompte] = useState(false);
+  const modaleRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const chargerProfil = async () => {
@@ -84,6 +86,16 @@ export default function Profil() {
     useEffect(() => {
       document.documentElement.classList.toggle('dark', darkMode);
     }, [darkMode]);
+
+    useEffect(() => {
+      if (showModaleSuppressionCompte) {
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => modaleRef.current?.focus(), 50);
+      } else {
+        document.body.style.overflow = '';
+      }
+      return () => { document.body.style.overflow = ''; };
+    }, [showModaleSuppressionCompte]);
 
     const scrollToTop = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -180,13 +192,12 @@ export default function Profil() {
         }
     };
 
-    const handleSuppressionCompte = async () => {
-      const confirmation = window.confirm(t('main.profil.confirmation_suppression_compte'));
+    const handleSuppressionCompte = () => {
+      setShowModaleSuppressionCompte(true);
+    };
 
-      if (!confirmation) {
-        return;
-      }
-
+    const handleConfirmerSuppression = async () => {
+      setShowModaleSuppressionCompte(false);
       setErreurFormulaire('');
       setMessageSucces('');
       setIsDeleting(true);
@@ -365,6 +376,58 @@ export default function Profil() {
             </button>
                 </div>
         </form>
+
+        {showModaleSuppressionCompte && (
+          <div
+            role="presentation"
+            className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-[60]"
+            onClick={() => setShowModaleSuppressionCompte(false)}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="suppression-compte-title"
+              ref={modaleRef}
+              tabIndex={-1}
+              onKeyDown={(e) => e.key === 'Escape' && setShowModaleSuppressionCompte(false)}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md animate-slide-up"
+            >
+              <div className="flex items-start gap-3 p-5 border-b border-gray-100">
+                <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 inline-flex items-center justify-center shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h2 id="suppression-compte-title" className="text-lg font-bold text-slate-800">
+                    {t('main.profil.supprimer_compte')}
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {t('main.profil.modale_suppression_avertissement')}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2 p-5">
+                <button
+                  type="button"
+                  onClick={() => setShowModaleSuppressionCompte(false)}
+                  className="flex-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-4 rounded-full text-sm transition-colors cursor-pointer"
+                >
+                  {t('main.profil.bouton_annuler')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmerSuppression}
+                  disabled={isDeleting}
+                  className="flex-1 bg-red-500 hover:bg-red-600 text-white font-medium py-2.5 px-4 rounded-full text-sm transition-colors shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isDeleting ? t('main.profil.suppression_compte_en_cours') : t('main.profil.bouton_confirmer_suppression')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
