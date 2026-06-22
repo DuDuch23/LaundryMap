@@ -39,13 +39,8 @@ class ApiInscriptionUtilisateurController extends AbstractController
         $compteEnAttente = null;
         if ($emailCandidat !== '') {
             $existant = $utilisateurRepository->findOneBy(['email' => $emailCandidat]);
-            if ($existant !== null) {
-                if ($existant->getUtilisateurSupprimeLe() !== null) {
-                    $existant->setEmail('deleted_' . $existant->getId() . '_' . time() . '@deleted.invalid');
-                    $entityManager->flush();
-                } elseif ($existant->getStatut() === StatutUtilisateurEnum::STATUT_EN_ATTENTE) {
-                    $compteEnAttente = $existant;
-                }
+            if ($existant !== null && $existant->getStatut() === StatutUtilisateurEnum::STATUT_EN_ATTENTE) {
+                $compteEnAttente = $existant;
             }
         }
 
