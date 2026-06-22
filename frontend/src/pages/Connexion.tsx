@@ -123,7 +123,10 @@ export default function PageConnexion() {
         } 
         else if (serverMessage === 'ACCOUNT_PENDING') {
           setErreurGenerale(t("main.connexion.erreur_compte_en_attente") as string);
-        } 
+        }
+        else if (serverMessage === 'ACCOUNT_DELETED') {
+          setErreurGenerale(t("main.connexion.erreur_compte_supprime") as string);
+        }
         else if (serverMessage === 'Invalid credentials.') {
           setErreurGenerale(t("main.connexion.mot_de_passe_invalid") as string);
         } 

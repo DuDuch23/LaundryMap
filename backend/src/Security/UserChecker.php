@@ -48,6 +48,10 @@ class UserChecker implements UserCheckerInterface
             throw new CustomUserMessageAccountStatusException('ACCOUNT_PENDING');
         }
 
+        if ($user->getStatut() === StatutUtilisateurEnum::STATUT_SUPPRIME || $user->getUtilisateurSupprimeLe() !== null) {
+            throw new CustomUserMessageAccountStatusException('ACCOUNT_DELETED');
+        }
+
         $professionnel = $user->getProfessionnel();
 
         if ($professionnel) {

@@ -524,9 +524,16 @@ class ApiProfilController extends AbstractController
 
         $dateSuppression = new \DateTime();
 
+        // Anonymisation RGPD immédiate : libère l'email et efface les données personnelles.
+        // L'entité reste en base pour conserver l'intégrité des FK (notes, etc.).
         $utilisateur
             ->setStatut(StatutUtilisateurEnum::STATUT_SUPPRIME)
-            ->setUtilisateurSupprimeLe($dateSuppression);
+            ->setUtilisateurSupprimeLe($dateSuppression)
+            ->setEmail('deleted_' . $utilisateur->getId() . '@deleted.invalid')
+            ->setNom(null)
+            ->setPrenom(null)
+            ->setMotDePasse(null)
+            ->setOauthId(null);
 
         $professionnel = $utilisateur->getProfessionnel();
         if ($professionnel !== null) {
