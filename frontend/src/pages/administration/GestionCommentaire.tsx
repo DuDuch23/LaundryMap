@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import {
-    ChevronLeft, ListX, SlidersHorizontal, Eye, AlertTriangle, ShieldOff,
+    ListX, SlidersHorizontal, Eye, AlertTriangle, ShieldOff,
     Star, MessageSquareOff,
 } from 'lucide-react';
 import {
@@ -191,13 +190,6 @@ export default function GestionCommentaires() {
             {/* HEADER */}
             <div className="bg-white flex items-center justify-between p-4 shadow-sm mb-6">
                 <div className="flex items-center gap-3">
-                    <Link
-                        to="/admin/tableau-de-bord"
-                        className="bg-[#14A8DE] text-white p-1.5 rounded-md hover:bg-[#1296c8] transition block"
-                        aria-label={t('main.gestion_commentaires.retour_aria')}
-                    >
-                        <ChevronLeft size={20} />
-                    </Link>
                     <h1 className="text-lg font-bold">{t('main.gestion_commentaires.titre')}</h1>
                 </div>
 

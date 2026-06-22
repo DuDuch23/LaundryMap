@@ -537,11 +537,6 @@ class ApiProfilController extends AbstractController
             }
         }
 
-        // Suppression RGPD : supprime toutes les notes/avis de l'utilisateur
-        foreach ($utilisateur->getNotes() as $note) {
-            $entityManager->remove($note);
-        }
-
         $entityManager->flush();
 
         return $this->json(['message' => 'Votre compte a bien été supprimé.']);

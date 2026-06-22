@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router';
-import { ChevronLeft, ListX, SlidersHorizontal, MoreHorizontal } from 'lucide-react';
+import { ListX, SlidersHorizontal, MoreHorizontal } from 'lucide-react';
 import { fetchAdminLaveries, type FiltresLaveries } from '../../services/request';
 import FilterModal, { type FilterSection, type FilterValues } from '../../components/FilterModal';
 import { resolveUrl } from '../../services/api';
@@ -171,9 +171,6 @@ export default function GestionLaveries() {
             {/* HEADER */}
             <div className="bg-white flex items-center justify-between p-4 shadow-sm mb-6">
                 <div className="flex items-center gap-3">
-                    <Link to="/admin/tableau-de-bord" className="bg-[#14A8DE] text-white p-1.5 rounded-md hover:bg-[#1296c8] transition block" aria-label="Retour">
-                        <ChevronLeft size={20} />
-                    </Link>
                     <h1 className="text-lg font-bold">Gestion des laveries</h1>
                 </div>
 

@@ -96,6 +96,11 @@ class ApiAdminMotsInterditController extends AbstractController
             return $this->json(['message' => 'Le mot est invalide.'], 400);
         }
 
+        $existant = $repo->findOneBy(['label' => $label]);
+        if ($existant !== null && $existant->getId() !== $id) {
+            return $this->json(['message' => 'Ce mot existe déjà dans la liste.'], 409);
+        }
+
         $mot->setLabel($label);
         $em->flush();
 

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Link } from 'react-router';
-import { Check, ChevronLeft, Pencil, Plus, Search, ShieldOff, Trash2, X } from 'lucide-react';
+import { Check, Pencil, Plus, Search, ShieldOff, Trash2, X } from 'lucide-react';
 import {
     fetchMotsInterdits,
     creerMotInterdit,
@@ -241,13 +240,6 @@ export default function MotsInterdits() {
 
             <div className="bg-white flex items-center justify-between p-4 shadow-sm mb-6">
                 <div className="flex items-center gap-3">
-                    <Link
-                        to="/admin/tableau-de-bord"
-                        className="bg-[#14A8DE] text-white p-1.5 rounded-md hover:bg-[#1296c8] transition block"
-                        aria-label="Retour"
-                    >
-                        <ChevronLeft size={20} />
-                    </Link>
                     <h1 className="text-lg font-bold">Mots interdits</h1>
                 </div>
 
@@ -316,7 +308,6 @@ export default function MotsInterdits() {
                     </div>
                 )}
 
-                {!chargement && totalResultats > 4 && (
                     <div className="relative mb-4">
                         <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input
@@ -337,7 +328,6 @@ export default function MotsInterdits() {
                             </button>
                         )}
                     </div>
-                )}
 
                 {chargement ? (
                     <ListeSkeleton />

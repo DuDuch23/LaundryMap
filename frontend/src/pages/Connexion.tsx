@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
-import { Link } from "react-router";
 import { AccessibleInput, AccessibleButton } from "../components/accessibility";
 import { connexion } from "../services/request";
 import API_BASE_URL from "../services/api";
@@ -55,7 +54,7 @@ export default function PageConnexion() {
       // Redirection dynamique selon le rôle (SSO)
       const roles = getRolesFromToken(token);
       if (roles.some((role) => role.includes("ADMIN"))) {
-        navigate("/admin/tableau-de-bord", { replace: true });
+        navigate("/admin/gestion-utilisateurs", { replace: true });
       } else if (roles.some((role) => role.includes("PROFESSIONNEL"))) {
         navigate("/professionnel/tableau-de-bord", { replace: true });
       } else {
@@ -192,14 +191,6 @@ export default function PageConnexion() {
             placeholder={"••••••••••••"}
             error={errors.password}
           />
-          <div className="right-0 top-0 z-1">
-            <Link
-              to="/mot-de-passe-oublie"
-              className="text-sm text-[#22ACE2] hover:text-blue-600 hover:underline font-medium transition-colors"
-            >
-              {t("main.connexion.mot_de_passe_oublie")}
-            </Link>
-          </div>
         </div>
 
         <AccessibleInput
