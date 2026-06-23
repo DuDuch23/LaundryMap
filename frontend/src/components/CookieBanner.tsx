@@ -70,7 +70,7 @@ export default function CookieBanner() {
                 role="dialog"
                 aria-modal="true"
                 aria-label="Gestion des cookies"
-                className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-2xl"
+                className="fixed bottom-0 left-0 right-0 z-[1000] bg-white border-t border-slate-200 shadow-2xl"
             >
                 {!open ? (
                     <div className="mx-auto max-w-5xl px-4 py-4 sm:py-3 flex flex-col sm:flex-row sm:items-center gap-3">
@@ -96,7 +96,7 @@ export default function CookieBanner() {
                             <button
                                 type="button"
                                 onClick={refuse}
-                                className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                                className="px-4 py-2 rounded-xl bg-[#22ACE2] text-white text-sm font-semibold hover:bg-[#1296c8] transition-colors cursor-pointer"
                             >
                                 Refuser
                             </button>
