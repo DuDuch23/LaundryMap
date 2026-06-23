@@ -1,6 +1,7 @@
-import { BookOpen, FileText, Share2, Shield } from "lucide-react";
+import { FileText, Share2, Shield } from "lucide-react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
+import { CookieReopenButton } from "../CookieBanner";
 
 export default function Footer() {
   const { t } = useTranslation();
@@ -16,9 +17,8 @@ export default function Footer() {
   };
 
   const links = [
-    { to: "/cgu",                    label: t("main.footer.cgu"),                    Icon: FileText  },
-    { to: "/mentions-legales",       label: t("main.footer.mentions_legales"),       Icon: Shield    },
-    { to: "/propriete-intellectuelle", label: t("main.footer.propriete_intellectuelle"), Icon: BookOpen  },
+    { to: "/cgu",              label: t("main.footer.cgu"),              Icon: FileText },
+    { to: "/mentions-legales", label: t("main.footer.mentions_legales"), Icon: Shield   },
   ];
 
   return (
@@ -81,10 +81,11 @@ export default function Footer() {
         {/* Séparateur */}
         <hr className="border-white/15 mt-8 mb-4" />
 
-        {/* Copyright */}
-        <p className="text-white/50 text-xs">
-          {t("main.footer.copyright")}
-        </p>
+        {/* Copyright + cookies */}
+        <div className="flex flex-wrap items-center gap-4">
+          <p className="text-white/50 text-xs">{t("main.footer.copyright")}</p>
+          <CookieReopenButton />
+        </div>
       </div>
     </footer>
   );
