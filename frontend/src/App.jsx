@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router';
 import './App.css'
 import Header from './components/Header';
 import Footer from './components/Footer/footer';
+import CookieBanner from './components/CookieBanner';
 import HeaderAdmin from './components/HeaderAdmin';
 import PageLoader from './components/PageLoader';
 import { Toaster } from './components/ui/sonner';
@@ -28,7 +29,6 @@ const MesAvis = React.lazy(() => import('./pages/MesAvis'));
 const FicheLaverie = React.lazy(() => import('./pages/FicheLaverie'));
 const TermsOfUse = React.lazy(() => import('./pages/TermsOfUse'));
 const LegalNotice = React.lazy(() => import('./pages/LegalNotice'));
-const ProprieteIntellectuelle = React.lazy(() => import('./pages/ProprieteIntellectuelle'));
 const TableauDeBordPro = React.lazy(() => import('./pages/professionnel/TableauDeBordPro'));
 const ModifierLaveriePro = React.lazy(() => import('./pages/professionnel/ModifierLaveriePro'));
 const ProRoute = React.lazy(() => import('./routes/ProRoute'));
@@ -104,6 +104,7 @@ function App() {
   // todo : rediriger vers la page de connexion si le token est expiré ou invalide (gérer ça dans une route protégée ?)
   return (
     <>
+      <CookieBanner />
       <Toaster position="top-right" richColors closeButton />
       <div className='bg-gray-50 w-full mx-auto flex flex-col items-center max-w-full lg:max-w-[1280px]'>
         <Suspense fallback={<PageLoader />}>
@@ -120,7 +121,7 @@ function App() {
               <Route path="/laveries/:id" element={<FicheLaverie />} />
               <Route path="/cgu" element={<TermsOfUse />} />
               <Route path="/mentions-legales" element={<LegalNotice />} />
-              <Route path="/propriete-intellectuelle" element={<ProprieteIntellectuelle />} />
+              <Route path="/propriete-intellectuelle" element={<Navigate to="/mentions-legales#propriete-intellectuelle" replace />} />
               <Route element={<UserRoute />}>
                 <Route path="/mes-favoris" element={<MesFavoris />} />
                 <Route path="/mes-avis" element={<MesAvis />} />
