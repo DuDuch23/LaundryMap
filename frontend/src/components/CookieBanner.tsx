@@ -8,11 +8,18 @@ interface Consent {
 }
 
 const STORAGE_KEY = 'lm_cookie_consent';
+const MAX_AGE_MS = 6 * 30 * 24 * 60 * 60 * 1000; // 6 mois (recommandation CNIL, changer si la recommandation évolue)
 
 export function getConsent(): Consent | null {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? (JSON.parse(raw) as Consent) : null;
+        if (!raw) return null;
+        const consent = JSON.parse(raw) as Consent;
+        if (Date.now() - consent.savedAt > MAX_AGE_MS) {
+            localStorage.removeItem(STORAGE_KEY);
+            return null;
+        }
+        return consent;
     } catch {
         return null;
     }
