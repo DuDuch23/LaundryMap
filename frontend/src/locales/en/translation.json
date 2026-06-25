@@ -229,7 +229,7 @@
       "ou": "or",
       "erreur_reseau": "A network error occurred. Please check your connection and try again.",
       "erreur_generique": "An error occurred. Please try again.",
-      "erreur_compte_en_attente": "Login is not possible at this time. Please try again later or contact the administrator.",
+      "erreur_compte_en_attente": "Incorrect credentials or account pending validation. Check your emails or contact the administrator.",
       "erreur_compte_banni": "Your account has been banned. Please contact the administrator for more information.",
       "erreur_compte_refuse": "Your account has been refused by the administration. Please contact the administrator for more information.",
       "erreur_compte_supprime": "This account has been deleted. To sign in again, please create a new account via the registration page."
