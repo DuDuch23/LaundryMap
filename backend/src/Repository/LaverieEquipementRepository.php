@@ -27,9 +27,12 @@ class LaverieEquipementRepository extends ServiceEntityRepository
 
     public function deleteByLaverie(Laverie $laverie): void
     {
-        foreach ($this->findByLaverie($laverie) as $equipement) {
-            $this->getEntityManager()->remove($equipement);
-        }
+        $this->createQueryBuilder('le')
+            ->delete()
+            ->where('le.laverie = :laverie')
+            ->setParameter('laverie', $laverie)
+            ->getQuery()
+            ->execute();
     }
 
     //    /**

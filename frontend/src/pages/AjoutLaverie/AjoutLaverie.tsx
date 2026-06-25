@@ -397,6 +397,9 @@ export default function AjoutLaverie() {
                 headers: { Authorization: `Bearer ${token}` },
                 body: fd,
             });
+            if (res.status === 413) {
+                throw new Error('Le fichier est trop volumineux. Réduisez la taille de vos images (5 Mo maximum par image).');
+            }
             let data: any = null;
             try {
                 data = await res.json();

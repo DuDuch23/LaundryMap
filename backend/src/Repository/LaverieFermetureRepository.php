@@ -27,9 +27,12 @@ class LaverieFermetureRepository extends ServiceEntityRepository
 
     public function deleteByLaverie(Laverie $laverie): void
     {
-        foreach ($this->findByLaverie($laverie) as $fermeture) {
-            $this->getEntityManager()->remove($fermeture);
-        }
+        $this->createQueryBuilder('lf')
+            ->delete()
+            ->where('lf.laverie = :laverie')
+            ->setParameter('laverie', $laverie)
+            ->getQuery()
+            ->execute();
     }
 
     //    /**

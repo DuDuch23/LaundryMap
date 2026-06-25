@@ -130,6 +130,9 @@ class ProfessionnelLaverieFormatterService
         $equipementsDb = $this->laverieEquipementRepository->findByLaverie($laverie);
 
         foreach ($equipementsDb as $equipement) {
+            if ($equipement->getType() === 'amenite') {
+                continue;
+            }
             $equipements[] = [
                 'id' => $equipement->getId(),
                 'equipementReference' => $equipement->getEquipementReference(),
@@ -142,6 +145,17 @@ class ProfessionnelLaverieFormatterService
         }
 
         return $equipements;
+    }
+
+    public function buildAmenitesResponse(Laverie $laverie): array
+    {
+        $amenites = [];
+        foreach ($this->laverieEquipementRepository->findByLaverie($laverie) as $equipement) {
+            if ($equipement->getType() === 'amenite') {
+                $amenites[] = $equipement->getNom();
+            }
+        }
+        return $amenites;
     }
 
     public function buildServicesResponse(Laverie $laverie): array
@@ -266,7 +280,6 @@ class ProfessionnelLaverieFormatterService
         $addFiles($allFiles['images[]'] ?? null);
         $addFiles($allFiles['gallery'] ?? null);
         $addFiles($allFiles['gallery[]'] ?? null);
-        $addFiles($allFiles['logo'] ?? null);
 
         return $uploaded;
     }
