@@ -223,6 +223,23 @@ class ApiLaverieController extends ApiProfilController
             }
         }
 
+        // ── Amenités (équipements string) ─────────────────────────────────────
+        if (is_array($equipements)) {
+            foreach ($equipements as $equipementData) {
+                if (!is_string($equipementData)) continue;
+                $nomAmenite = trim($equipementData);
+                if ($nomAmenite === '') continue;
+                $amenite = new LaverieEquipement();
+                $amenite->setLaverie($laverie);
+                $amenite->setNom($nomAmenite);
+                $amenite->setType('amenite');
+                $amenite->setCapacite(0);
+                $amenite->setTarif(0.0);
+                $amenite->setDuree(0);
+                $em->persist($amenite);
+            }
+        }
+
         // ── Services ──────────────────────────────────────────────────────────
         if (is_array($serviceIds)) {
             foreach ($serviceIds as $serviceId) {
@@ -306,10 +323,14 @@ class ApiLaverieController extends ApiProfilController
         $logo = $laverie->getLogo();
         $horaires = $formatter->buildHorairesResponse($laverie);
         $equipements = $formatter->buildEquipementsResponse($laverie);
+        $amenites = $formatter->buildAmenitesResponse($laverie);
         $gallery = $formatter->buildGalleryResponse($laverie, $request);
         $primaryImage = $gallery[0]['image'] ?? (($logo && $formatter->isProjectManagedMediaPath($logo->getEmplacement()))
             ? $formatter->toPublicMediaUrl($logo->getEmplacement(), $request)
             : null);
+        $logoUrl = ($logo && $formatter->isProjectManagedMediaPath($logo->getEmplacement()))
+            ? $formatter->toPublicMediaUrl($logo->getEmplacement(), $request)
+            : null;
 
         return $this->json([
             'id' => $laverie->getId(),
@@ -327,10 +348,12 @@ class ApiLaverieController extends ApiProfilController
             'statut' => $laverie->getStatut()->value,
             'dateAjout' => $laverie->getDateAjout()->format('d/m/Y'),
             'dateModification' => $laverie->getDateModification()->format('d/m/Y'),
+            'logo' => $logoUrl ? ['id' => $logo->getId(), 'image' => $logoUrl] : null,
             'image' => $primaryImage,
             'images' => $gallery,
             'horaires' => $horaires,
             'equipements' => $equipements,
+            'amenites' => $amenites,
             'services' => $formatter->buildServicesResponse($laverie),
             'paiements' => $formatter->buildPaiementsResponse($laverie),
             'commentairesCount' => $formatter->countLaverieCommentaires($laverie),
@@ -355,6 +378,7 @@ class ApiLaverieController extends ApiProfilController
         ServiceRepository $serviceRepository,
         MethodePaiementRepository $methodePaiementRepository,
         ProfessionnelLaverieFormatterService $formatter,
+        MediaService $mediaService,
     ): JsonResponse {
         $professionnel = $this->getValidatedProfessionnel($professionnelRepository);
 
@@ -562,6 +586,20 @@ class ApiLaverieController extends ApiProfilController
         }
 
         foreach ($equipements as $equipementData) {
+            if (is_string($equipementData)) {
+                $nomAmenite = trim($equipementData);
+                if ($nomAmenite === '') continue;
+                $amenite = new LaverieEquipement();
+                $amenite->setLaverie($laverie);
+                $amenite->setNom($nomAmenite);
+                $amenite->setType('amenite');
+                $amenite->setCapacite(0);
+                $amenite->setTarif(0.0);
+                $amenite->setDuree(0);
+                $entityManager->persist($amenite);
+                continue;
+            }
+
             if (!is_array($equipementData)) {
                 continue;
             }
@@ -637,6 +675,17 @@ class ApiLaverieController extends ApiProfilController
             $entityManager->remove($media);
         }
 
+        // ── Logo dédié ────────────────────────────────────────────────────────
+        $newLogoMedia = null;
+        $logoFile = $request->files->get('logo');
+        if ($logoFile !== null) {
+            $erreurLogo = $mediaService->validerFichier($logoFile);
+            if ($erreurLogo) {
+                return $this->json(['erreur' => "Logo : $erreurLogo"], 400);
+            }
+            $newLogoMedia = $mediaService->creerMedia($logoFile);
+        }
+
         $uploadedImages = $formatter->extractUploadedImages($request);
         $firstUploadedMedia = null;
         $uploadsDirectory = $this->getParameter('kernel.project_dir') . '/public/uploads/laveries';
@@ -710,7 +759,9 @@ class ApiLaverieController extends ApiProfilController
             }
         }
 
-        if ($firstUploadedMedia !== null) {
+        if ($newLogoMedia !== null) {
+            $laverie->setLogo($newLogoMedia);
+        } elseif ($firstUploadedMedia !== null) {
             $laverie->setLogo($firstUploadedMedia);
         } else {
             $remainingGalleryMedia = null;

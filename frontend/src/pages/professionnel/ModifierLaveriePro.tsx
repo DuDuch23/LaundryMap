@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { ArrowLeft, Plus, AlertCircle, CheckCircle2 } from 'lucide-react';
+import Uppy from '@uppy/core';
 import API_BASE_URL from '../../services/api';
 import { geocodeSuggestions, getMethodesPaiement, getServices } from '../../services/request';
 import { EQUIPEMENTS_OPTIONS } from '../../constants/Laverie';
@@ -8,6 +9,8 @@ import type { HorairesJour, PlageHoraire } from '../../types/HorairesJour';
 import type { Machine } from '../../types/Machine';
 import type { WiLineCentrale } from '../../types/wiline/WiLineCentrale';
 import type { GeoSuggestion, MethodePaiementOption, ServiceOption } from '../../types/Laverie';
+import { LogoUpload } from '../../components/laverie/LogoUpload';
+import { PhotosUpload } from '../../components/laverie/PhotosUpload';
 import { CheckboxGroup } from '../../components/laverie/CheckboxGroup';
 import { MachineRow } from '../../components/laverie/MachineRow';
 import { Card } from '../../components/ui/Card';
@@ -16,6 +19,11 @@ import { Field, inputClass } from '../../components/ui/Field';
 import { ToggleSwitch } from '../../components/ui/ToggleSwitch';
 import { Button } from '../../components/ui/button';
 import { Alert, AlertDescription } from '../../components/ui/alert';
+
+const RESTRICTIONS_IMAGE = {
+    maxFileSize: 5 * 1024 * 1024,
+    allowedFileTypes: ['image/jpeg', 'image/png', 'image/webp'],
+} as const;
 
 const JOURS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
 
@@ -59,6 +67,23 @@ export default function ModifierLaveriePro() {
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
 
+    const [logoUppy, setLogoUppy] = useState<Uppy | null>(null);
+    const [photosUppy, setPhotosUppy] = useState<Uppy | null>(null);
+
+    useEffect(() => {
+        const logo = new Uppy({
+            id: 'logo-modifier',
+            restrictions: { ...RESTRICTIONS_IMAGE, allowedFileTypes: [...RESTRICTIONS_IMAGE.allowedFileTypes], maxNumberOfFiles: 1 },
+        });
+        const photos = new Uppy({
+            id: 'photos-modifier',
+            restrictions: { ...RESTRICTIONS_IMAGE, allowedFileTypes: [...RESTRICTIONS_IMAGE.allowedFileTypes], maxNumberOfFiles: 15 },
+        });
+        setLogoUppy(logo);
+        setPhotosUppy(photos);
+        return () => { logo.destroy(); photos.destroy(); };
+    }, []);
+
     const [servicesDisponibles,  setServicesDisponibles]  = useState<ServiceOption[]>([]);
     const [paiementsDisponibles, setPaiementsDisponibles] = useState<MethodePaiementOption[]>([]);
     const [loadingRef, setLoadingRef] = useState(true);
@@ -67,15 +92,65 @@ export default function ModifierLaveriePro() {
     const [wiLineLoading,   setWiLineLoading]   = useState(false);
     const [wiLineError,     setWiLineError]     = useState<string | null>(null);
 
+    const [existingLogo,            setExistingLogo]            = useState<{ id: number; image: string } | null>(null);
     const [existingGallery,         setExistingGallery]         = useState<Array<{ id: number; image: string; alt: string }>>([]);
     const [removedExistingImageIds, setRemovedExistingImageIds] = useState<number[]>([]);
-    const [galleryFiles,            setGalleryFiles]            = useState<File[]>([]);
-    const [galleryPreviews,         setGalleryPreviews]         = useState<string[]>([]);
 
-    const [adresseQuery,          setAdresseQuery]          = useState('');
-    const [adresseSuggestions,    setAdresseSuggestions]    = useState<GeoSuggestion[]>([]);
+    useEffect(() => {
+        if (!logoUppy || !existingLogo) return;
+        let cancelled = false;
+        const pathname = new URL(existingLogo.image, window.location.origin).pathname;
+        fetch(pathname)
+            .then((r) => r.blob())
+            .then((blob) => {
+                if (cancelled) return;
+                const alreadyAdded = logoUppy.getFiles().some((f: any) => f.meta?.existingServerId === existingLogo.id);
+                if (!alreadyAdded) {
+                    try { logoUppy.addFile({ name: 'logo-existant', type: blob.type || 'image/jpeg', data: blob, meta: { existingServerId: existingLogo.id } }); } catch {}
+                }
+            })
+            .catch(() => {});
+        return () => { cancelled = true; };
+    }, [logoUppy, existingLogo]);
+
+    useEffect(() => {
+        if (!logoUppy) return;
+        const onRemoved = (file: any) => {
+            if (file.meta?.existingServerId) setRemovedExistingImageIds((prev) => [...prev, file.meta.existingServerId]);
+        };
+        logoUppy.on('file-removed', onRemoved);
+        return () => { logoUppy.off('file-removed', onRemoved); };
+    }, [logoUppy]);
+
+    useEffect(() => {
+        if (!photosUppy || existingGallery.length === 0) return;
+        existingGallery.forEach((img) => {
+            const pathname = new URL(img.image, window.location.origin).pathname;
+            fetch(pathname)
+                .then((r) => r.blob())
+                .then((blob) => {
+                    const alreadyAdded = photosUppy.getFiles().some((f: any) => f.meta?.existingServerId === img.id);
+                    if (!alreadyAdded) {
+                        try { photosUppy.addFile({ name: img.alt || `photo-${img.id}`, type: blob.type || 'image/jpeg', data: blob, meta: { existingServerId: img.id } }); } catch {}
+                    }
+                })
+                .catch(() => {});
+        });
+    }, [photosUppy, existingGallery]);
+
+    useEffect(() => {
+        if (!photosUppy) return;
+        const onRemoved = (file: any) => {
+            if (file.meta?.existingServerId) setRemovedExistingImageIds((prev) => [...prev, file.meta.existingServerId]);
+        };
+        photosUppy.on('file-removed', onRemoved);
+        return () => { photosUppy.off('file-removed', onRemoved); };
+    }, [photosUppy]);
+
+    const [adresseQuery,           setAdresseQuery]           = useState('');
+    const [adresseSuggestions,     setAdresseSuggestions]     = useState<GeoSuggestion[]>([]);
     const [showAdresseSuggestions, setShowAdresseSuggestions] = useState(false);
-    const [adresseGeocoding,      setAdresseGeocoding]      = useState(false);
+    const [adresseGeocoding,       setAdresseGeocoding]       = useState(false);
     const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const skipNextGeo  = useRef(false);
 
@@ -92,6 +167,7 @@ export default function ModifierLaveriePro() {
         latitude: null as number | null,
         longitude: null as number | null,
         wiLineCode: '',
+        wiLineCentraleId: null as number | null,
         horaires: defaultHoraires(),
         machines: [] as Machine[],
         equipements: [] as string[],
@@ -125,6 +201,7 @@ export default function ModifierLaveriePro() {
                     latitude: data.latitude ?? null,
                     longitude: data.longitude ?? null,
                     wiLineCode: '',
+                    wiLineCentraleId: null,
                     horaires: Array.isArray(data.horaires) && data.horaires.length > 0
                         ? buildHorairesFromApi(data.horaires)
                         : defaultHoraires(),
@@ -139,22 +216,17 @@ export default function ModifierLaveriePro() {
                             wiline_machine_id: e.equipementReference ?? null,
                         }))
                         : [],
-                    equipements: [],
+                    equipements: Array.isArray(data.amenites) ? data.amenites : [],
                     serviceIds: Array.isArray(data.services) ? data.services.map((s: any) => s.id) : [],
                     paiementIds: Array.isArray(data.paiements) ? data.paiements.map((p: any) => p.id) : [],
                 });
                 setAdresseQuery(data.rue || data.adresse || '');
+                if (data.logo) setExistingLogo(data.logo);
                 setExistingGallery(Array.isArray(data.images) ? data.images : []);
             })
             .catch(() => setSubmitError('Impossible de charger la laverie.'))
             .finally(() => setIsLoading(false));
     }, [id]);
-
-    useEffect(() => {
-        const previews = galleryFiles.map((f) => URL.createObjectURL(f));
-        setGalleryPreviews(previews);
-        return () => previews.forEach((p) => URL.revokeObjectURL(p));
-    }, [galleryFiles]);
 
     useEffect(() => {
         if (skipNextGeo.current) { skipNextGeo.current = false; return; }
@@ -209,8 +281,26 @@ export default function ModifierLaveriePro() {
             latitude:   s.latitude,
             longitude:  s.longitude,
         }));
-        setErrors((e) => ({ ...e, rue: undefined, codePostal: undefined, ville: undefined }));
+        setErrors((e) => ({ ...e, rue: undefined, codePostal: undefined, ville: undefined, pays: undefined }));
     };
+
+    const toggleEquipement = (val: string) =>
+        setForm((f) => ({
+            ...f,
+            equipements: f.equipements.includes(val) ? f.equipements.filter((v) => v !== val) : [...f.equipements, val],
+        }));
+
+    const toggleServiceId = (sid: number) =>
+        setForm((f) => ({
+            ...f,
+            serviceIds: f.serviceIds.includes(sid) ? f.serviceIds.filter((v) => v !== sid) : [...f.serviceIds, sid],
+        }));
+
+    const togglePaiementId = (pid: number) =>
+        setForm((f) => ({
+            ...f,
+            paiementIds: f.paiementIds.includes(pid) ? f.paiementIds.filter((v) => v !== pid) : [...f.paiementIds, pid],
+        }));
 
     const setHoraire = (jour: string, ouvert: boolean) =>
         setForm((f) => ({ ...f, horaires: { ...f.horaires, [jour]: { ...f.horaires[jour], ouvert } } }));
@@ -235,32 +325,13 @@ export default function ModifierLaveriePro() {
 
     const addMachines = (n: number) => set('machines', [...form.machines, ...Array.from({ length: n }, () => newMachine())]);
 
-    const updateMachine = (id: string, field: keyof Machine, value: string) =>
-        setForm((f) => ({ ...f, machines: f.machines.map((m) => m.id === id ? { ...m, [field]: value } : m) }));
+    const updateMachine = (mid: string, field: keyof Machine, value: string) =>
+        setForm((f) => ({ ...f, machines: f.machines.map((m) => m.id === mid ? { ...m, [field]: value } : m) }));
 
-    const removeMachine = (id: string) =>
-        setForm((f) => ({ ...f, machines: f.machines.filter((m) => m.id !== id) }));
-
-    const toggleEquipement = (val: string) =>
-        setForm((f) => ({
-            ...f,
-            equipements: f.equipements.includes(val) ? f.equipements.filter((v) => v !== val) : [...f.equipements, val],
-        }));
-
-    const toggleServiceId = (id: number) =>
-        setForm((f) => ({
-            ...f,
-            serviceIds: f.serviceIds.includes(id) ? f.serviceIds.filter((v) => v !== id) : [...f.serviceIds, id],
-        }));
-
-    const togglePaiementId = (id: number) =>
-        setForm((f) => ({
-            ...f,
-            paiementIds: f.paiementIds.includes(id) ? f.paiementIds.filter((v) => v !== id) : [...f.paiementIds, id],
-        }));
+    const removeMachine = (mid: string) =>
+        setForm((f) => ({ ...f, machines: f.machines.filter((m) => m.id !== mid) }));
 
     const selectionnerCentrale = (centrale: WiLineCentrale) => {
-
         const machinesImportees: Machine[] = centrale.machines
             .filter((m) => !m.hors_service)
             .map((m) => ({
@@ -290,6 +361,7 @@ export default function ModifierLaveriePro() {
 
         setForm((f) => ({
             ...f,
+            wiLineCentraleId: centrale.id,
             nomEtablissement: centrale.nom         || f.nomEtablissement,
             description:      centrale.description || f.description,
             rue:              centrale.adresse      || f.rue,
@@ -300,7 +372,7 @@ export default function ModifierLaveriePro() {
             machines:         machinesImportees,
             paiementIds:      matchedPaiementIds.length > 0 ? matchedPaiementIds : f.paiementIds,
         }));
-        setErrors((e) => ({ ...e, nomEtablissement: undefined, rue: undefined, codePostal: undefined, ville: undefined }));
+        setErrors((e) => ({ ...e, nomEtablissement: undefined, rue: undefined, codePostal: undefined, ville: undefined, pays: undefined }));
     };
 
     const handleWiLineConnexion = async () => {
@@ -325,28 +397,13 @@ export default function ModifierLaveriePro() {
         }
     };
 
-    const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(e.target.files || []);
-        if (!files.length) return;
-        setGalleryFiles((prev) => {
-            const merged = [...prev, ...files];
-            const seen = new Set<string>();
-            return merged.filter((f) => {
-                const key = `${f.name}-${f.size}-${f.lastModified}`;
-                if (seen.has(key)) return false;
-                seen.add(key);
-                return true;
-            });
-        });
-        e.target.value = '';
-    };
-
     const validate = (): boolean => {
         const e: Record<string, string> = {};
         if (!form.nomEtablissement.trim()) e.nomEtablissement = 'Le nom est obligatoire.';
         if (!form.rue.trim())             e.rue              = 'La rue est obligatoire.';
         if (!form.codePostal.trim())      e.codePostal       = 'Le code postal est obligatoire.';
         if (!form.ville.trim())           e.ville            = 'La ville est obligatoire.';
+        if (!form.pays.trim())            e.pays             = 'Le pays est obligatoire.';
         if (form.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.contactEmail)) {
             e.contactEmail = 'Email invalide.';
         }
@@ -357,7 +414,7 @@ export default function ModifierLaveriePro() {
         return Object.keys(e).length === 0;
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!validate()) return;
         setIsSubmitting(true);
@@ -374,19 +431,32 @@ export default function ModifierLaveriePro() {
             fd.append('pays',             form.pays);
             if (form.latitude  !== null) fd.append('latitude',  String(form.latitude));
             if (form.longitude !== null) fd.append('longitude', String(form.longitude));
-            fd.append('horaires',    JSON.stringify(form.horaires));
-            fd.append('machines',    JSON.stringify(form.machines));
-            fd.append('equipements', JSON.stringify([]));
-            fd.append('serviceIds',  JSON.stringify(form.serviceIds));
-            fd.append('paiementIds', JSON.stringify(form.paiementIds));
+            if (form.wiLineCentraleId !== null) fd.append('wiLineCentraleId', String(form.wiLineCentraleId));
+
+            fd.append('horaires',       JSON.stringify(form.horaires));
+            fd.append('machines',       JSON.stringify(form.machines));
+            fd.append('equipements',    JSON.stringify(form.equipements));
+            fd.append('serviceIds',     JSON.stringify(form.serviceIds));
+            fd.append('paiementIds',    JSON.stringify(form.paiementIds));
             fd.append('removeImageIds', JSON.stringify(removedExistingImageIds));
-            galleryFiles.forEach((f) => fd.append('images[]', f));
+
+            if (logoUppy) {
+                const logoFile = logoUppy.getFiles().find((f) => !f.meta?.existingServerId);
+                if (logoFile) fd.append('logo', logoFile.data as File);
+            }
+            photosUppy?.getFiles()
+                .filter((f) => !f.meta?.existingServerId)
+                .forEach((f) => fd.append('images[]', f.data as File));
 
             const res = await fetch(`${API_BASE_URL}/api/professionnel/laveries/${id}`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` },
                 body: fd,
             });
+
+            if (res.status === 413) {
+                throw new Error('Le fichier est trop volumineux. Réduisez la taille de vos images (5 Mo maximum par image).');
+            }
             const data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data?.erreur ?? data?.message ?? 'La mise à jour a échoué.');
             navigate('/professionnel/tableau-de-bord');
@@ -406,7 +476,12 @@ export default function ModifierLaveriePro() {
             <div className="mx-auto px-4">
 
                 <div className="mb-8">
-                    <Button type="button" variant="ghost" onClick={() => navigate('/professionnel/tableau-de-bord')} className="mb-4 text-gray-500 hover:text-[#14A8DE] -ml-2">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => navigate('/professionnel/tableau-de-bord')}
+                        className="mb-4 text-gray-500 hover:text-[#14A8DE] -ml-2"
+                    >
                         <ArrowLeft className="size-4" />
                         Revenir en arrière
                     </Button>
@@ -414,7 +489,7 @@ export default function ModifierLaveriePro() {
                     <p className="text-gray-500 mt-1">Les modifications seront enregistrées immédiatement.</p>
                 </div>
 
-                <form onSubmit={handleSubmit} noValidate>
+                <form encType="multipart/form-data" onSubmit={handleSubmit} noValidate>
                 <div className="space-y-6">
 
                     {/* ── 1. WI-LINE ── */}
@@ -422,7 +497,9 @@ export default function ModifierLaveriePro() {
                         <SectionTitle step={1} title="Centrale WI-LINE" subtitle="Optionnel — pré-remplit automatiquement le formulaire depuis votre centrale" />
                         <div className="flex gap-3 mt-4 mb-2 flex-wrap">
                             <div className="flex-1">
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Numéro de série Wi-Line</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Numéro de série Wi-Line
+                                </label>
                                 <input
                                     type="text"
                                     value={form.wiLineCode}
@@ -444,7 +521,9 @@ export default function ModifierLaveriePro() {
                                 {wiLineLoading ? 'Connexion…' : 'Connecter'}
                             </Button>
                         </div>
-                        {wiLineError && <p className="text-xs text-red-500 mt-1 mb-2">{wiLineError}</p>}
+                        {wiLineError && (
+                            <p className="text-xs text-red-500 mt-1 mb-2">{wiLineError}</p>
+                        )}
                         {wiLineConnecte && (
                             <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
                                 <CheckCircle2 className="size-3.5" />
@@ -486,7 +565,13 @@ export default function ModifierLaveriePro() {
                         ) : (
                             <div className="space-y-3">
                                 {form.machines.map((machine, idx) => (
-                                    <MachineRow key={machine.id} machine={machine} index={idx} onUpdate={updateMachine} onRemove={removeMachine} />
+                                    <MachineRow
+                                        key={machine.id}
+                                        machine={machine}
+                                        index={idx}
+                                        onUpdate={updateMachine}
+                                        onRemove={removeMachine}
+                                    />
                                 ))}
                             </div>
                         )}
@@ -513,7 +598,9 @@ export default function ModifierLaveriePro() {
                         <SectionTitle step={4} title="Adresse" subtitle="Champs obligatoires" />
                         <div className="grid grid-cols-1 gap-4">
                             <div className="relative">
-                                <label className="block text-md font-medium text-gray-700 mb-1.5">Rechercher une adresse</label>
+                                <label className="block text-md font-medium text-gray-700 mb-1.5">
+                                    Rechercher une adresse
+                                </label>
                                 <div className="relative">
                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -539,9 +626,15 @@ export default function ModifierLaveriePro() {
                                             const [principal, ...reste] = s.label.split(',');
                                             return (
                                                 <li key={i}>
-                                                    <button type="button" onMouseDown={() => selectionnerAdresse(s)} className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0">
+                                                    <button
+                                                        type="button"
+                                                        onMouseDown={() => selectionnerAdresse(s)}
+                                                        className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
+                                                    >
                                                         <span className="font-medium text-gray-800">{principal}</span>
-                                                        {reste.length > 0 && <span className="text-gray-400 text-xs ml-2">{reste.join(',').trim()}</span>}
+                                                        {reste.length > 0 && (
+                                                            <span className="text-gray-400 text-xs ml-2">{reste.join(',').trim()}</span>
+                                                        )}
                                                     </button>
                                                 </li>
                                             );
@@ -560,7 +653,7 @@ export default function ModifierLaveriePro() {
                                     <input type="text" value={form.ville} onChange={(e) => set('ville', e.target.value)} placeholder="Mulhouse" className={inputClass(errors.ville)} />
                                 </Field>
                             </div>
-                            <Field label="Pays" error={errors.pays}>
+                            <Field label="Pays" required error={errors.pays}>
                                 <input type="text" value={form.pays} onChange={(e) => set('pays', e.target.value)} placeholder="France" className={inputClass(errors.pays)} />
                             </Field>
                         </div>
@@ -574,25 +667,50 @@ export default function ModifierLaveriePro() {
                             {JOURS.map((jour) => {
                                 const h = form.horaires[jour];
                                 return (
-                                    <div key={jour} className="flex items-center gap-3 flex-wrap justify-between py-2">
+                                    <div key={jour} className="flex items-center gap-3 flex-wrap justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className="w-24 text-md font-medium text-gray-700 shrink-0">{jour}</div>
-                                            <ToggleSwitch checked={h.ouvert} onChange={(val) => setHoraire(jour, val)} label={`${jour} ouvert`} />
+                                            <ToggleSwitch
+                                                checked={h.ouvert}
+                                                onChange={(val) => setHoraire(jour, val)}
+                                                label={`${jour} ouvert`}
+                                            />
                                             <span className="text-xs text-gray-500">{h.ouvert ? 'Ouvert' : 'Fermé'}</span>
                                         </div>
                                         {h.ouvert && (
                                             <div className="pl-0 sm:pl-28 space-y-2">
                                                 {h.plages.map((plage, idx) => (
                                                     <div key={idx} className="flex items-center gap-2">
-                                                        <input type="time" value={plage.ouverture} onChange={(e) => setHorairePlage(jour, idx, 'ouverture', e.target.value)} className="flex-1 px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:border-[#14A8DE] focus:outline-none" />
+                                                        <input
+                                                            type="time"
+                                                            value={plage.ouverture}
+                                                            onChange={(e) => setHorairePlage(jour, idx, 'ouverture', e.target.value)}
+                                                            className="flex-1 px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:border-[#14A8DE] focus:outline-none"
+                                                        />
                                                         <span className="text-gray-400 text-sm shrink-0">→</span>
-                                                        <input type="time" value={plage.fermeture} onChange={(e) => setHorairePlage(jour, idx, 'fermeture', e.target.value)} className="flex-1 px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:border-[#14A8DE] focus:outline-none" />
+                                                        <input
+                                                            type="time"
+                                                            value={plage.fermeture}
+                                                            onChange={(e) => setHorairePlage(jour, idx, 'fermeture', e.target.value)}
+                                                            className="flex-1 px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:border-[#14A8DE] focus:outline-none"
+                                                        />
                                                         {h.plages.length > 1 && (
-                                                            <button type="button" onClick={() => removePlage(jour, idx)} className="shrink-0 text-rose-400 hover:text-rose-600 text-lg leading-none transition-colors" aria-label="Supprimer cette plage">×</button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => removePlage(jour, idx)}
+                                                                className="shrink-0 text-rose-400 hover:text-rose-600 text-lg leading-none transition-colors cursor-pointer"
+                                                                aria-label="Supprimer cette plage"
+                                                            >
+                                                                ×
+                                                            </button>
                                                         )}
                                                     </div>
                                                 ))}
-                                                <button type="button" onClick={() => addPlage(jour)} className="text-xs text-[#14A8DE] hover:text-[#119ac8] flex items-center gap-1 transition-colors">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => addPlage(jour)}
+                                                    className="text-xs text-[#14A8DE] hover:text-[#119ac8] flex items-center gap-1 transition-colors cursor-pointer"
+                                                >
                                                     <Plus className="size-3" /> Ajouter une plage horaire
                                                 </button>
                                             </div>
@@ -610,82 +728,40 @@ export default function ModifierLaveriePro() {
                             <CheckboxGroup
                                 title="Équipements"
                                 items={EQUIPEMENTS_OPTIONS.map((e) => ({ id: e, label: e }))}
-                                isChecked={(id) => form.equipements.includes(id as string)}
-                                onToggle={(id) => toggleEquipement(id as string)}
+                                isChecked={(eid) => form.equipements.includes(eid as string)}
+                                onToggle={(eid) => toggleEquipement(eid as string)}
                             />
                             <CheckboxGroup
                                 title="Services proposés"
                                 items={servicesDisponibles.map((s) => ({ id: s.id, label: s.nom }))}
-                                isChecked={(id) => form.serviceIds.includes(id as number)}
-                                onToggle={(id) => toggleServiceId(id as number)}
+                                isChecked={(eid) => form.serviceIds.includes(eid as number)}
+                                onToggle={(eid) => toggleServiceId(eid as number)}
                                 loading={loadingRef}
                                 emptyMessage="Aucun service disponible."
                             />
                             <CheckboxGroup
                                 title="Moyens de paiement"
                                 items={paiementsDisponibles.map((p) => ({ id: p.id, label: p.nom }))}
-                                isChecked={(id) => form.paiementIds.includes(id as number)}
-                                onToggle={(id) => togglePaiementId(id as number)}
+                                isChecked={(eid) => form.paiementIds.includes(eid as number)}
+                                onToggle={(eid) => togglePaiementId(eid as number)}
                                 loading={loadingRef}
                                 emptyMessage="Aucun moyen de paiement disponible."
                             />
                         </div>
                     </Card>
 
-                    {/* ── 7. Photos ── */}
+                    {/* ── 7. Logo & photos ── */}
                     <Card>
-                        <SectionTitle step={7} title="Photos" subtitle="JPEG, PNG ou WebP — 5 Mo max par fichier" />
-                        <div className="rounded-xl border border-dashed border-gray-200 p-4">
-                            <input
-                                type="file"
-                                accept="image/jpeg,image/png,image/webp"
-                                multiple
-                                onChange={handleGalleryChange}
-                                className="block w-full text-xs text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-[#14A8DE]/10 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-[#14A8DE] hover:file:bg-[#14A8DE]/20"
-                            />
+                        <SectionTitle step={7} title="Logo & photos" subtitle="JPEG, PNG ou WebP — 5 Mo max par fichier" />
+                        <div className="mb-6">
+                            <p className="text-md font-medium text-gray-700 mb-3">Logo de l'établissement</p>
+                            {logoUppy && <LogoUpload uppy={logoUppy} />}
                         </div>
-                        {existingGallery.length > 0 && (
-                            <div className="mt-4">
-                                <p className="text-sm font-medium text-gray-700 mb-2">Photos actuelles</p>
-                                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                                    {existingGallery.map((img) => (
-                                        <div key={img.id} className="relative">
-                                            <img src={img.image} alt={img.alt} className="h-20 w-full rounded-lg object-cover" />
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setExistingGallery((prev) => prev.filter((i) => i.id !== img.id));
-                                                    setRemovedExistingImageIds((prev) => [...prev, img.id]);
-                                                }}
-                                                className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white text-sm leading-none"
-                                                aria-label="Supprimer cette photo"
-                                            >×</button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                        {galleryPreviews.length > 0 && (
-                            <div className="mt-4">
-                                <p className="text-sm font-medium text-gray-700 mb-2">Nouvelles photos</p>
-                                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                                    {galleryPreviews.map((preview, idx) => (
-                                        <div key={idx} className="relative">
-                                            <img src={preview} alt="Nouvelle photo" className="h-20 w-full rounded-lg object-cover" />
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setGalleryFiles((prev) => prev.filter((_, i) => i !== idx));
-                                                    setGalleryPreviews((prev) => prev.filter((_, i) => i !== idx));
-                                                }}
-                                                className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white text-sm leading-none"
-                                                aria-label="Supprimer cette photo"
-                                            >×</button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                        <div className="border-t border-gray-100 mb-5" />
+                        <div>
+                            <p className="text-md font-medium text-gray-700 mb-3">Photos de la laverie</p>
+                            {photosUppy && <PhotosUpload uppy={photosUppy} />}
+                        </div>
                     </Card>
 
                     {submitError && (
@@ -696,8 +772,18 @@ export default function ModifierLaveriePro() {
                     )}
 
                     <div className="flex items-center justify-end gap-3 pt-2">
-                        <Button type="button" variant="outline" onClick={() => navigate('/professionnel/tableau-de-bord')}>Annuler</Button>
-                        <Button type="submit" disabled={isSubmitting} className="bg-[#14A8DE] hover:bg-[#119ac8] text-white border-0">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => navigate('/professionnel/tableau-de-bord')}
+                        >
+                            Annuler
+                        </Button>
+                        <Button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="bg-[#14A8DE] hover:bg-[#119ac8] text-white border-0"
+                        >
                             {isSubmitting ? 'Enregistrement...' : 'Enregistrer les modifications'}
                         </Button>
                     </div>
