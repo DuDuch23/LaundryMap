@@ -11,7 +11,7 @@ interface MachineRowProps {
 }
 
 const fieldClass =
-    'w-full px-2.5 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#14A8DE] focus:outline-none';
+    'w-full max-w-[stretch] px-2.5 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:border-[#14A8DE] focus:outline-none';
 
 export function MachineRow({ machine, index, onUpdate, onRemove }: MachineRowProps) {
     return (
@@ -42,7 +42,7 @@ export function MachineRow({ machine, index, onUpdate, onRemove }: MachineRowPro
                     <X />
                 </Button>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 sm:grid-cols-5 gap-3">
                 <div className="sm:col-span-1">
                     <label className="block text-xs font-medium text-gray-600 mb-1">Nom</label>
                     <input
@@ -59,7 +59,7 @@ export function MachineRow({ machine, index, onUpdate, onRemove }: MachineRowPro
                         value={machine.type}
                         onValueChange={(val) => onUpdate(machine.id, 'type', val)}
                     >
-                        <SelectTrigger className="w-full h-auto py-2 text-sm">
+                        <SelectTrigger className="w-full max-w-[stretch] h-auto py-2 text-sm">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
