@@ -227,7 +227,7 @@
       "ou": "ou",
       "erreur_reseau": "Une erreur réseau est survenue. Veuillez vérifier votre connexion et réessayer.",
       "erreur_generique": "Une erreur est survenue. Veuillez réessayer.",
-      "erreur_compte_en_attente": "Connexion impossible. Veuillez réessayer plus tard ou contacter l'administrateur.",
+      "erreur_compte_en_attente": "Identifiants incorrects ou compte en attente de validation. Vérifiez vos emails ou contactez l'administrateur.",
       "erreur_compte_banni": "Votre compte a été banni. Veuillez contacter l'administrateur pour plus d'informations.",
       "erreur_compte_refuse": "Votre compte a été refusé par l'administration. Veuillez contacter l'administrateur pour plus d'informations.",
       "erreur_compte_supprime": "Ce compte a été supprimé. Pour vous reconnecter, veuillez créer un nouveau compte via la page d'inscription."
