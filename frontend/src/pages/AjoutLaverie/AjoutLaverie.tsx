@@ -450,7 +450,7 @@ export default function AjoutLaverie() {
                                     type="text"
                                     value={form.wiLineCode}
                                     onChange={(e) => set('wiLineCode', e.target.value.toUpperCase())}
-                                    placeholder="Ex : 17415410EC125A03"
+                                    placeholder="Ex : 265115410XQ155A67"
                                     className={inputClass()}
                                     maxLength={16}
                                     autoCorrect="off"
