@@ -526,6 +526,9 @@
       }
     },
     "fiche_laverie": {
+      "reseaux_sociaux": {
+        "titre": "Suivez-nous sur les réseaux"
+      },
       "avis": {
         "section_kicker": "Notes et avis",
         "section_titre": "Ce que disent les clients",
