@@ -103,6 +103,10 @@ class Laverie
     #[Groups(['laverie:public', 'laverie:private'])]
     private Collection $historiqueInteractions;
 
+    #[ORM\OneToMany(mappedBy: 'laverie', targetEntity: LaverieReseauSocial::class)]
+    #[Groups(['laverie:public', 'laverie:private'])]
+    private Collection $reseauxSociaux;
+
     public function __construct()
     {
         $this->equipements = new ArrayCollection();
@@ -114,6 +118,7 @@ class Laverie
         $this->fermetures = new ArrayCollection();
         $this->fermeturesExceptionnelles = new ArrayCollection();
         $this->historiqueInteractions = new ArrayCollection();
+        $this->reseauxSociaux = new ArrayCollection();
     }
 
     public function getId(): ?int {
@@ -334,6 +339,17 @@ class Laverie
     public function setHistoriqueInteractions(Collection $historiqueInteractions): static
     {
         $this->historiqueInteractions = $historiqueInteractions;
+        return $this;
+    }
+
+    public function getReseauxSociaux(): Collection
+    {
+        return $this->reseauxSociaux;
+    }
+
+    public function setReseauxSociaux(Collection $reseauxSociaux): static
+    {
+        $this->reseauxSociaux = $reseauxSociaux;
         return $this;
     }
 }
