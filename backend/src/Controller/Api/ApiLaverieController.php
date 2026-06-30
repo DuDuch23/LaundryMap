@@ -124,6 +124,20 @@ class ApiLaverieController extends ApiProfilController
             }
         }
 
+        $siteWeb = trim((string) $request->request->get('siteWeb', ''));
+        $facebook = trim((string) $request->request->get('facebook', ''));
+        $instagram = trim((string) $request->request->get('instagram', ''));
+        $twitter = trim((string) $request->request->get('twitter', ''));
+        $linkedin = trim((string) $request->request->get('linkedin', ''));
+
+        foreach (['siteWeb', 'facebook', 'instagram', 'twitter', 'linkedin'] as $reseau) {
+            $val = trim((string) $request->request->get($reseau, ''));
+            $erreur = $this->validerReseauxSociaux($reseau, $val);
+            if ($erreur) {
+                return $this->json(['message' => $erreur], 400);
+            }
+        }
+
         // Champs complexes envoyés en JSON-string dans le FormData
         $horaires   = json_decode($request->request->get('horaires',   '{}'), true);
         $machines   = json_decode($request->request->get('machines',   '[]'), true);
@@ -162,6 +176,11 @@ class ApiLaverieController extends ApiProfilController
         $laverie->setNomEtablissement($get('nomEtablissement'));
         $laverie->setContactEmail($get('contactEmail') !== '' ? $get('contactEmail') : null);
         $laverie->setDescription($get('description') !== '' ? $get('description') : null);
+        $laverie->setSiteWeb($siteWeb !== '' ? $siteWeb : null);
+        $laverie->setFacebook($facebook !== '' ? $facebook : null);
+        $laverie->setInstagram($instagram !== '' ? $instagram : null);
+        $laverie->setTwitter($twitter !== '' ? $twitter : null);
+        $laverie->setLinkedin($linkedin !== '' ? $linkedin : null);
         $laverie->setAdresse($adresse);
         $laverie->setStatut(StatutLaverieEnum::STATUT_EN_ATTENTE);
         $laverie->setDateAjout(new \DateTime());
@@ -344,6 +363,11 @@ class ApiLaverieController extends ApiProfilController
             'longitude' => $laverie->getAdresse()->getLongitude(),
             'email' => $laverie->getContactEmail(),
             'description' => $laverie->getDescription(),
+            'siteWeb' => $laverie->getSiteWeb(),
+            'facebook' => $laverie->getFacebook(),
+            'instagram' => $laverie->getInstagram(),
+            'twitter' => $laverie->getTwitter(),
+            'linkedin' => $laverie->getLinkedin(),
             'wiLineReference' => $laverie->getWiLineReference(),
             'statut' => $laverie->getStatut()->value,
             'dateAjout' => $laverie->getDateAjout()->format('d/m/Y'),
@@ -425,6 +449,20 @@ class ApiLaverieController extends ApiProfilController
             return $this->json(['erreur' => 'Le format de l\'email est invalide'], 400);
         }
 
+        $siteWeb = trim((string) $request->request->get('siteWeb', ''));
+        $facebook = trim((string) $request->request->get('facebook', ''));
+        $instagram = trim((string) $request->request->get('instagram', ''));
+        $twitter = trim((string) $request->request->get('twitter', ''));
+        $linkedin = trim((string) $request->request->get('linkedin', ''));
+
+        foreach (['siteWeb', 'facebook', 'instagram', 'twitter', 'linkedin'] as $reseau) {
+            $val = trim((string) $request->request->get($reseau, ''));
+            $erreur = $this->validerReseauxSociaux($reseau, $val);
+            if ($erreur) {
+                return $this->json(['erreur' => $erreur], 400);
+            }
+        }
+
         $horaires = json_decode($horairesJson, true);
         if (!is_array($horaires)) {
             return $this->json(['erreur' => 'Format des horaires invalide'], 400);
@@ -495,6 +533,11 @@ class ApiLaverieController extends ApiProfilController
         $laverie->setNomEtablissement($nom);
         $laverie->setContactEmail($email === '' ? null : $email);
         $laverie->setDescription($description === '' ? null : $description);
+        $laverie->setSiteWeb($siteWeb === '' ? null : $siteWeb);
+        $laverie->setFacebook($facebook === '' ? null : $facebook);
+        $laverie->setInstagram($instagram === '' ? null : $instagram);
+        $laverie->setTwitter($twitter === '' ? null : $twitter);
+        $laverie->setLinkedin($linkedin === '' ? null : $linkedin);
         $laverie->setDateModification(new \DateTime());
 
         $laverieFermetureRepository->deleteByLaverie($laverie);
@@ -829,5 +872,60 @@ class ApiLaverieController extends ApiProfilController
         $entityManager->flush();
 
         return $this->json(['message' => 'Laverie supprimée avec succès'], 200);
+    }
+
+    private function validerReseauxSociaux(string $type, string $url): ?string
+    {
+        if ($url === '') {
+            return null;
+        }
+
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            return "L'URL renseignée pour le champ " . $this->getReseauLabel($type) . " n'est pas valide.";
+        }
+
+        $host = strtolower(parse_url($url, PHP_URL_HOST) ?? '');
+
+        switch ($type) {
+            case 'siteWeb':
+                if (!in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https'], true)) {
+                    return "L'URL du site web doit commencer par http:// ou https://.";
+                }
+                break;
+            case 'facebook':
+                if (!str_contains($host, 'facebook.com') && !str_contains($host, 'fb.com')) {
+                    return "Le lien Facebook doit pointer vers facebook.com ou fb.com.";
+                }
+                break;
+            case 'instagram':
+                if (!str_contains($host, 'instagram.com')) {
+                    return "Le lien Instagram doit pointer vers instagram.com.";
+                }
+                break;
+            case 'twitter':
+                if (!str_contains($host, 'twitter.com') && !str_contains($host, 'x.com')) {
+                    return "Le lien Twitter (X) doit pointer vers twitter.com ou x.com.";
+                }
+                break;
+            case 'linkedin':
+                if (!str_contains($host, 'linkedin.com')) {
+                    return "Le lien LinkedIn doit pointer vers linkedin.com.";
+                }
+                break;
+        }
+
+        return null;
+    }
+
+    private function getReseauLabel(string $type): string
+    {
+        return match ($type) {
+            'siteWeb' => 'Site Web',
+            'facebook' => 'Facebook',
+            'instagram' => 'Instagram',
+            'twitter' => 'Twitter (X)',
+            'linkedin' => 'LinkedIn',
+            default => $type
+        };
     }
 }

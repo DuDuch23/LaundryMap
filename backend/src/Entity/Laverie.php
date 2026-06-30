@@ -67,6 +67,26 @@ class Laverie
     #[Groups(['laverie:public', 'laverie:private'])]
     private ?\DateTimeInterface $supprimee_le = null;
 
+    #[ORM\Column(name: 'site_web', type: 'string', length: 255, nullable: true)]
+    #[Groups(['laverie:public'])]
+    private ?string $siteWeb = null;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['laverie:public'])]
+    private ?string $facebook = null;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['laverie:public'])]
+    private ?string $instagram = null;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['laverie:public'])]
+    private ?string $twitter = null;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['laverie:public'])]
+    private ?string $linkedin = null;
+
     #[ORM\OneToMany(mappedBy: 'laverie', targetEntity: LaverieEquipement::class)]
     #[Groups(['laverie:public'])]
     private Collection $equipements;
@@ -334,6 +354,61 @@ class Laverie
     public function setHistoriqueInteractions(Collection $historiqueInteractions): static
     {
         $this->historiqueInteractions = $historiqueInteractions;
+        return $this;
+    }
+
+    public function getSiteWeb(): ?string
+    {
+        return $this->siteWeb;
+    }
+
+    public function setSiteWeb(?string $siteWeb): static
+    {
+        $this->siteWeb = $siteWeb;
+        return $this;
+    }
+
+    public function getFacebook(): ?string
+    {
+        return $this->facebook;
+    }
+
+    public function setFacebook(?string $facebook): static
+    {
+        $this->facebook = $facebook;
+        return $this;
+    }
+
+    public function getInstagram(): ?string
+    {
+        return $this->instagram;
+    }
+
+    public function setInstagram(?string $instagram): static
+    {
+        $this->instagram = $instagram;
+        return $this;
+    }
+
+    public function getTwitter(): ?string
+    {
+        return $this->twitter;
+    }
+
+    public function setTwitter(?string $twitter): static
+    {
+        $this->twitter = $twitter;
+        return $this;
+    }
+
+    public function getLinkedin(): ?string
+    {
+        return $this->linkedin;
+    }
+
+    public function setLinkedin(?string $linkedin): static
+    {
+        $this->linkedin = $linkedin;
         return $this;
     }
 }
