@@ -525,6 +525,10 @@
         "confirmer_deblocage": "Confirmer le déblocage de cet utilisateur ?"
       }
     },
+    "reseaux_sociaux": {
+      "site_web": "Site web",
+      "aria_visiter": "Visiter {{reseau}} (nouvel onglet)"
+    },
     "fiche_laverie": {
       "reseaux_sociaux": {
         "titre": "Suivez-nous sur les réseaux"

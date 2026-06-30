@@ -1,4 +1,5 @@
 import { Globe } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { ReseauSocial, ReseauSocialType } from '../../services/request';
 
 interface ReseauxSociauxLinksProps {
@@ -58,6 +59,8 @@ function BrandIcon({ type, size = 20 }: { type: ReseauSocialType; size?: number 
 }
 
 export default function ReseauxSociauxLinks({ reseaux, size = 20 }: ReseauxSociauxLinksProps) {
+    const { t } = useTranslation();
+
     // Si aucun lien : on n'affiche rien du tout (pas de section vide).
     if (!reseaux || reseaux.length === 0) {
         return null;
@@ -67,6 +70,11 @@ export default function ReseauxSociauxLinks({ reseaux, size = 20 }: ReseauxSocia
         <div className="flex flex-wrap items-center gap-2">
             {reseaux.map((reseau) => {
                 const colorClasses = COLOR_MAP[reseau.type] ?? 'hover:bg-slate-700 hover:border-slate-700';
+                // Le site web est traduit ; les noms de marque restent tels quels (noms propres).
+                const label = reseau.type === 'SITE_WEB'
+                    ? t('main.reseaux_sociaux.site_web')
+                    : reseau.libelle;
+                const ariaLabel = t('main.reseaux_sociaux.aria_visiter', { reseau: label });
 
                 return (
                     <a
@@ -74,8 +82,8 @@ export default function ReseauxSociauxLinks({ reseaux, size = 20 }: ReseauxSocia
                         href={reseau.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        aria-label={reseau.libelle}
-                        title={reseau.libelle}
+                        aria-label={ariaLabel}
+                        title={label}
                         className={`inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:text-white ${colorClasses}`}
                     >
                         <BrandIcon type={reseau.type} size={size} />
