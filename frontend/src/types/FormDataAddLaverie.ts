@@ -18,4 +18,9 @@ export interface FormDataAddLaverie {
     equipements: string[];
     serviceIds: number[],
     paiementIds: number[],
+    siteWeb: string;
+    facebook: string;
+    instagram: string;
+    twitter: string;
+    linkedin: string;
 }
