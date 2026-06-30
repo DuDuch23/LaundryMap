@@ -419,6 +419,15 @@ export interface FavoriLaverie {
     imageAlt: string | null;
 }
 
+export type ReseauSocialType = 'SITE_WEB' | 'FACEBOOK' | 'INSTAGRAM' | 'X' | 'LINKEDIN';
+
+export interface ReseauSocial {
+    id: number;
+    type: ReseauSocialType;
+    libelle: string;
+    url: string;
+}
+
 export interface LaveriePublicDetail {
     id: number;
     nom: string;
@@ -461,6 +470,7 @@ export interface LaveriePublicDetail {
         id: number;
         nom: string;
     }>;
+    reseauxSociaux: ReseauSocial[];
     commentaires: Array<{
         id: number;
         note: number;

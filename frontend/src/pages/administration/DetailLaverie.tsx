@@ -6,6 +6,8 @@ import { AccessibleModal, AccessibleInput } from '../../components/accessibility
 import ItineraireButton from '../../components/map/ItineraireButton';
 import { resolveUrl } from '../../services/api';
 import { LaverieAdminDetailSkeleton } from '../../components/administration/AdminSkeletons';
+import ReseauxSociauxLinks from '../../components/laverie/ReseauxSociauxLinks';
+import type { ReseauSocial } from '../../services/request';
 
 const IMAGE_LAVERIE_PAR_DEFAUT = '/uploads/laveries/default-laundry.jpg';
 
@@ -42,6 +44,7 @@ interface LaverieDetailData {
     images: ImageDetail[];
     equipements: Equipement[];
     horaires: Horaire[];
+    reseauxSociaux?: ReseauSocial[];
     professionnel: {
         utilisateurId: number;
         id: number;
@@ -322,6 +325,14 @@ export default function DetailLaverie() {
                         className="w-[90%]"
                     />
                 </div>
+
+                {/* RÉSEAUX SOCIAUX */}
+                {laverie.reseauxSociaux && laverie.reseauxSociaux.length > 0 && (
+                    <div className="mb-6">
+                        <h2 className="font-bold text-sm underline underline-offset-4 decoration-1 mb-3">Réseaux sociaux</h2>
+                        <ReseauxSociauxLinks reseaux={laverie.reseauxSociaux} />
+                    </div>
+                )}
 
                 {/* COMMENTAIRE */}
                 <fieldset className="border border-black rounded-xl p-1 relative mb-6">

@@ -184,6 +184,20 @@ class ProfessionnelLaverieFormatterService
         return $paiements;
     }
 
+    public function buildReseauxSociauxResponse(Laverie $laverie): array
+    {
+        $reseaux = [];
+        foreach ($laverie->getReseauxSociaux() as $reseau) {
+            $reseaux[] = [
+                'id' => $reseau->getId(),
+                'type' => $reseau->getType()->name,
+                'libelle' => $reseau->getType()->value,
+                'url' => $reseau->getUrl(),
+            ];
+        }
+        return $reseaux;
+    }
+
     public function buildCommentairesResponse(Laverie $laverie): array
     {
         $commentaires = [];

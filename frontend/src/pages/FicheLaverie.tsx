@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AccessibleButton, SkipLink, AccessibleModal } from '../components/accessibility';
+import ReseauxSociauxLinks from '../components/laverie/ReseauxSociauxLinks';
 import API_BASE_URL, { uploadPath, resolveUrl } from '../services/api';
 import { toast } from 'sonner';
 import { fetchPublicLaverieDetail, ajouterFavori, supprimerFavori, creerAvis, modifierAvis, supprimerAvis, publierReponseAvis, supprimerReponseAvis, type LaveriePublicDetail, type MonAvis, signalerCommentaire, signalerReponse } from '../services/request';
@@ -1195,6 +1196,13 @@ export default function FicheLaverie() {
 						</div>
 					</div>
 				</section>
+
+				{laverie.reseauxSociaux && laverie.reseauxSociaux.length > 0 && (
+					<section className="mt-8 rounded-[28px] bg-white p-5 shadow-sm sm:p-6" aria-labelledby="reseaux-title">
+						<h2 id="reseaux-title" className="text-lg font-bold text-slate-900 mb-4">{t('main.fiche_laverie.reseaux_sociaux.titre')}</h2>
+						<ReseauxSociauxLinks reseaux={laverie.reseauxSociaux} />
+					</section>
+				)}
 
 				<section className="mt-8 rounded-[28px] bg-white p-5 shadow-sm sm:p-6" aria-labelledby="avis-title">
 					<div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">

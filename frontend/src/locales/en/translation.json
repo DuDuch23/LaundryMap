@@ -527,7 +527,14 @@
         "confirmer_deblocage": "Confirm unblocking this user?"
       }
     },
+    "reseaux_sociaux": {
+      "site_web": "Website",
+      "aria_visiter": "Visit {{reseau}} (new tab)"
+    },
     "fiche_laverie": {
+      "reseaux_sociaux": {
+        "titre": "Follow us on social media"
+      },
       "avis": {
         "section_kicker": "Ratings and reviews",
         "section_titre": "What customers are saying",

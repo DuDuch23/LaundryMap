@@ -9,11 +9,14 @@ use App\Entity\LaverieFermeture;
 use App\Entity\LaveriePaiement;
 use App\Entity\LaverieService;
 use App\Entity\LaverieMedia;
+use App\Entity\LaverieReseauSocial;
 use App\Entity\Media;
 use App\Entity\Utilisateur;
 use App\Enum\JourEnum;
 use App\Enum\StatutLaverieEnum;
+use App\Enum\TypeReseauSocialEnum;
 use App\Repository\LaverieEquipementRepository;
+use App\Repository\LaverieReseauSocialRepository;
 use App\Repository\LaverieFermetureRepository;
 use App\Repository\LaverieMediaRepository;
 use App\Repository\LaveriePaiementRepository;
@@ -25,6 +28,7 @@ use App\Repository\ServiceRepository;
 use App\Service\ApiWiLineService;
 use App\Service\MediaService;
 use App\Service\Professionnel\ProfessionnelLaverieFormatterService;
+use App\Service\ReseauSocialValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -53,6 +57,58 @@ class ApiLaverieController extends ApiProfilController
         }
 
         return $professionnel;
+    }
+
+    private function construireReseauxSociaux(array $data, Laverie $laverie, ReseauSocialValidator $validator): array|string
+    {
+        $entites = [];
+        $typesVus = [];
+
+        foreach ($data as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $url = trim((string) ($item['url'] ?? ''));
+            if ($url === '') {
+                continue;
+            }
+
+            $typeStr = (string) ($item['type'] ?? '');
+            $type = $this->resolveTypeReseauSocial($typeStr);
+            if ($type === null) {
+                return sprintf('Type de réseau social inconnu : %s.', $typeStr);
+            }
+
+            if (isset($typesVus[$type->value])) {
+                return sprintf('Un seul lien %s est autorisé par laverie.', $type->value);
+            }
+            $typesVus[$type->value] = true;
+
+            $erreur = $validator->validate($type, $url);
+            if ($erreur !== null) {
+                return $erreur;
+            }
+
+            $reseau = new LaverieReseauSocial();
+            $reseau->setLaverie($laverie);
+            $reseau->setType($type);
+            $reseau->setUrl($url);
+            $entites[] = $reseau;
+        }
+
+        return $entites;
+    }
+
+    private function resolveTypeReseauSocial(string $name): ?TypeReseauSocialEnum
+    {
+        foreach (TypeReseauSocialEnum::cases() as $case) {
+            if ($case->name === $name) {
+                return $case;
+            }
+        }
+
+        return null;
     }
 
 
@@ -109,6 +165,7 @@ class ApiLaverieController extends ApiProfilController
         ServiceRepository $serviceRepository,
         MethodePaiementRepository $methodePaiementRepository,
         MediaService $mediaService,
+        ReseauSocialValidator $reseauSocialValidator,
     ): JsonResponse {
         $professionnel = $this->getProfessionnelValide();
         if ($professionnel instanceof JsonResponse) {
@@ -130,6 +187,7 @@ class ApiLaverieController extends ApiProfilController
         $equipements = json_decode($request->request->get('equipements', '[]'), true);
         $serviceIds = json_decode($request->request->get('serviceIds', '[]'), true);
         $paiementIds = json_decode($request->request->get('paiementIds', '[]'), true);
+        $reseauxSociaux = json_decode($request->request->get('reseauxSociaux', '[]'), true);
 
         if (empty($horaires) || !is_array($horaires)) {
             return $this->json(['message' => 'Les horaires sont obligatoires.'], 400);
@@ -264,6 +322,17 @@ class ApiLaverieController extends ApiProfilController
             }
         }
 
+        // ── Réseaux sociaux ───────────────────────────────────────────────────
+        if (is_array($reseauxSociaux)) {
+            $reseaux = $this->construireReseauxSociaux($reseauxSociaux, $laverie, $reseauSocialValidator);
+            if (is_string($reseaux)) {
+                return $this->json(['message' => $reseaux], 400);
+            }
+            foreach ($reseaux as $reseau) {
+                $em->persist($reseau);
+            }
+        }
+
         // ── Médias (logo + photos dans la même requête) ───────────────────────
         $logoFile = $request->files->get('logo');
         if ($logoFile) {
@@ -356,6 +425,7 @@ class ApiLaverieController extends ApiProfilController
             'amenites' => $amenites,
             'services' => $formatter->buildServicesResponse($laverie),
             'paiements' => $formatter->buildPaiementsResponse($laverie),
+            'reseauxSociaux' => $formatter->buildReseauxSociauxResponse($laverie),
             'commentairesCount' => $formatter->countLaverieCommentaires($laverie),
             'noteMoyenne' => $formatter->getLaverieNoteMoyenne($laverie),
         ], 200);
@@ -375,10 +445,12 @@ class ApiLaverieController extends ApiProfilController
         LaverieMediaRepository $laverieMediaRepository,
         LaverieServiceRepository $laverieServiceRepository,
         LaveriePaiementRepository $laveriePaiementRepository,
+        LaverieReseauSocialRepository $laverieReseauSocialRepository,
         ServiceRepository $serviceRepository,
         MethodePaiementRepository $methodePaiementRepository,
         ProfessionnelLaverieFormatterService $formatter,
         MediaService $mediaService,
+        ReseauSocialValidator $reseauSocialValidator,
     ): JsonResponse {
         $professionnel = $this->getValidatedProfessionnel($professionnelRepository);
 
@@ -406,6 +478,7 @@ class ApiLaverieController extends ApiProfilController
         $equipementsJson = (string) $request->request->get('equipements', '[]');
         $serviceIdsJson = (string) $request->request->get('serviceIds', '[]');
         $paiementIdsJson = (string) $request->request->get('paiementIds', '[]');
+        $reseauxSociauxJson = (string) $request->request->get('reseauxSociaux', '[]');
         $removeImageIdsJson = (string) $request->request->get('removeImageIds', '[]');
         $latRaw = $request->request->get('latitude');
         $lngRaw = $request->request->get('longitude');
@@ -448,6 +521,15 @@ class ApiLaverieController extends ApiProfilController
         $paiementIds = json_decode($paiementIdsJson, true);
         if (!is_array($paiementIds)) {
             $paiementIds = [];
+        }
+
+        $reseauxSociaux = json_decode($reseauxSociauxJson, true);
+        if (!is_array($reseauxSociaux)) {
+            $reseauxSociaux = [];
+        }
+        $reseauxEntites = $this->construireReseauxSociaux($reseauxSociaux, $laverie, $reseauSocialValidator);
+        if (is_string($reseauxEntites)) {
+            return $this->json(['erreur' => $reseauxEntites], 400);
         }
 
         $removeImageIds = json_decode($removeImageIdsJson, true);
@@ -501,6 +583,7 @@ class ApiLaverieController extends ApiProfilController
         $laverieEquipementRepository->deleteByLaverie($laverie);
         $laverieServiceRepository->deleteByLaverie($laverie);
         $laveriePaiementRepository->deleteByLaverie($laverie);
+        $laverieReseauSocialRepository->deleteByLaverie($laverie);
 
         $jourMapping = [
             'Lundi' => JourEnum::LUNDI, 'Mardi' => JourEnum::MARDI,
@@ -646,6 +729,10 @@ class ApiLaverieController extends ApiProfilController
             $laveriePaiement->setLaverie($laverie);
             $laveriePaiement->setPaiement($paiement);
             $entityManager->persist($laveriePaiement);
+        }
+
+        foreach ($reseauxEntites as $reseau) {
+            $entityManager->persist($reseau);
         }
 
         foreach ($removeImageIds as $removeImageId) {

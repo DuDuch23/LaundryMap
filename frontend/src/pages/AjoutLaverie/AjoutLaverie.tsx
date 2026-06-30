@@ -6,6 +6,8 @@ import API_BASE_URL from '../../services/api';
 import { geocodeSuggestions, getMethodesPaiement, getServices } from '../../services/request';
 import { EQUIPEMENTS_OPTIONS } from '../../constants/Laverie';
 import { FormDataAddLaverie } from '../../types/FormDataAddLaverie';
+import { RESEAUX_SOCIAUX_CONFIG, validerLienReseauSocial } from '../../utils/reseauSocial';
+import type { ReseauSocialType } from '../../services/request';
 import { HorairesJour, PlageHoraire } from '../../types/HorairesJour';
 import { Machine } from '../../types/Machine';
 import { WiLineCentrale } from '../../types/wiline/WiLineCentrale';
@@ -110,6 +112,7 @@ export default function AjoutLaverie() {
         equipements: [],
         serviceIds: [],
         paiementIds: [],
+        reseauxSociaux: { SITE_WEB: '', FACEBOOK: '', INSTAGRAM: '', X: '', LINKEDIN: '' },
     });
 
     useEffect(() => {
@@ -212,6 +215,17 @@ export default function AjoutLaverie() {
                 ? f.paiementIds.filter((v) => v !== id)
                 : [...f.paiementIds, id],
         }));
+    };
+
+    const setReseauSocial = (type: ReseauSocialType, url: string) => {
+        setForm((f) => ({ ...f, reseauxSociaux: { ...f.reseauxSociaux, [type]: url } }));
+        // On efface l'erreur du champ dès que l'utilisateur le modifie.
+        setErrors((prev) => {
+            if (!prev[`reseau_${type}`]) return prev;
+            const next = { ...prev };
+            delete next[`reseau_${type}`];
+            return next;
+        });
     };
 
     const setHoraire = (jour: string, ouvert: boolean) => {
@@ -354,6 +368,11 @@ export default function AjoutLaverie() {
         if (!Object.values(form.horaires).some((h) => h.ouvert && h.plages.length > 0)) {
             e.horaires = 'Au moins un jour doit être ouvert.';
         }
+        // Réseaux sociaux : on valide chaque lien renseigné (les vides sont ignorés).
+        RESEAUX_SOCIAUX_CONFIG.forEach(({ type }) => {
+            const erreur = validerLienReseauSocial(type, form.reseauxSociaux[type]);
+            if (erreur) e[`reseau_${type}`] = erreur;
+        });
         setErrors(e);
         return Object.keys(e).length === 0;
     };
@@ -385,6 +404,12 @@ export default function AjoutLaverie() {
             fd.append('equipements', JSON.stringify(form.equipements));
             fd.append('serviceIds',  JSON.stringify(form.serviceIds));
             fd.append('paiementIds', JSON.stringify(form.paiementIds));
+
+            // Réseaux sociaux : tableau [{type, url}] sans les champs vides.
+            const reseauxSociaux = RESEAUX_SOCIAUX_CONFIG
+                .map(({ type }) => ({ type, url: form.reseauxSociaux[type].trim() }))
+                .filter((r) => r.url !== '');
+            fd.append('reseauxSociaux', JSON.stringify(reseauxSociaux));
 
             if (logoUppy) {
                 const logoFile = logoUppy.getFiles()[0];
@@ -700,9 +725,28 @@ export default function AjoutLaverie() {
                         </div>
                     </Card>
 
-                    {/* ── 7. Médias ── */}
+                    {/* ── 7. Réseaux sociaux ── */}
                     <Card>
-                        <SectionTitle step={7} title="Logo & photos" subtitle="JPEG, PNG ou WebP — 5 Mo max par fichier" />
+                        <SectionTitle step={7} title="Réseaux sociaux" subtitle="Facultatif — un seul lien par réseau" />
+                        <div className="space-y-5">
+                            {RESEAUX_SOCIAUX_CONFIG.map(({ type, label, placeholder }) => (
+                                <Field key={type} label={label} error={errors[`reseau_${type}`]}>
+                                    <input
+                                        type="url"
+                                        inputMode="url"
+                                        value={form.reseauxSociaux[type]}
+                                        onChange={(e) => setReseauSocial(type, e.target.value)}
+                                        placeholder={placeholder}
+                                        className={inputClass(errors[`reseau_${type}`])}
+                                    />
+                                </Field>
+                            ))}
+                        </div>
+                    </Card>
+
+                    {/* ── 8. Médias ── */}
+                    <Card>
+                        <SectionTitle step={8} title="Logo & photos" subtitle="JPEG, PNG ou WebP — 5 Mo max par fichier" />
                         <div className="mb-6">
                             <p className="text-md font-medium text-gray-700 mb-3">Logo de l'établissement</p>
                             {logoUppy && <LogoUpload uppy={logoUppy} />}

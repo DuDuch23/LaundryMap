@@ -19,6 +19,8 @@ import { Field, inputClass } from '../../components/ui/Field';
 import { ToggleSwitch } from '../../components/ui/ToggleSwitch';
 import { Button } from '../../components/ui/button';
 import { Alert, AlertDescription } from '../../components/ui/alert';
+import { RESEAUX_SOCIAUX_CONFIG, validerLienReseauSocial } from '../../utils/reseauSocial';
+import type { ReseauSocialType } from '../../services/request';
 
 const RESTRICTIONS_IMAGE = {
     maxFileSize: 5 * 1024 * 1024,
@@ -173,6 +175,7 @@ export default function ModifierLaveriePro() {
         equipements: [] as string[],
         serviceIds: [] as number[],
         paiementIds: [] as number[],
+        reseauxSociaux: { SITE_WEB: '', FACEBOOK: '', INSTAGRAM: '', X: '', LINKEDIN: '' } as Record<ReseauSocialType, string>,
     });
 
     useEffect(() => {
@@ -219,6 +222,15 @@ export default function ModifierLaveriePro() {
                     equipements: Array.isArray(data.amenites) ? data.amenites : [],
                     serviceIds: Array.isArray(data.services) ? data.services.map((s: any) => s.id) : [],
                     paiementIds: Array.isArray(data.paiements) ? data.paiements.map((p: any) => p.id) : [],
+                    reseauxSociaux: (() => {
+                        const map: Record<ReseauSocialType, string> = { SITE_WEB: '', FACEBOOK: '', INSTAGRAM: '', X: '', LINKEDIN: '' };
+                        if (Array.isArray(data.reseauxSociaux)) {
+                            for (const r of data.reseauxSociaux) {
+                                if (r && r.type in map) map[r.type as ReseauSocialType] = r.url ?? '';
+                            }
+                        }
+                        return map;
+                    })(),
                 });
                 setAdresseQuery(data.rue || data.adresse || '');
                 if (data.logo) setExistingLogo(data.logo);
@@ -301,6 +313,16 @@ export default function ModifierLaveriePro() {
             ...f,
             paiementIds: f.paiementIds.includes(pid) ? f.paiementIds.filter((v) => v !== pid) : [...f.paiementIds, pid],
         }));
+
+    const setReseauSocial = (type: ReseauSocialType, url: string) => {
+        setForm((f) => ({ ...f, reseauxSociaux: { ...f.reseauxSociaux, [type]: url } }));
+        setErrors((prev) => {
+            if (!prev[`reseau_${type}`]) return prev;
+            const next = { ...prev };
+            delete next[`reseau_${type}`];
+            return next;
+        });
+    };
 
     const setHoraire = (jour: string, ouvert: boolean) =>
         setForm((f) => ({ ...f, horaires: { ...f.horaires, [jour]: { ...f.horaires[jour], ouvert } } }));
@@ -410,6 +432,10 @@ export default function ModifierLaveriePro() {
         if (!Object.values(form.horaires).some((h) => h.ouvert && h.plages.length > 0)) {
             e.horaires = 'Au moins un jour doit être ouvert.';
         }
+        RESEAUX_SOCIAUX_CONFIG.forEach(({ type }) => {
+            const erreur = validerLienReseauSocial(type, form.reseauxSociaux[type]);
+            if (erreur) e[`reseau_${type}`] = erreur;
+        });
         setErrors(e);
         return Object.keys(e).length === 0;
     };
@@ -438,6 +464,13 @@ export default function ModifierLaveriePro() {
             fd.append('equipements',    JSON.stringify(form.equipements));
             fd.append('serviceIds',     JSON.stringify(form.serviceIds));
             fd.append('paiementIds',    JSON.stringify(form.paiementIds));
+
+            // Réseaux sociaux : tableau [{type, url}] sans les champs vides.
+            const reseauxSociaux = RESEAUX_SOCIAUX_CONFIG
+                .map(({ type }) => ({ type, url: form.reseauxSociaux[type].trim() }))
+                .filter((r) => r.url !== '');
+            fd.append('reseauxSociaux', JSON.stringify(reseauxSociaux));
+
             fd.append('removeImageIds', JSON.stringify(removedExistingImageIds));
 
             if (logoUppy) {
@@ -750,9 +783,28 @@ export default function ModifierLaveriePro() {
                         </div>
                     </Card>
 
-                    {/* ── 7. Logo & photos ── */}
+                    {/* ── 7. Réseaux sociaux ── */}
                     <Card>
-                        <SectionTitle step={7} title="Logo & photos" subtitle="JPEG, PNG ou WebP — 5 Mo max par fichier" />
+                        <SectionTitle step={7} title="Réseaux sociaux" subtitle="Facultatif — un seul lien par réseau" />
+                        <div className="space-y-5">
+                            {RESEAUX_SOCIAUX_CONFIG.map(({ type, label, placeholder }) => (
+                                <Field key={type} label={label} error={errors[`reseau_${type}`]}>
+                                    <input
+                                        type="url"
+                                        inputMode="url"
+                                        value={form.reseauxSociaux[type]}
+                                        onChange={(e) => setReseauSocial(type, e.target.value)}
+                                        placeholder={placeholder}
+                                        className={inputClass(errors[`reseau_${type}`])}
+                                    />
+                                </Field>
+                            ))}
+                        </div>
+                    </Card>
+
+                    {/* ── 8. Logo & photos ── */}
+                    <Card>
+                        <SectionTitle step={8} title="Logo & photos" subtitle="JPEG, PNG ou WebP — 5 Mo max par fichier" />
                         <div className="mb-6">
                             <p className="text-md font-medium text-gray-700 mb-3">Logo de l'établissement</p>
                             {logoUppy && <LogoUpload uppy={logoUppy} />}

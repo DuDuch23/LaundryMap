@@ -60,6 +60,7 @@ class ApiLaverieController extends AbstractController
         $horaires = $formatter->buildHorairesResponse($laverie);
         $services = $formatter->buildServicesResponse($laverie);
         $paiements = $formatter->buildPaiementsResponse($laverie);
+        $reseauxSociaux = $formatter->buildReseauxSociauxResponse($laverie);
         $commentaires = $formatter->buildCommentairesResponse($laverie);
 
         $currentUser = $this->getUser();
@@ -115,6 +116,7 @@ class ApiLaverieController extends AbstractController
             'equipements' => $equipements,
             'services' => $services,
             'paiements' => $paiements,
+            'reseauxSociaux' => $reseauxSociaux,
             'commentaires' => $commentaires,
             'horaires' => $horaires,
             'commentairesCount' => $formatter->countLaverieCommentaires($laverie),
@@ -274,6 +276,7 @@ class ApiLaverieController extends AbstractController
             'images' => $images,
             'equipements' => $equipements,
             'horaires' => $horaires,
+            'reseauxSociaux' => $formatter->buildReseauxSociauxResponse($laverie),
             'professionnel' => [
                 'utilisateurId' => $pro->getUtilisateur()->getId(),
                 'id' => $pro->getId(),
