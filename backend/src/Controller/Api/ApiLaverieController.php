@@ -425,6 +425,7 @@ class ApiLaverieController extends ApiProfilController
             'amenites' => $amenites,
             'services' => $formatter->buildServicesResponse($laverie),
             'paiements' => $formatter->buildPaiementsResponse($laverie),
+            'reseauxSociaux' => $formatter->buildReseauxSociauxResponse($laverie),
             'commentairesCount' => $formatter->countLaverieCommentaires($laverie),
             'noteMoyenne' => $formatter->getLaverieNoteMoyenne($laverie),
         ], 200);

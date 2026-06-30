@@ -1,5 +1,6 @@
 import { HorairesJour } from "./HorairesJour";
 import { Machine } from "./Machine";
+import type { ReseauSocialType } from "../services/request";
 
 export interface FormDataAddLaverie {
     nomEtablissement: string;
@@ -18,4 +19,5 @@ export interface FormDataAddLaverie {
     equipements: string[];
     serviceIds: number[],
     paiementIds: number[],
+    reseauxSociaux: Record<ReseauSocialType, string>,
 }
