@@ -1059,6 +1059,68 @@ export default function FicheLaverie() {
 									</div>
 								</div>
 
+								{laverie.socialMedias && Object.keys(laverie.socialMedias).length > 0 && (() => {
+									const links: Array<{ key: string; url: string; label: string; icon: React.ReactNode }> = [];
+									const socialMedia = laverie.socialMedias;
+
+									if (socialMedia.site_web){
+										links.push({
+											key: 'site_web',
+											url: socialMedia.site_web,
+											label: 'Site web',
+											icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="h-5 w-5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+										});
+									}
+									if (socialMedia.facebook){
+										links.push({
+											key: 'facebook',
+											url: socialMedia.facebook,
+											label: 'Facebook',
+											icon: <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>,
+										});
+									}
+									if (socialMedia.instagram){
+										links.push({
+											key: 'instagram',
+											url: socialMedia.instagram,
+											label: 'Instagram',
+											icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="h-5 w-5" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>,
+										});
+									}
+									if (socialMedia.x){
+										links.push({
+											key: 'x',
+											url: socialMedia.x,
+											label: 'X',
+											icon: <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+										});
+									}
+									if (socialMedia.linkedin){
+										links.push({
+											key: 'linkedin',
+											url: socialMedia.linkedin,
+											label: 'LinkedIn',
+											icon: <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>,
+										});
+									}
+									return links.length > 0 ? (
+										<div className="mt-5 flex flex-wrap items-center gap-3" aria-label="Réseaux sociaux">
+											{links.map(({ key, url, label, icon }) => (
+												<a
+													key={key}
+													href={url}
+													target="_blank"
+													rel="noopener noreferrer"
+													aria-label={label}
+													className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200 transition hover:bg-cyan-50 hover:text-cyan-600 hover:ring-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+												>
+													{icon}
+												</a>
+											))}
+										</div>
+									) : null;
+								})()}
+
 								{shareFeedback && <p className="mt-4 text-xs font-medium text-cyan-700">{shareFeedback}</p>}
 							</div>
 

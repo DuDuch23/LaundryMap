@@ -9,15 +9,18 @@ use App\Entity\LaverieFermeture;
 use App\Entity\LaveriePaiement;
 use App\Entity\LaverieService;
 use App\Entity\LaverieMedia;
+use App\Entity\LaverieSocialMedia;
 use App\Entity\Media;
 use App\Entity\Utilisateur;
 use App\Enum\JourEnum;
+use App\Enum\SocialMediaTypeEnum;
 use App\Enum\StatutLaverieEnum;
 use App\Repository\LaverieEquipementRepository;
 use App\Repository\LaverieFermetureRepository;
 use App\Repository\LaverieMediaRepository;
 use App\Repository\LaveriePaiementRepository;
 use App\Repository\LaverieServiceRepository;
+use App\Repository\LaverieSocialMediaRepository;
 use App\Repository\LaverieRepository;
 use App\Repository\MethodePaiementRepository;
 use App\Repository\ProfessionnelRepository;
@@ -264,6 +267,58 @@ class ApiLaverieController extends ApiProfilController
             }
         }
 
+        // ── Réseaux sociaux ───────────────────────────────────────────────────
+        $socialMediasData = json_decode($request->request->get('socialMedias', '{}'), true);
+        if (is_array($socialMediasData)) {
+            $socialMediaAllowedDomains = [
+                'facebook'  => ['facebook.com'],
+                'instagram' => ['instagram.com'],
+                'x'         => ['x.com', 'twitter.com'],
+                'linkedin'  => ['linkedin.com'],
+            ];
+            $socialMediaUrlErrors = [];
+            foreach ($socialMediasData as $typeStr => $url) {
+                $url  = trim((string) $url);
+                $type = SocialMediaTypeEnum::tryFrom($typeStr);
+
+                if ($url === '' || $type === null) {
+                    continue;
+                }
+
+                if (!filter_var($url, FILTER_VALIDATE_URL)) {
+                    $socialMediaUrlErrors[$typeStr] = "L'URL renseignée n'est pas valide (exemple : https://www.exemple.fr).";
+                } elseif (isset($socialMediaAllowedDomains[$typeStr])) {
+                    $host     = strtolower((string) parse_url($url, PHP_URL_HOST));
+                    $domainOk = false;
+                    foreach ($socialMediaAllowedDomains[$typeStr] as $domain) {
+                        if ($host === $domain || str_ends_with($host, ".$domain")) {
+                            $domainOk = true;
+                            break;
+                        }
+                    }
+                    if ($domainOk) {
+                        $socialMedia = new LaverieSocialMedia();
+                        $socialMedia->setLaverie($laverie);
+                        $socialMedia->setType($type);
+                        $socialMedia->setUrl($url);
+                        $em->persist($socialMedia);
+                    } else {
+                        $expected = implode(' ou ', $socialMediaAllowedDomains[$typeStr]);
+                        $socialMediaUrlErrors[$typeStr] = "Ce lien ne pointe pas vers $expected.";
+                    }
+                } else {
+                    $socialMedia = new LaverieSocialMedia();
+                    $socialMedia->setLaverie($laverie);
+                    $socialMedia->setType($type);
+                    $socialMedia->setUrl($url);
+                    $em->persist($socialMedia);
+                }
+            }
+            if (!empty($socialMediaUrlErrors)) {
+                return $this->json(['message' => 'Une ou plusieurs URLs sont invalides.', 'socialMediaErrors' => $socialMediaUrlErrors], 400);
+            }
+        }
+
         // ── Médias (logo + photos dans la même requête) ───────────────────────
         $logoFile = $request->files->get('logo');
         if ($logoFile) {
@@ -332,6 +387,11 @@ class ApiLaverieController extends ApiProfilController
             ? $formatter->toPublicMediaUrl($logo->getEmplacement(), $request)
             : null;
 
+        $socialMediasResponse = [];
+        foreach ($laverie->getSocialMedias() as $socialMedia) {
+            $socialMediasResponse[$socialMedia->getType()->value] = $socialMedia->getUrl();
+        }
+
         return $this->json([
             'id' => $laverie->getId(),
             'nom' => $laverie->getNomEtablissement(),
@@ -356,6 +416,7 @@ class ApiLaverieController extends ApiProfilController
             'amenites' => $amenites,
             'services' => $formatter->buildServicesResponse($laverie),
             'paiements' => $formatter->buildPaiementsResponse($laverie),
+            'socialMedias' => $socialMediasResponse,
             'commentairesCount' => $formatter->countLaverieCommentaires($laverie),
             'noteMoyenne' => $formatter->getLaverieNoteMoyenne($laverie),
         ], 200);
@@ -375,6 +436,7 @@ class ApiLaverieController extends ApiProfilController
         LaverieMediaRepository $laverieMediaRepository,
         LaverieServiceRepository $laverieServiceRepository,
         LaveriePaiementRepository $laveriePaiementRepository,
+        LaverieSocialMediaRepository $laverieSocialMediaRepository,
         ServiceRepository $serviceRepository,
         MethodePaiementRepository $methodePaiementRepository,
         ProfessionnelLaverieFormatterService $formatter,
@@ -455,6 +517,47 @@ class ApiLaverieController extends ApiProfilController
             return $this->json(['erreur' => 'Format des images à supprimer invalide'], 400);
         }
 
+        $socialMediasJson = (string) $request->request->get('socialMedias', '{}');
+        $socialMediasData = json_decode($socialMediasJson, true);
+        if (!is_array($socialMediasData)) {
+            $socialMediasData = [];
+        }
+
+        $socialMediaAllowedDomains = [
+            'facebook'  => ['facebook.com'],
+            'instagram' => ['instagram.com'],
+            'x'         => ['x.com', 'twitter.com'],
+            'linkedin'  => ['linkedin.com'],
+        ];
+        $socialMediaUrlErrors = [];
+        foreach ($socialMediasData as $typeStr => $url) {
+            $url = trim((string) $url);
+
+            if ($url === '') {
+                continue;
+            }
+
+            if (!filter_var($url, FILTER_VALIDATE_URL)) {
+                $socialMediaUrlErrors[$typeStr] = "L'URL renseignée n'est pas valide (exemple : https://www.exemple.fr).";
+            } elseif (isset($socialMediaAllowedDomains[$typeStr])) {
+                $host     = strtolower((string) parse_url($url, PHP_URL_HOST));
+                $domainOk = false;
+                foreach ($socialMediaAllowedDomains[$typeStr] as $domain) {
+                    if ($host === $domain || str_ends_with($host, ".$domain")) {
+                        $domainOk = true;
+                        break;
+                    }
+                }
+                if (!$domainOk) {
+                    $expected = implode(' ou ', $socialMediaAllowedDomains[$typeStr]);
+                    $socialMediaUrlErrors[$typeStr] = "Ce lien ne pointe pas vers $expected.";
+                }
+            }
+        }
+        if (!empty($socialMediaUrlErrors)) {
+            return $this->json(['erreur' => 'Une ou plusieurs URLs sont invalides.', 'socialMediaErrors' => $socialMediaUrlErrors], 400);
+        }
+
         $removeImageIds = array_values(array_unique(array_map(
             static fn (mixed $value): int => (int) $value,
             array_filter($removeImageIds, static fn (mixed $value): bool => is_numeric($value))
@@ -501,6 +604,19 @@ class ApiLaverieController extends ApiProfilController
         $laverieEquipementRepository->deleteByLaverie($laverie);
         $laverieServiceRepository->deleteByLaverie($laverie);
         $laveriePaiementRepository->deleteByLaverie($laverie);
+        $laverieSocialMediaRepository->deleteByLaverie($laverie);
+
+        foreach ($socialMediasData as $typeStr => $url) {
+            $url = trim((string) $url);
+            if ($url === '') continue;
+            $type = SocialMediaTypeEnum::tryFrom($typeStr);
+            if ($type === null) continue;
+            $socialMedia = new LaverieSocialMedia();
+            $socialMedia->setLaverie($laverie);
+            $socialMedia->setType($type);
+            $socialMedia->setUrl($url);
+            $entityManager->persist($socialMedia);
+        }
 
         $jourMapping = [
             'Lundi' => JourEnum::LUNDI, 'Mardi' => JourEnum::MARDI,

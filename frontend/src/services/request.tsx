@@ -486,6 +486,7 @@ export interface LaveriePublicDetail {
         nom?: string | null;
         prenom?: string | null;
     };
+    socialMedias?: Partial<Record<'site_web' | 'facebook' | 'instagram' | 'x' | 'linkedin', string>>;
 }
 
 interface MesFavorisData {
