@@ -37,6 +37,11 @@ export interface Laverie {
     noteMoyenne: number;
     commentairesCount: number;
     description: string | null;
+    siteWeb?: string | null;
+    facebook?: string | null;
+    instagram?: string | null;
+    twitter?: string | null;
+    linkedin?: string | null;
 }
 
 export interface GeoSuggestion {

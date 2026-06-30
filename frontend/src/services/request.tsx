@@ -432,6 +432,11 @@ export interface LaveriePublicDetail {
     distance: number | null;
     wiLineReference: number | null;
     logo: string | null;
+    siteWeb?: string | null;
+    facebook?: string | null;
+    instagram?: string | null;
+    twitter?: string | null;
+    linkedin?: string | null;
     image: string | null;
     images: Array<{
         id?: number;
