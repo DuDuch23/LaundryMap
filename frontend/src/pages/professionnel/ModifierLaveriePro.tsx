@@ -173,6 +173,11 @@ export default function ModifierLaveriePro() {
         equipements: [] as string[],
         serviceIds: [] as number[],
         paiementIds: [] as number[],
+        siteWeb: '',
+        facebook: '',
+        instagram: '',
+        twitter: '',
+        linkedin: '',
     });
 
     useEffect(() => {
@@ -219,6 +224,11 @@ export default function ModifierLaveriePro() {
                     equipements: Array.isArray(data.amenites) ? data.amenites : [],
                     serviceIds: Array.isArray(data.services) ? data.services.map((s: any) => s.id) : [],
                     paiementIds: Array.isArray(data.paiements) ? data.paiements.map((p: any) => p.id) : [],
+                    siteWeb: data.siteWeb || '',
+                    facebook: data.facebook || '',
+                    instagram: data.instagram || '',
+                    twitter: data.twitter || '',
+                    linkedin: data.linkedin || '',
                 });
                 setAdresseQuery(data.rue || data.adresse || '');
                 if (data.logo) setExistingLogo(data.logo);
@@ -410,6 +420,40 @@ export default function ModifierLaveriePro() {
         if (!Object.values(form.horaires).some((h) => h.ouvert && h.plages.length > 0)) {
             e.horaires = 'Au moins un jour doit être ouvert.';
         }
+
+        const isValidUrl = (url: string) => {
+            try {
+                new URL(url);
+                return true;
+            } catch {
+                return false;
+            }
+        };
+
+        const checkSocialField = (fieldName: 'siteWeb' | 'facebook' | 'instagram' | 'twitter' | 'linkedin', label: string, domains?: string[]) => {
+            const raw = form[fieldName].trim();
+            if (!raw) return;
+            let val = raw;
+            if (!/^https?:\/\//i.test(val)) {
+                val = 'https://' + val;
+            }
+            if (!isValidUrl(val)) {
+                e[fieldName] = `L'URL renseignée pour le champ ${label} n'est pas valide.`;
+            } else if (domains) {
+                const host = new URL(val).hostname.toLowerCase();
+                const match = domains.some(d => host.includes(d));
+                if (!match) {
+                    e[fieldName] = `Le lien ${label} doit pointer vers ${domains.join(' ou ')}.`;
+                }
+            }
+        };
+
+        checkSocialField('siteWeb', 'Site Web');
+        checkSocialField('facebook', 'Facebook', ['facebook.com', 'fb.com']);
+        checkSocialField('instagram', 'Instagram', ['instagram.com']);
+        checkSocialField('twitter', 'Twitter (X)', ['twitter.com', 'x.com']);
+        checkSocialField('linkedin', 'LinkedIn', ['linkedin.com']);
+
         setErrors(e);
         return Object.keys(e).length === 0;
     };
@@ -438,6 +482,21 @@ export default function ModifierLaveriePro() {
             fd.append('equipements',    JSON.stringify(form.equipements));
             fd.append('serviceIds',     JSON.stringify(form.serviceIds));
             fd.append('paiementIds',    JSON.stringify(form.paiementIds));
+
+            const ensureProtocol = (url: string) => {
+                const trimmed = url.trim();
+                if (!trimmed) return '';
+                if (!/^https?:\/\//i.test(trimmed)) {
+                    return 'https://' + trimmed;
+                }
+                return trimmed;
+            };
+
+            fd.append('siteWeb', ensureProtocol(form.siteWeb));
+            fd.append('facebook', ensureProtocol(form.facebook));
+            fd.append('instagram', ensureProtocol(form.instagram));
+            fd.append('twitter', ensureProtocol(form.twitter));
+            fd.append('linkedin', ensureProtocol(form.linkedin));
             fd.append('removeImageIds', JSON.stringify(removedExistingImageIds));
 
             if (logoUppy) {
@@ -761,6 +820,30 @@ export default function ModifierLaveriePro() {
                         <div>
                             <p className="text-md font-medium text-gray-700 mb-3">Photos de la laverie</p>
                             {photosUppy && <PhotosUpload uppy={photosUppy} />}
+                        </div>
+                    </Card>
+
+                    {/* ── 8. Réseaux sociaux ── */}
+                    <Card>
+                        <SectionTitle step={8} title="Réseaux sociaux" subtitle="Optionnel — Liens vers vos pages et sites" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Field label="Site web" error={errors.siteWeb}>
+                                <input type="url" value={form.siteWeb} onChange={(e) => set('siteWeb', e.target.value)} placeholder="https://www.mon-etablissement.fr" className={inputClass(errors.siteWeb)} />
+                            </Field>
+                            <Field label="Facebook" error={errors.facebook}>
+                                <input type="url" value={form.facebook} onChange={(e) => set('facebook', e.target.value)} placeholder="https://facebook.com/" className={inputClass(errors.facebook)} />
+                            </Field>
+                            <Field label="Instagram" error={errors.instagram}>
+                                <input type="url" value={form.instagram} onChange={(e) => set('instagram', e.target.value)} placeholder="https://instagram.com/" className={inputClass(errors.instagram)} />
+                            </Field>
+                            <Field label="Twitter (X)" error={errors.twitter}>
+                                <input type="url" value={form.twitter} onChange={(e) => set('twitter', e.target.value)} placeholder="https://x.com/" className={inputClass(errors.twitter)} />
+                            </Field>
+                            <div className="md:col-span-2">
+                                <Field label="LinkedIn" error={errors.linkedin}>
+                                    <input type="url" value={form.linkedin} onChange={(e) => set('linkedin', e.target.value)} placeholder="https://linkedin.com/" className={inputClass(errors.linkedin)} />
+                                </Field>
+                            </div>
                         </div>
                     </Card>
 

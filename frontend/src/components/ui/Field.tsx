@@ -10,7 +10,7 @@ export function Field({
     children: React.ReactNode;
 }) {
     return (
-        <div>
+        <div className="!box-border">
             <label className="block text-md font-medium text-gray-700 mb-1.5">
                 {label} {required && <span className="text-red-500">*</span>}
             </label>

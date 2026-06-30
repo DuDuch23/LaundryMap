@@ -16,6 +16,7 @@ import {
 	Trash2,
 	Weight,
 	X,
+	Globe,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AccessibleButton, SkipLink, AccessibleModal } from '../components/accessibility';
@@ -1028,6 +1029,87 @@ export default function FicheLaverie() {
 										{[laverie.adresse, laverie.codePostal, laverie.ville].filter(Boolean).join(' • ')}
 									</span>
 								</p>
+
+								{/* Liens réseaux sociaux */}
+								{(laverie.siteWeb || laverie.facebook || laverie.instagram || laverie.twitter || laverie.linkedin) && (
+									<div className="mt-5">
+										<p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 mb-2.5">Réseaux sociaux</p>
+										<div className="flex items-center gap-3 flex-wrap" aria-label="Réseaux sociaux et liens externes">
+											{laverie.siteWeb && (
+												<a
+													href={laverie.siteWeb}
+													target="_blank"
+													rel="noopener noreferrer"
+													className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-[#14A8DE]/10 hover:text-[#14A8DE] transition-colors"
+													title="Site internet (ouvre dans un nouvel onglet)"
+													aria-label="Consulter le site internet de l'établissement"
+												>
+													<Globe className="h-4.5 w-4.5" />
+												</a>
+											)}
+											{laverie.facebook && (
+												<a
+													href={laverie.facebook}
+													target="_blank"
+													rel="noopener noreferrer"
+													className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-[#14A8DE]/10 hover:text-[#14A8DE] transition-colors"
+													title="Facebook (ouvre dans un nouvel onglet)"
+													aria-label="Consulter la page Facebook de l'établissement"
+												>
+													<svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+														<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+													</svg>
+												</a>
+											)}
+											{laverie.instagram && (
+												<a
+													href={laverie.instagram}
+													target="_blank"
+													rel="noopener noreferrer"
+													className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-[#14A8DE]/10 hover:text-[#14A8DE] transition-colors"
+													title="Instagram (ouvre dans un nouvel onglet)"
+													aria-label="Consulter la page Instagram de l'établissement"
+												>
+													<svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+														<rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+														<path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+														<line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+													</svg>
+												</a>
+											)}
+											{laverie.twitter && (
+												<a
+													href={laverie.twitter}
+													target="_blank"
+													rel="noopener noreferrer"
+													className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-[#14A8DE]/10 hover:text-[#14A8DE] transition-colors"
+													title="Twitter / X (ouvre dans un nouvel onglet)"
+													aria-label="Consulter le profil Twitter / X de l'établissement"
+												>
+													<svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+														<path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
+													</svg>
+												</a>
+											)}
+											{laverie.linkedin && (
+												<a
+													href={laverie.linkedin}
+													target="_blank"
+													rel="noopener noreferrer"
+													className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:bg-[#14A8DE]/10 hover:text-[#14A8DE] transition-colors"
+													title="LinkedIn (ouvre dans un nouvel onglet)"
+													aria-label="Consulter la page LinkedIn de l'établissement"
+												>
+													<svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+														<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+														<rect x="2" y="9" width="4" height="12" />
+														<circle cx="4" cy="4" r="2" />
+													</svg>
+												</a>
+											)}
+										</div>
+									</div>
+								)}
 							</div>
 
 							<div className="flex flex-col gap-5 p-5 sm:p-6 lg:p-8">
