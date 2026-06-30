@@ -103,6 +103,10 @@ class Laverie
     #[Groups(['laverie:public', 'laverie:private'])]
     private Collection $historiqueInteractions;
 
+    #[ORM\OneToMany(mappedBy: 'laverie', targetEntity: LaverieSocialMedia::class)]
+    #[Groups(['laverie:public'])]
+    private Collection $socialMedias;
+
     public function __construct()
     {
         $this->equipements = new ArrayCollection();
@@ -114,6 +118,7 @@ class Laverie
         $this->fermetures = new ArrayCollection();
         $this->fermeturesExceptionnelles = new ArrayCollection();
         $this->historiqueInteractions = new ArrayCollection();
+        $this->socialMedias = new ArrayCollection();
     }
 
     public function getId(): ?int {
@@ -334,6 +339,26 @@ class Laverie
     public function setHistoriqueInteractions(Collection $historiqueInteractions): static
     {
         $this->historiqueInteractions = $historiqueInteractions;
+        return $this;
+    }
+
+    public function getSocialMedias(): Collection
+    {
+        return $this->socialMedias;
+    }
+
+    public function addSocialMedia(LaverieSocialMedia $socialMedia): static
+    {
+        if (!$this->socialMedias->contains($socialMedia)) {
+            $this->socialMedias->add($socialMedia);
+            $socialMedia->setLaverie($this);
+        }
+        return $this;
+    }
+
+    public function removeSocialMedia(LaverieSocialMedia $socialMedia): static
+    {
+        $this->socialMedias->removeElement($socialMedia);
         return $this;
     }
 }

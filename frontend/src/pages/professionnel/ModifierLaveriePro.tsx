@@ -9,6 +9,7 @@ import type { HorairesJour, PlageHoraire } from '../../types/HorairesJour';
 import type { Machine } from '../../types/Machine';
 import type { WiLineCentrale } from '../../types/wiline/WiLineCentrale';
 import type { GeoSuggestion, MethodePaiementOption, ServiceOption } from '../../types/Laverie';
+import type { SocialMediaType } from '../../types/FormDataAddLaverie';
 import { LogoUpload } from '../../components/laverie/LogoUpload';
 import { PhotosUpload } from '../../components/laverie/PhotosUpload';
 import { CheckboxGroup } from '../../components/laverie/CheckboxGroup';
@@ -66,6 +67,7 @@ export default function ModifierLaveriePro() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
+    const [socialMediaErrors, setSocialMediaErrors] = useState<Partial<Record<SocialMediaType, string>>>({});
 
     const [logoUppy, setLogoUppy] = useState<Uppy | null>(null);
     const [photosUppy, setPhotosUppy] = useState<Uppy | null>(null);
@@ -173,6 +175,7 @@ export default function ModifierLaveriePro() {
         equipements: [] as string[],
         serviceIds: [] as number[],
         paiementIds: [] as number[],
+        socialMedias: {} as Partial<Record<'site_web' | 'facebook' | 'instagram' | 'x' | 'linkedin', string>>,
     });
 
     useEffect(() => {
@@ -219,6 +222,7 @@ export default function ModifierLaveriePro() {
                     equipements: Array.isArray(data.amenites) ? data.amenites : [],
                     serviceIds: Array.isArray(data.services) ? data.services.map((s: any) => s.id) : [],
                     paiementIds: Array.isArray(data.paiements) ? data.paiements.map((p: any) => p.id) : [],
+                    socialMedias: (data.socialMedias && typeof data.socialMedias === 'object') ? data.socialMedias : {},
                 });
                 setAdresseQuery(data.rue || data.adresse || '');
                 if (data.logo) setExistingLogo(data.logo);
@@ -419,6 +423,7 @@ export default function ModifierLaveriePro() {
         if (!validate()) return;
         setIsSubmitting(true);
         setSubmitError(null);
+        setSocialMediaErrors({});
         try {
             const token = localStorage.getItem('token');
             const fd = new FormData();
@@ -438,6 +443,7 @@ export default function ModifierLaveriePro() {
             fd.append('equipements',    JSON.stringify(form.equipements));
             fd.append('serviceIds',     JSON.stringify(form.serviceIds));
             fd.append('paiementIds',    JSON.stringify(form.paiementIds));
+            fd.append('socialMedias',   JSON.stringify(form.socialMedias));
             fd.append('removeImageIds', JSON.stringify(removedExistingImageIds));
 
             if (logoUppy) {
@@ -458,7 +464,13 @@ export default function ModifierLaveriePro() {
                 throw new Error('Le fichier est trop volumineux. Réduisez la taille de vos images (5 Mo maximum par image).');
             }
             const data = await res.json().catch(() => ({}));
-            if (!res.ok) throw new Error(data?.erreur ?? data?.message ?? 'La mise à jour a échoué.');
+            if (!res.ok) {
+                if (data?.socialMediaErrors && typeof data.socialMediaErrors === 'object') {
+                    setSocialMediaErrors(data.socialMediaErrors);
+                    return;
+                }
+                throw new Error(data?.erreur ?? data?.message ?? 'La mise à jour a échoué.');
+            }
             navigate('/professionnel/tableau-de-bord');
         } catch (err: any) {
             setSubmitError(err.message);
@@ -750,9 +762,61 @@ export default function ModifierLaveriePro() {
                         </div>
                     </Card>
 
-                    {/* ── 7. Logo & photos ── */}
+                    {/* ── 7. Réseaux sociaux ── */}
                     <Card>
-                        <SectionTitle step={7} title="Logo & photos" subtitle="JPEG, PNG ou WebP — 5 Mo max par fichier" />
+                        <SectionTitle step={7} title="Réseaux sociaux" subtitle="Champs optionnels" />
+                        <div className="grid grid-cols-1 gap-4 mt-4">
+                            {(
+                                [
+                                    {
+                                        key: 'site_web' as const,
+                                        label: 'Site web',
+                                        placeholder: 'https://www.malaverie.fr'
+                                    },
+                                    {
+                                        key: 'facebook' as const,
+                                        label: 'Facebook',
+                                        placeholder: 'https://www.facebook.com/malaverie'
+                                    },
+                                    {
+                                        key: 'instagram' as const,
+                                        label: 'Instagram',
+                                        placeholder: 'https://www.instagram.com/malaverie'
+                                    },
+                                    {
+                                        key: 'x' as const,
+                                        label: 'X (Twitter)',
+                                        placeholder: 'https://x.com/malaverie'
+                                    },
+                                    {
+                                        key: 'linkedin' as const,
+                                        label: 'LinkedIn',
+                                        placeholder: 'https://www.linkedin.com/company/malaverie'
+                                    },
+                                ]
+                            ).map(({ key, label, placeholder }) => (
+                                <Field key={key} label={label} error={socialMediaErrors[key]}>
+                                    <input
+                                        type="url"
+                                        value={form.socialMedias[key] ?? ''}
+                                        onChange={(e) => {
+                                            setForm((f) => ({
+                                                ...f,
+                                                socialMedias: { ...f.socialMedias, [key]: e.target.value },
+                                            }));
+                                            setSocialMediaErrors((prev) => ({ ...prev, [key]: undefined }));
+                                        }}
+                                        placeholder={placeholder}
+                                        className={inputClass(socialMediaErrors[key])}
+                                    />
+                                </Field>
+                            ))}
+                        </div>
+                    </Card>
+
+                    {/* ── 8. Logo & photos ── */}
+                    <Card>
+                        <SectionTitle step={8} title="Logo & photos" subtitle="JPEG, PNG ou WebP — 5 Mo max par fichier" />
                         <div className="mb-6">
                             <p className="text-md font-medium text-gray-700 mb-3">Logo de l'établissement</p>
                             {logoUppy && <LogoUpload uppy={logoUppy} />}

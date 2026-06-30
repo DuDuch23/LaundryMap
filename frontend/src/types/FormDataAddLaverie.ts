@@ -1,6 +1,8 @@
 import { HorairesJour } from "./HorairesJour";
 import { Machine } from "./Machine";
 
+export type SocialMediaType = 'site_web' | 'facebook' | 'instagram' | 'x' | 'linkedin';
+
 export interface FormDataAddLaverie {
     nomEtablissement: string;
     contactEmail: string;
@@ -16,6 +18,7 @@ export interface FormDataAddLaverie {
     horaires: Record<string, HorairesJour>;
     machines: Machine[];
     equipements: string[];
-    serviceIds: number[],
-    paiementIds: number[],
+    serviceIds: number[];
+    paiementIds: number[];
+    socialMedias: Partial<Record<SocialMediaType, string>>;
 }

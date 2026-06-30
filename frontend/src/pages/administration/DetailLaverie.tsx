@@ -29,6 +29,8 @@ interface Horaire {
     heureFin: string;
 }
 
+type SocialMediaType = 'site_web' | 'facebook' | 'instagram' | 'x' | 'linkedin';
+
 interface LaverieDetailData {
     id: number;
     nom: string;
@@ -42,6 +44,7 @@ interface LaverieDetailData {
     images: ImageDetail[];
     equipements: Equipement[];
     horaires: Horaire[];
+    socialMedias?: Partial<Record<SocialMediaType, string>>;
     professionnel: {
         utilisateurId: number;
         id: number;
@@ -322,6 +325,55 @@ export default function DetailLaverie() {
                         className="w-[90%]"
                     />
                 </div>
+
+                {/* RÉSEAUX SOCIAUX */}
+                {laverie.socialMedias && Object.keys(laverie.socialMedias).length > 0 && (
+                    <div className="mb-6">
+                        <h2 className="font-bold text-base underline decoration-[1.5px] decoration-black underline-offset-4 mb-4">Réseaux sociaux :</h2>
+                        <div className="flex flex-wrap gap-3">
+                            {([
+                                {
+                                    key: 'site_web' as SocialMediaType,
+                                    label: 'Site web',
+                                    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="h-5 w-5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+                                },
+                                {
+                                    key: 'facebook' as SocialMediaType,
+                                    label: 'Facebook',
+                                    icon: <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>,
+                                },
+                                {
+                                    key: 'instagram' as SocialMediaType,
+                                    label: 'Instagram',
+                                    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="h-5 w-5" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>,
+                                },
+                                {
+                                    key: 'x' as SocialMediaType,
+                                    label: 'X',
+                                    icon: <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>,
+                                },
+                                {
+                                    key: 'linkedin' as SocialMediaType,
+                                    label: 'LinkedIn',
+                                    icon: <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>,
+                                },
+                            ] as const).map(({ key, label, icon }) =>
+                                laverie.socialMedias![key] ? (
+                                    <a
+                                        key={key}
+                                        href={laverie.socialMedias![key]}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        aria-label={label}
+                                        className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gray-50 text-gray-600 shadow-sm border border-gray-200 transition hover:bg-[#EBF8FD] hover:text-[#14A8DE] hover:border-[#14A8DE]"
+                                    >
+                                        {icon}
+                                    </a>
+                                ) : null
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* COMMENTAIRE */}
                 <fieldset className="border border-black rounded-xl p-1 relative mb-6">

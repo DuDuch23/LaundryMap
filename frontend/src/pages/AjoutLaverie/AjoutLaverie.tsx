@@ -5,7 +5,7 @@ import Uppy from '@uppy/core';
 import API_BASE_URL from '../../services/api';
 import { geocodeSuggestions, getMethodesPaiement, getServices } from '../../services/request';
 import { EQUIPEMENTS_OPTIONS } from '../../constants/Laverie';
-import { FormDataAddLaverie } from '../../types/FormDataAddLaverie';
+import { FormDataAddLaverie, type SocialMediaType } from '../../types/FormDataAddLaverie';
 import { HorairesJour, PlageHoraire } from '../../types/HorairesJour';
 import { Machine } from '../../types/Machine';
 import { WiLineCentrale } from '../../types/wiline/WiLineCentrale';
@@ -48,6 +48,7 @@ export default function AjoutLaverie() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
+    const [socialMediaErrors, setSocialMediaErrors] = useState<Partial<Record<SocialMediaType, string>>>({});
 
     const [logoUppy, setLogoUppy] = useState<Uppy | null>(null);
     const [photosUppy, setPhotosUppy] = useState<Uppy | null>(null);
@@ -110,6 +111,7 @@ export default function AjoutLaverie() {
         equipements: [],
         serviceIds: [],
         paiementIds: [],
+        socialMedias: {},
     });
 
     useEffect(() => {
@@ -365,6 +367,7 @@ export default function AjoutLaverie() {
         if (!validate()) return;
         setIsSubmitting(true);
         setSubmitError(null);
+        setSocialMediaErrors({});
         try {
             const token = localStorage.getItem('token');
 
@@ -385,6 +388,7 @@ export default function AjoutLaverie() {
             fd.append('equipements', JSON.stringify(form.equipements));
             fd.append('serviceIds',  JSON.stringify(form.serviceIds));
             fd.append('paiementIds', JSON.stringify(form.paiementIds));
+            fd.append('socialMedias', JSON.stringify(form.socialMedias));
 
             if (logoUppy) {
                 const logoFile = logoUppy.getFiles()[0];
@@ -406,7 +410,13 @@ export default function AjoutLaverie() {
             } catch {
                 throw new Error(`Erreur serveur (HTTP ${res.status}). Contactez l'administrateur.`);
             }
-            if (!res.ok) throw new Error(data?.message ?? 'Erreur lors de la création.');
+            if (!res.ok) {
+                if (data?.socialMediaErrors && typeof data.socialMediaErrors === 'object') {
+                    setSocialMediaErrors(data.socialMediaErrors);
+                    return;
+                }
+                throw new Error(data?.message ?? 'Erreur lors de la création.');
+            }
             navigate('/professionnel/tableau-de-bord');
         } catch (err: any) {
             setSubmitError(err.message);
@@ -700,9 +710,61 @@ export default function AjoutLaverie() {
                         </div>
                     </Card>
 
-                    {/* ── 7. Médias ── */}
+                    {/* ── 7. Réseaux sociaux ── */}
                     <Card>
-                        <SectionTitle step={7} title="Logo & photos" subtitle="JPEG, PNG ou WebP — 5 Mo max par fichier" />
+                        <SectionTitle step={7} title="Réseaux sociaux" subtitle="Champs optionnels" />
+                        <div className="grid grid-cols-1 gap-4 mt-4">
+                            {(
+                                [
+                                    {
+                                        key: 'site_web' as SocialMediaType,
+                                        label: 'Site web',
+                                        placeholder: 'https://www.malaverie.fr'
+                                    },
+                                    {
+                                        key: 'facebook' as SocialMediaType,
+                                        label: 'Facebook',
+                                        placeholder: 'https://www.facebook.com/malaverie'
+                                    },
+                                    {
+                                        key: 'instagram' as SocialMediaType,
+                                        label: 'Instagram',
+                                        placeholder: 'https://www.instagram.com/malaverie'
+                                    },
+                                    {
+                                        key: 'x' as SocialMediaType,
+                                        label: 'X (Twitter)',
+                                        placeholder: 'https://x.com/malaverie'
+                                    },
+                                    {
+                                        key: 'linkedin' as SocialMediaType,
+                                        label: 'LinkedIn',
+                                        placeholder: 'https://www.linkedin.com/company/malaverie'
+                                    },
+                                ] as const
+                            ).map(({ key, label, placeholder }) => (
+                                <Field key={key} label={label} error={socialMediaErrors[key]}>
+                                    <input
+                                        type="url"
+                                        value={form.socialMedias[key] ?? ''}
+                                        onChange={(e) => {
+                                            setForm((f) => ({
+                                                ...f,
+                                                socialMedias: { ...f.socialMedias, [key]: e.target.value },
+                                            }));
+                                            setSocialMediaErrors((prev) => ({ ...prev, [key]: undefined }));
+                                        }}
+                                        placeholder={placeholder}
+                                        className={inputClass(socialMediaErrors[key])}
+                                    />
+                                </Field>
+                            ))}
+                        </div>
+                    </Card>
+
+                    {/* ── 8. Médias ── */}
+                    <Card>
+                        <SectionTitle step={8} title="Logo & photos" subtitle="JPEG, PNG ou WebP — 5 Mo max par fichier" />
                         <div className="mb-6">
                             <p className="text-md font-medium text-gray-700 mb-3">Logo de l'établissement</p>
                             {logoUppy && <LogoUpload uppy={logoUppy} />}

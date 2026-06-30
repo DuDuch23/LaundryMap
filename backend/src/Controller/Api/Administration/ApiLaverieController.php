@@ -97,6 +97,11 @@ class ApiLaverieController extends AbstractController
 
         $logoUrl = $formatter->buildLogoUrl($laverie, $request);
 
+        $socialMediasResponse = [];
+        foreach ($laverie->getSocialMedias() as $socialMedia) {
+            $socialMediasResponse[$socialMedia->getType()->value] = $socialMedia->getUrl();
+        }
+
         return $this->json([
             'id' => $laverie->getId(),
             'nom' => $laverie->getNomEtablissement(),
@@ -117,6 +122,7 @@ class ApiLaverieController extends AbstractController
             'paiements' => $paiements,
             'commentaires' => $commentaires,
             'horaires' => $horaires,
+            'socialMedias' => $socialMediasResponse,
             'commentairesCount' => $formatter->countLaverieCommentaires($laverie),
             'noteMoyenne' => $formatter->getLaverieNoteMoyenne($laverie),
             'monAvis' => $monAvis,
@@ -261,6 +267,11 @@ class ApiLaverieController extends AbstractController
 
         $pro = $laverie->getProfessionnel();
 
+        $socialMediasResponse = [];
+        foreach ($laverie->getSocialMedias() as $socialMedia) {
+            $socialMediasResponse[$socialMedia->getType()->value] = $socialMedia->getUrl();
+        }
+
         return $this->json([
             'id' => $laverie->getId(),
             'nom' => $laverie->getNomEtablissement(),
@@ -274,6 +285,7 @@ class ApiLaverieController extends AbstractController
             'images' => $images,
             'equipements' => $equipements,
             'horaires' => $horaires,
+            'socialMedias' => $socialMediasResponse,
             'professionnel' => [
                 'utilisateurId' => $pro->getUtilisateur()->getId(),
                 'id' => $pro->getId(),
