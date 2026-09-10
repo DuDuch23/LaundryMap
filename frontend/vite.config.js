@@ -8,9 +8,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/uploads': {
-        target: 'https://localhost:8000',
+        target: 'http://localhost:8000',
         changeOrigin: true,
-        secure: false,
       },
     },
   },

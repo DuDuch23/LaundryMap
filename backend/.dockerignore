@@ -1,0 +1,26 @@
+# ── Secrets — jamais dans l'image ──────────
+.env
+.env.local
+.env.local.php
+.env.*.local
+.env.save
+config/jwt/*.pem
+
+# ── Dépendances / cache — régénérés dans l'image ──
+/var/
+/vendor/
+
+# ── Uploads utilisateurs (persistés via bind mount) ──
+/public/uploads/*
+!/public/uploads/.htaccess
+!/public/uploads/laveries/default-laundry.jpg
+
+# ── VCS / IDE ───────────────────────────────
+.git
+.gitignore
+.idea
+.vscode
+*.swp
+
+# ── Docs (inutiles dans l'image) ───────────
+readme.md

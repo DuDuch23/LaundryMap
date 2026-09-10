@@ -3,10 +3,10 @@
 ## Vue d'ensemble
 
 Application web de recherche de laveries automatiques en France.
-- **Frontend** : React 18 + TypeScript + Vite + Tailwind CSS + react-leaflet
-- **Backend** : Symfony 7 + PHP 8.3 + Doctrine ORM + JWT (LexikJWT)
+- **Frontend** : React 19 + TypeScript (mix .tsx/.jsx) + Vite + Tailwind CSS v4 + react-leaflet
+- **Backend** : Symfony 8 + PHP 8.4 + Doctrine ORM + JWT (LexikJWT)
 - **Base de données** : MariaDB 11
-- **Infrastructure** : Docker Compose (db / php-fpm / nginx / frontend / phpmyadmin)
+- **Infrastructure** : Docker Compose (db / migrate / php-fpm / nginx / frontend / phpmyadmin)
 
 ---
 
@@ -14,11 +14,11 @@ Application web de recherche de laveries automatiques en France.
 
 | Couche | Technologie |
 |---|---|
-| Frontend | React 18, TypeScript, Vite, Tailwind CSS |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS v4 |
 | Carte | react-leaflet + Leaflet, OpenStreetMap / Nominatim |
 | Internationalisation | react-i18next (fr / en) |
 | HTTP client | axios (avec intercepteurs JWT) + fetch natif |
-| Backend | Symfony 7, PHP 8.3, PHP-FPM |
+| Backend | Symfony 8, PHP 8.4, PHP-FPM |
 | ORM | Doctrine ORM |
 | Auth | JWT via LexikJWTAuthenticationBundle |
 | BDD | MariaDB 11 |
@@ -30,8 +30,11 @@ Application web de recherche de laveries automatiques en France.
 ## Lancer le projet
 
 ```bash
-# Démarrer tous les services
-docker compose up -d
+# Copier et remplir le .env racine (DB_*, APP_SECRET, Brevo, Google OAuth, INSEE, WI-LINE)
+cp .env.example .env
+
+# Construire les images et démarrer tous les services
+docker compose up -d --build
 
 # Accès
 # Frontend  : http://localhost:5173
@@ -39,8 +42,10 @@ docker compose up -d
 # phpMyAdmin: http://localhost:8081
 ```
 
+Le service `migrate` applique automatiquement les migrations, génère les clés JWT et charge les fixtures au premier démarrage (`restart: "no"`, s'arrête une fois terminé). Comptes de test créés par les fixtures : voir [README.md](README.md#comptes-de-test-chargés-par-les-fixtures).
+
 ```bash
-# Migrations Doctrine
+# Migrations Doctrine (rejouer manuellement)
 docker compose exec php php bin/console doctrine:migrations:migrate
 
 # Fixtures
@@ -191,3 +196,6 @@ BREVO_CONNEXION, BREVO_KEY_SMTP, BREVO_HOST, BREVO_PORT, BREVO_FROM
 - **Recherche géographique** : filtre bounding-box en SQL puis haversine exacte en PHP. Limite à 30 résultats, rayon max 50 km.
 - **`isOuvertMaintenant`** : les `LaverieFermeture` représentent les **plages d'ouverture** (nom trompeur), pas les fermetures.
 - **Touch zoom carte** : `touchAction` change dynamiquement entre `pan-y` (1 doigt = scroll page) et `none` (2 doigts = zoom Leaflet).
+- **Protocole API en dev** : en Docker, nginx ne sert que du HTTP sur le port 8000 (pas de TLS). `frontend/.env` (`VITE_API_BASE_URL`) et le proxy `/uploads` de `vite.config.js` doivent donc rester en `http://`, pas `https://` — sinon les requêtes échouent (handshake TLS refusé par nginx). En dev natif (`symfony server:start`), le serveur Symfony CLI sert en HTTPS auto-signé par défaut : adapter `VITE_API_BASE_URL` en conséquence si vous utilisez ce mode.
+- **Port 8000** : un `symfony server:start` local et le service `nginx` du docker-compose se disputent tous les deux le port 8000. N'utilisez pas les deux en même temps (`symfony server:stop` avant de lancer Docker).
+- **Fixtures** : le service `migrate` recharge et **purge** entièrement les fixtures à chaque recréation de son conteneur (`docker compose down && up`, ou `--force-recreate migrate`). Un simple `stop`/`start` sans recréation conserve les données du volume `db_data`.
