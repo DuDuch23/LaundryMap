@@ -10,11 +10,14 @@ docker/db_data/
 .DS_Store
 Thumbs.db
 
-# ── IDE ──────────────────────────────────────────────
+# ── IDE / outils Claude Code ──────────────────────────
 .idea/
 .vscode/
 *.swp
 .claude
+.claude-flow/
+graphify-out/
+.graphify_*
 
 # ── Fichiers générés à la racine par erreur ──────────
 /package-lock.json

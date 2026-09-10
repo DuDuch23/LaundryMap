@@ -1,0 +1,21 @@
+# ── Secrets — jamais dans l'image ──────────
+.env
+.env.production
+.env.*.local
+
+# ── Dépendances / build — régénérés dans l'image ──
+node_modules
+dist
+dist-ssr
+
+# ── VCS / IDE ───────────────────────────────
+.git
+.gitignore
+.idea
+.vscode
+*.swp
+
+# ── Logs ────────────────────────────────────
+logs
+*.log
+npm-debug.log*
